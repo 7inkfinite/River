@@ -1,3 +1,4 @@
+//Step 2 of the pipedream workflow
 export default defineComponent({
   async run({ steps, $ }) {
     // Read the HTTP Trigger payload
