@@ -1,0 +1,6 @@
+//Step 6 of the pipedream workflow
+//this is a GET request to yt-api
+//we pass the url from the sub_pick step and the api returns an xml caption output
+{
+  "$return_value": "<xml?"
+}
