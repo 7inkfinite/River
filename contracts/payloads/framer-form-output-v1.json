@@ -1,0 +1,16 @@
+//initial generation
+{
+	"youtube_url": "https://www.youtube.com/watch?v=VIDEO_ID",
+	"tone": "creator-friendly, punchy",
+	"platforms": ["twitter", "carousel"]
+}
+
+//regeneration or tweak generation
+{ 
+	"youtube_url": "<https://www.youtube.com/watch?v=VIDEO_ID>", 
+  "tone": "creator-friendly, punchy", 
+  "platforms": ["twitter", "carousel"],
+	"force_regen": true, 
+  "tweak_instructions": "make the hook stronger and simplify language",
+	"extra_options": { "target_platform": "carousel" } 
+}
