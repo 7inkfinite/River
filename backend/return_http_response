@@ -1,0 +1,139 @@
+//Step 14 of the pipedream workflow
+//this webhook sends the output from save_generation back to framer
+{
+  "$summary": "Responded successfully with status 200",
+  "$response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "video": {
+        "id": "92154612-081b-4651-a2b9-fdef1b12aa06",
+        "youtube_video_id": "0XI_Xt0ci2Y",
+        "original_url": "https://www.youtube.com/watch?v=0XI_Xt0ci2Y&t=2s"
+      },
+      "generation": {
+        "id": "31aa1864-15ce-486d-8a8a-1ab191264092",
+        "video_id": "92154612-081b-4651-a2b9-fdef1b12aa06",
+        "tone": "creator-friendly, punchy",
+        "platforms": [
+          "twitter",
+          "linkedin",
+          "carousel"
+        ],
+        "extra_options": null,
+        "status": "success",
+        "error_message": null,
+        "prompt_version": "v1",
+        "transcript_used_version": null,
+        "created_at": "2025-12-23T13:36:07.227129+00:00",
+        "completed_at": "2025-12-23T13:36:06.63+00:00",
+        "cache_key": "92154612-081b-4651-a2b9-fdef1b12aa06|creator-friendly, punchy|carousel,linkedin,twitter|v1|"
+      },
+      "inputs": {
+        "tone": "creator-friendly, punchy",
+        "platforms": [
+          "twitter",
+          "linkedin",
+          "carousel"
+        ],
+        "force_regen": false,
+        "tweak_instructions": null
+      },
+      "outputs": {
+        "twitter": {
+          "platform": "twitter",
+          "format": "thread",
+          "tweets": [
+            "🚀 The future belongs to those who understand the power of agency! Let's dive in. 🧠✨",
+            "1/9 AI needs direction. Tools need masters. Data needs insight. Content needs context. 🌐",
+            "2/9 Success isn’t just about skills; it’s about mindset. High agency individuals don’t rely on a single skill for success. 🔑",
+            "3/9 Agency is the ability to iterate without permission. It’s NOT just acting without guidance. 🛠️",
+            "4/9 Conformity stifles growth. Many operate under cultural programming, when they need to think independently. 🧩",
+            "5/9 If you want to thrive, you must cultivate agency. It’s about setting your own direction and avoiding distractions. ⚡",
+            "6/9 High agency people treat life as a giant experiment. They learn, adapt, and iterate. 📊🧪",
+            "7/9 Failure is part of the process. Embrace it, learn from it, and keep pushing forward! 🔄",
+            "8/9 Remember: Your thoughts shape your reality. Break free from conformity and build your own path! 🌟",
+            "9/9 Ready to take control of your future? Let’s cultivate agency together! #Mindset #Agency #Success"
+          ],
+          "raw": "🚀 The future belongs to those who understand the power of agency! Let's dive in. 🧠✨\n\n1/9 AI needs direction. Tools need masters. Data needs insight. Content needs context. 🌐\n\n2/9 Success isn’t just about skills; it’s about mindset. High agency individuals don’t rely on a single skill for success. 🔑\n\n3/9 Agency is the ability to iterate without permission. It’s NOT just acting without guidance. 🛠️\n\n4/9 Conformity stifles growth. Many operate under cultural programming, when they need to think independently. 🧩\n\n5/9 If you want to thrive, you must cultivate agency. It’s about setting your own direction and avoiding distractions. ⚡\n\n6/9 High agency people treat life as a giant experiment. They learn, adapt, and iterate. 📊🧪\n\n7/9 Failure is part of the process. Embrace it, learn from it, and keep pushing forward! 🔄\n\n8/9 Remember: Your thoughts shape your reality. Break free from conformity and build your own path! 🌟\n\n9/9 Ready to take control of your future? Let’s cultivate agency together! #Mindset #Agency #Success"
+        },
+        "linkedin": {
+          "platform": "linkedin",
+          "format": "post",
+          "post": "In today's rapidly evolving world, understanding the concept of agency is crucial for success. Agency is not just about acting without permission; it’s about having the ability to iterate and adapt continuously. High agency individuals set their own life direction, treat challenges as experiments, and learn from failures. This mindset empowers them to thrive in an uncertain future. \n\nIf we want to avoid being left behind, we must cultivate this skill. Embrace failure as part of the journey, and let your thoughts shape your reality. \n\nWhat steps are you taking to develop your agency? \n\n#Mindset #Agency #Growth"
+        },
+        "carousel": {
+          "platform": "carousel",
+          "format": "slides",
+          "slides": [
+            "Slide 1: 🚀 Unlock Your Future: Cultivate Agency! 🌟",
+            "Slide 2: Agency = The ability to iterate without permission. 🛠️",
+            "Slide 3: Conformity stifles growth. Think independently! 🧠",
+            "Slide 4: Treat life as an experiment. Learn, adapt, repeat! 🔄",
+            "Slide 5: Ready to take control? Embrace agency today! 💪"
+          ]
+        }
+      },
+      "dbOutputs": [
+        {
+          "id": "c8696778-37aa-40b5-9e17-6c883304dcd7",
+          "generation_id": "31aa1864-15ce-486d-8a8a-1ab191264092",
+          "platform": "twitter",
+          "format": "thread",
+          "content": "🚀 The future belongs to those who understand the power of agency! Let's dive in. 🧠✨\n\n1/9 AI needs direction. Tools need masters. Data needs insight. Content needs context. 🌐\n\n2/9 Success isn’t just about skills; it’s about mindset. High agency individuals don’t rely on a single skill for success. 🔑\n\n3/9 Agency is the ability to iterate without permission. It’s NOT just acting without guidance. 🛠️\n\n4/9 Conformity stifles growth. Many operate under cultural programming, when they need to think independently. 🧩\n\n5/9 If you want to thrive, you must cultivate agency. It’s about setting your own direction and avoiding distractions. ⚡\n\n6/9 High agency people treat life as a giant experiment. They learn, adapt, and iterate. 📊🧪\n\n7/9 Failure is part of the process. Embrace it, learn from it, and keep pushing forward! 🔄\n\n8/9 Remember: Your thoughts shape your reality. Break free from conformity and build your own path! 🌟\n\n9/9 Ready to take control of your future? Let’s cultivate agency together! #Mindset #Agency #Success",
+          "metadata": {
+            "type": "tweet_thread",
+            "tweets": [
+              "🚀 The future belongs to those who understand the power of agency! Let's dive in. 🧠✨",
+              "1/9 AI needs direction. Tools need masters. Data needs insight. Content needs context. 🌐",
+              "2/9 Success isn’t just about skills; it’s about mindset. High agency individuals don’t rely on a single skill for success. 🔑",
+              "3/9 Agency is the ability to iterate without permission. It’s NOT just acting without guidance. 🛠️",
+              "4/9 Conformity stifles growth. Many operate under cultural programming, when they need to think independently. 🧩",
+              "5/9 If you want to thrive, you must cultivate agency. It’s about setting your own direction and avoiding distractions. ⚡",
+              "6/9 High agency people treat life as a giant experiment. They learn, adapt, and iterate. 📊🧪",
+              "7/9 Failure is part of the process. Embrace it, learn from it, and keep pushing forward! 🔄",
+              "8/9 Remember: Your thoughts shape your reality. Break free from conformity and build your own path! 🌟",
+              "9/9 Ready to take control of your future? Let’s cultivate agency together! #Mindset #Agency #Success"
+            ],
+            "tweet_count": 10
+          },
+          "created_at": "2025-12-23T13:36:08.20124+00:00"
+        },
+        {
+          "id": "cfa7b06c-a447-451e-96a2-4764e35937f6",
+          "generation_id": "31aa1864-15ce-486d-8a8a-1ab191264092",
+          "platform": "linkedin",
+          "format": "post",
+          "content": "In today's rapidly evolving world, understanding the concept of agency is crucial for success. Agency is not just about acting without permission; it’s about having the ability to iterate and adapt continuously. High agency individuals set their own life direction, treat challenges as experiments, and learn from failures. This mindset empowers them to thrive in an uncertain future. \n\nIf we want to avoid being left behind, we must cultivate this skill. Embrace failure as part of the journey, and let your thoughts shape your reality. \n\nWhat steps are you taking to develop your agency? \n\n#Mindset #Agency #Growth",
+          "metadata": {
+            "type": "linkedin_post",
+            "char_count": 616
+          },
+          "created_at": "2025-12-23T13:36:08.20124+00:00"
+        },
+        {
+          "id": "d9a81907-f2c6-46a6-a713-ec6467609f3f",
+          "generation_id": "31aa1864-15ce-486d-8a8a-1ab191264092",
+          "platform": "carousel",
+          "format": "slides",
+          "content": "Slide 1: 🚀 Unlock Your Future: Cultivate Agency! 🌟\n\nSlide 2: Agency = The ability to iterate without permission. 🛠️\n\nSlide 3: Conformity stifles growth. Think independently! 🧠\n\nSlide 4: Treat life as an experiment. Learn, adapt, repeat! 🔄\n\nSlide 5: Ready to take control? Embrace agency today! 💪",
+          "metadata": {
+            "type": "carousel_slides",
+            "slides": [
+              "Slide 1: 🚀 Unlock Your Future: Cultivate Agency! 🌟",
+              "Slide 2: Agency = The ability to iterate without permission. 🛠️",
+              "Slide 3: Conformity stifles growth. Think independently! 🧠",
+              "Slide 4: Treat life as an experiment. Learn, adapt, repeat! 🔄",
+              "Slide 5: Ready to take control? Embrace agency today! 💪"
+            ],
+            "slide_count": 5
+          },
+          "created_at": "2025-12-23T13:36:08.20124+00:00"
+        }
+      ],
+      "fromCache": false
+    }
+  }
+}
