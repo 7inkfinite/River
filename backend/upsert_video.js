@@ -1,3 +1,4 @@
+////Step 3 of the pipedream workflow
 export default defineComponent({
   async run({ steps, $ }) {
     const { videoId, rawUrl } = steps.validate_input.$return_value;
