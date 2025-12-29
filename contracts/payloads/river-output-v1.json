@@ -1,0 +1,74 @@
+{
+  "video": {
+    "id": "uuid",
+    "youtube_video_id": "string",
+    "original_url": "string"
+  },
+
+  "generation": {
+    "id": "uuid",
+    "video_id": "uuid",
+    "tone": "string",
+    "platforms": ["twitter", "linkedin", "carousel"],
+    "status": "success",
+    "prompt_version": "v1",
+    "cache_key": "string | null",
+    "completed_at": "ISO-8601 timestamp",
+
+    "extra_options": {
+      "target_platform": "twitter | linkedin | carousel | null",
+      "...future_options": "any"
+    }
+  },
+
+  "inputs": {
+    "tone": "string",
+    "platforms": ["twitter", "linkedin", "carousel"],
+    "force_regen": true,
+    "tweak_instructions": "string | null",
+    "extra_options": {
+      "target_platform": "twitter | linkedin | carousel | null",
+      "...future_options": "any"
+    }
+  },
+
+  "outputs": {
+    "twitter": {
+      "platform": "twitter",
+      "format": "thread",
+      "tweets": ["Tweet 1", "Tweet 2", "..."],
+      "raw": "Tweet 1\n\nTweet 2\n\n..."
+    },
+
+    "linkedin": {
+      "platform": "linkedin",
+      "format": "post",
+      "post": "Full LinkedIn post text"
+    },
+
+    "carousel": {
+      "platform": "carousel",
+      "format": "slides",
+      "slides": ["Slide 1", "Slide 2", "..."]
+    }
+  },
+
+  "dbOutputs": [
+    {
+      "id": "uuid",
+      "generation_id": "uuid",
+      "platform": "twitter | linkedin | carousel",
+      "format": "thread | post | slides",
+      "content": "string",
+      "metadata": {
+        "type": "tweet_thread | linkedin_post | carousel_slides",
+        "tweet_count": 10,
+        "slide_count": 5,
+        "tweets": ["..."],
+        "slides": ["..."]
+      }
+    }
+  ],
+
+  "fromCache": false
+}
