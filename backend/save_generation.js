@@ -153,9 +153,18 @@ export default defineComponent({
     //    (regen overwrites previous outputs)
     // ------------------------------------------------------
 
-    // Delete old outputs (if any) for this generation
+    // ✅ NEW: Check if we're targeting a specific platform
+    const targetPlatform = v.extra_options?.target_platform;
+    const isTargetedRegen = targetPlatform && typeof targetPlatform === "string";
+
+    // ✅ If targeting specific platform, only delete that platform's output
+    // Otherwise, delete all outputs (full regeneration)
+    const deleteFilter = isTargetedRegen
+      ? `generation_id=eq.${generation.id}&platform=eq.${targetPlatform}`
+      : `generation_id=eq.${generation.id}`;
+
     const delRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/outputs?generation_id=eq.${generation.id}`,
+      `${SUPABASE_URL}/rest/v1/outputs?${deleteFilter}`,
       {
         method: "DELETE",
         headers: {
@@ -246,7 +255,58 @@ export default defineComponent({
     );
 
     // ------------------------------------------------------
-    // 6) Final shape sent back to Framer
+    // 6) Fetch ALL current outputs for this generation
+    //    (important for targeted regens where other platforms weren't regenerated)
+    // ------------------------------------------------------
+    const allOutputsRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/outputs?generation_id=eq.${generation.id}`,
+      {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!allOutputsRes.ok) {
+      const allOutputsText = await allOutputsRes.text();
+      throw new Error(
+        `Failed to fetch all outputs: ${allOutputsRes.status} ${allOutputsText}`
+      );
+    }
+
+    const allOutputs = await allOutputsRes.json();
+
+    // ✅ Reconstruct normalized outputs from ALL database outputs
+    const completeNormalizedOutputs = {};
+
+    for (const output of allOutputs) {
+      if (output.platform === "twitter") {
+        completeNormalizedOutputs.twitter = {
+          platform: "twitter",
+          format: "thread",
+          tweets: output.metadata?.tweets || [],
+          raw: output.content || "",
+        };
+      } else if (output.platform === "linkedin") {
+        completeNormalizedOutputs.linkedin = {
+          platform: "linkedin",
+          format: "post",
+          post: output.content || "",
+        };
+      } else if (output.platform === "carousel") {
+        completeNormalizedOutputs.carousel = {
+          platform: "carousel",
+          format: "slides",
+          slides: output.metadata?.slides || [],
+        };
+      }
+    }
+
+    // ------------------------------------------------------
+    // 7) Final shape sent back to Framer
     // ------------------------------------------------------
     return {
       video: {
@@ -261,8 +321,8 @@ export default defineComponent({
         force_regen: forceRegen,
         tweak_instructions: tweak || null,
       },
-      outputs: normalizedOutputs,
-      dbOutputs,
+      outputs: completeNormalizedOutputs, // ✅ Return ALL outputs, not just newly generated
+      dbOutputs: allOutputs, // ✅ Return ALL dbOutputs
       fromCache: false,
     };
   },

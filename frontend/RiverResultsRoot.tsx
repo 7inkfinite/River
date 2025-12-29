@@ -2,6 +2,7 @@ import * as React from "react"
 import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
+import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -16,6 +17,7 @@ type NormalizedRiverResult = {
     tone: string
     platforms: string[]
     twitterThread?: { tweets: string[]; raw: string }
+    linkedInPost?: { post: string; raw: string }
     instagramCarousel?: { slides: string[]; raw: string }
     receivedAt: Date
     raw: RawRiverResult
@@ -84,6 +86,24 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
         }
     }
 
+    // ---------- LinkedIn post ----------
+    let linkedInPost: { post: string; raw: string } | undefined
+    const linkedInOut = outputs.linkedin
+    if (linkedInOut) {
+        linkedInPost = {
+            post: String(linkedInOut.post ?? ""),
+            raw: String(linkedInOut.post ?? ""),
+        }
+    } else {
+        const fromDb = dbOutputs.find((row: any) => row.platform === "linkedin")
+        if (fromDb) {
+            linkedInPost = {
+                post: String(fromDb.content ?? ""),
+                raw: String(fromDb.content ?? ""),
+            }
+        }
+    }
+
     // ---------- Instagram carousel ----------
     let instagramCarousel: { slides: string[]; raw: string } | undefined
     const carouselOut = outputs.carousel
@@ -120,6 +140,7 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
         tone,
         platforms,
         twitterThread,
+        linkedInPost,
         instagramCarousel,
         receivedAt: new Date(),
         raw,
@@ -146,6 +167,15 @@ function RiverResultsInner() {
     const twCopyTimerRef = React.useRef<number | null>(null)
     const twCollapseTimerRef = React.useRef<number | null>(null)
 
+    // -------- LinkedIn card state --------
+    const [liTweakOpen, setLiTweakOpen] = React.useState(false)
+    const [liTweakText, setLiTweakText] = React.useState("")
+    const [liCopyLabel, setLiCopyLabel] = React.useState<"copy" | "copied!">(
+        "copy"
+    )
+    const liCopyTimerRef = React.useRef<number | null>(null)
+    const liCollapseTimerRef = React.useRef<number | null>(null)
+
     // -------- IG card state --------
     const [igAspect, setIgAspect] = React.useState<"1:1" | "4:5">("1:1")
     const [igIndex, setIgIndex] = React.useState(0)
@@ -161,6 +191,7 @@ function RiverResultsInner() {
         state.lastAction === "tweak" && state.status === "loading"
 
     const twIsTweakLoading = twTweakOpen && isTweakLoading
+    const liIsTweakLoading = liTweakOpen && isTweakLoading
     const igIsTweakLoading = igTweakOpen && isTweakLoading
 
     const twTweakRegenMode: RegenMode = React.useMemo(() => {
@@ -171,6 +202,15 @@ function RiverResultsInner() {
         if (state.status === "error") return "error"
         return "idle"
     }, [twTweakOpen, state.status, state.lastAction])
+
+    const liTweakRegenMode: RegenMode = React.useMemo(() => {
+        if (!liTweakOpen) return "idle"
+        if (state.lastAction !== "tweak") return "idle"
+        if (state.status === "loading") return "loading"
+        if (state.status === "success") return "success"
+        if (state.status === "error") return "error"
+        return "idle"
+    }, [liTweakOpen, state.status, state.lastAction])
 
     const igTweakRegenMode: RegenMode = React.useMemo(() => {
         if (!igTweakOpen) return "idle"
@@ -198,6 +238,10 @@ function RiverResultsInner() {
                 window.clearTimeout(twCopyTimerRef.current)
             if (twCollapseTimerRef.current)
                 window.clearTimeout(twCollapseTimerRef.current)
+            if (liCopyTimerRef.current)
+                window.clearTimeout(liCopyTimerRef.current)
+            if (liCollapseTimerRef.current)
+                window.clearTimeout(liCollapseTimerRef.current)
             if (igCollapseTimerRef.current)
                 window.clearTimeout(igCollapseTimerRef.current)
         }
@@ -230,6 +274,34 @@ function RiverResultsInner() {
             }
         }
     }, [twTweakOpen, state.lastAction, state.status])
+
+    // ✅ Auto-collapse LinkedIn tweak panel ~2.5s after tweak success
+    React.useEffect(() => {
+        const isTweakSuccess =
+            liTweakOpen &&
+            state.lastAction === "tweak" &&
+            state.status === "success"
+
+        if (!isTweakSuccess) return
+
+        if (liCollapseTimerRef.current) {
+            window.clearTimeout(liCollapseTimerRef.current)
+            liCollapseTimerRef.current = null
+        }
+
+        liCollapseTimerRef.current = window.setTimeout(() => {
+            setLiTweakOpen(false)
+            setLiTweakText("")
+            liCollapseTimerRef.current = null
+        }, 2500)
+
+        return () => {
+            if (liCollapseTimerRef.current) {
+                window.clearTimeout(liCollapseTimerRef.current)
+                liCollapseTimerRef.current = null
+            }
+        }
+    }, [liTweakOpen, state.lastAction, state.status])
 
     // ✅ Auto-collapse IG tweak panel ~2.5s after tweak success
     React.useEffect(() => {
@@ -301,6 +373,10 @@ function RiverResultsInner() {
         ""
     const hasTwitterOutput = Boolean(twitterText)
 
+    // ---------- LinkedIn derived ----------
+    const linkedInText = result.linkedInPost?.post || ""
+    const hasLinkedInOutput = Boolean(linkedInText)
+
     // ---------- Instagram derived ----------
     const igSlides = result.instagramCarousel?.slides || []
     const igCount = igSlides.length
@@ -351,7 +427,44 @@ function RiverResultsInner() {
         regenerate({
             tweak_instructions: twTweakText,
             force_regen: true,
-            extra_options: { target_platform: "twitter" }, //
+            extra_options: { target_platform: "twitter" },
+        })
+    }
+
+    const handleLinkedInCopy = async () => {
+        if (!hasLinkedInOutput) return
+        try {
+            await navigator.clipboard.writeText(linkedInText)
+            setLiCopyLabel("copied!")
+            if (liCopyTimerRef.current)
+                window.clearTimeout(liCopyTimerRef.current)
+            liCopyTimerRef.current = window.setTimeout(
+                () => setLiCopyLabel("copy"),
+                1400
+            )
+        } catch (e) {
+            console.warn("Clipboard not available", e)
+        }
+    }
+
+    const handleLinkedInToggleTweak = () => {
+        if (liIsTweakLoading) return
+        setLiTweakOpen((open) => {
+            const next = !open
+            setLiCopyLabel("copy")
+            if (!next && liCollapseTimerRef.current) {
+                window.clearTimeout(liCollapseTimerRef.current)
+                liCollapseTimerRef.current = null
+            }
+            return next
+        })
+    }
+
+    const handleLinkedInRegenerate = () => {
+        regenerate({
+            tweak_instructions: liTweakText,
+            force_regen: true,
+            extra_options: { target_platform: "linkedin" },
         })
     }
 
@@ -391,7 +504,7 @@ function RiverResultsInner() {
         regenerate({
             tweak_instructions: igTweakText,
             force_regen: true,
-            extra_options: { target_platform: "carousel" }, // ✅ NEW
+            extra_options: { target_platform: "carousel" },
         })
     }
 
@@ -407,22 +520,44 @@ function RiverResultsInner() {
             }}
         >
             {/* ---------------- Twitter ---------------- */}
-            <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
-                <TwitterThreadCard
-                    title={result.videoTitle}
-                    threadText={twitterText}
-                    tweakOpen={twTweakOpen}
-                    onToggleTweak={handleTwitterToggleTweak}
-                    tweakToggleDisabled={twIsTweakLoading}
-                    tweakText={twTweakText}
-                    onChangeTweakText={setTwTweakText}
-                    onRegenerate={handleTwitterRegenerate}
-                    regenMode={twTweakRegenMode}
-                    onCopy={handleTwitterCopy}
-                    copyLabel={twCopyLabel}
-                    copyDisabled={!hasTwitterOutput || twTweakOpen}
-                />
-            </div>
+            {hasTwitterOutput && (
+                <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
+                    <TwitterThreadCard
+                        title={result.videoTitle}
+                        threadText={twitterText}
+                        tweakOpen={twTweakOpen}
+                        onToggleTweak={handleTwitterToggleTweak}
+                        tweakToggleDisabled={twIsTweakLoading}
+                        tweakText={twTweakText}
+                        onChangeTweakText={setTwTweakText}
+                        onRegenerate={handleTwitterRegenerate}
+                        regenMode={twTweakRegenMode}
+                        onCopy={handleTwitterCopy}
+                        copyLabel={twCopyLabel}
+                        copyDisabled={!hasTwitterOutput || twTweakOpen}
+                    />
+                </div>
+            )}
+
+            {/* ---------------- LinkedIn ---------------- */}
+            {hasLinkedInOutput && (
+                <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
+                    <LinkedInPostCard
+                        title={result.videoTitle}
+                        postText={linkedInText}
+                        tweakOpen={liTweakOpen}
+                        onToggleTweak={handleLinkedInToggleTweak}
+                        tweakToggleDisabled={liIsTweakLoading}
+                        tweakText={liTweakText}
+                        onChangeTweakText={setLiTweakText}
+                        onRegenerate={handleLinkedInRegenerate}
+                        regenMode={liTweakRegenMode}
+                        onCopy={handleLinkedInCopy}
+                        copyLabel={liCopyLabel}
+                        copyDisabled={!hasLinkedInOutput || liTweakOpen}
+                    />
+                </div>
+            )}
 
             {/* ------------- Instagram carousel ------------- */}
             {hasIgOutput && (
