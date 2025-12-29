@@ -1,0 +1,60 @@
+//pipedream workflow is triggered when framer sends it's payload to this webhook that exports the following custom payload
+//NOTE! This is a sample values. Use this to understand the structure.
+//domains - pipedream.net
+//authorization - none
+//url to trigger the workflow - https://eo8cimuv49hq45d.m.pipedream.net
+{
+  "context": {
+    "id": "37L8BRU1Kd7UDqDYvEJ0Q65Lrx4",
+    "ts": "2025-12-25T13:54:14.219Z",
+    "pipeline_id": null,
+    "workflow_id": "p_xMC5jwb",
+    "deployment_id": "d_lBsZma3L",
+    "source_type": "TRACE",
+    "verified": false,
+    "hops": null,
+    "test": true,
+    "replay": false,
+    "owner_id": "o_R5I0Z0o",
+    "platform_version": "3.61.1",
+    "workflow_name": "YouTube Transcript to LLM Processor",
+    "resume": null,
+    "emitter_id": "hi_nlH3qZb",
+    "external_user_id": null,
+    "external_user_environment": null,
+    "trace_id": "37L8BRU1Kd7UDqDYvEJ0Q65Lrx4",
+    "project_id": "proj_9lsvKG0"
+  },
+  "event": {
+    "body": {
+      "force_regen": false,
+      "platforms": [
+        "twitter",
+        "linkedin",
+        "carousel"
+      ],
+      "youtube_url": "https://www.youtube.com/watch?v=0XI_Xt0ci2Y&t=2s"
+    },
+    "client_ip": "223.178.82.206",
+    "headers": {
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, br, zstd",
+      "accept-language": "en-US,en;q=0.5",
+      "content-length": "132",
+      "content-type": "application/json",
+      "host": "eo8cimuv49hq45d.m.pipedream.net",
+      "origin": "https://project-mk1zm382lghqeexqliym.framercanvas.com",
+      "priority": "u=0",
+      "referer": "https://project-mk1zm382lghqeexqliym.framercanvas.com/",
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "cross-site",
+      "sec-gpc": "1",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:139.0) Gecko/20100101 Firefox/139.0"
+    },
+    "method": "POST",
+    "path": "/",
+    "query": {},
+    "url": "https://eo8cimuv49hq45d.m.pipedream.net/"
+  }
+}
