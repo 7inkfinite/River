@@ -1,7 +1,8 @@
 // code/InstagramCarouselCard.tsx
 import * as React from "react"
 import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
-import type { RegenMode } from "./TwitterThreadCard.tsx"
+
+export type RegenMode = "idle" | "loading" | "success" | "error"
 
 export function InstagramCarouselCard(props: {
     title: string
@@ -134,7 +135,7 @@ export function InstagramCarouselCard(props: {
                 >
                     <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
                     <div style={{ color: "#7A7A7A", fontSize: 13 }}>
-                        {slides[safeIndex]?.length || 0} chars
+                        {slides?.[safeIndex]?.length || 0} chars
                     </div>
                 </div>
 
