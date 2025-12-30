@@ -4,7 +4,6 @@ import { Repeat, Copy, X } from "lucide-react"
 export type RegenMode = "idle" | "loading" | "success" | "error"
 
 export type LinkedInPostCardProps = {
-    title: string
     postText: string
 
     onToggleTweak: () => void
@@ -22,7 +21,6 @@ export type LinkedInPostCardProps = {
 }
 
 export function LinkedInPostCard({
-    title,
     postText,
 
     onToggleTweak,
@@ -68,7 +66,7 @@ export function LinkedInPostCard({
                 position: "relative",
             }}
         >
-            {/* STACK containing title + output */}
+            {/* STACK containing output */}
             <div
                 style={{
                     width: "100%",
@@ -84,29 +82,15 @@ export function LinkedInPostCard({
                     zIndex: 1,
                 }}
             >
-                {/* Title and Character Count */}
+                {/* Character Count */}
                 <div
                     style={{
                         width: "100%",
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 12,
+                        justifyContent: "flex-start",
                         flex: "0 0 auto",
                     }}
                 >
-                    <div
-                        style={{
-                            textAlign: "left",
-                            fontFamily:
-                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                            fontSize: 16,
-                            lineHeight: "1.3em",
-                            color: "#7A7A7A",
-                        }}
-                    >
-                        {title}
-                    </div>
                     <div
                         style={{
                             fontFamily:

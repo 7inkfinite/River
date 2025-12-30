@@ -71,8 +71,42 @@ Try it out and let me know what you think! Would love your feedback.
                 padding: 20,
             }}
         >
+            <div
+                style={{
+                    width: "100%",
+                    maxWidth: 840,
+                    margin: "0 auto 8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                }}
+            >
+                <div
+                    style={{
+                        fontFamily:
+                            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontSize: 24,
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                        color: "#2F2F2F",
+                    }}
+                >
+                    How to Build a SaaS Product in 2024
+                </div>
+                <div
+                    style={{
+                        fontFamily:
+                            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                        fontSize: 14,
+                        lineHeight: 1.4,
+                        color: "#7A7A7A",
+                    }}
+                >
+                    YouTube Video • dQw4w9WgXcQ
+                </div>
+            </div>
+
             <LinkedInPostCard
-                title="How to Build a SaaS Product in 2024"
                 postText={dummyPost}
                 tweakOpen={tweakOpen}
                 onToggleTweak={() => setTweakOpen(!tweakOpen)}

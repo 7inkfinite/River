@@ -572,7 +572,6 @@ function RiverResultsInner() {
             {hasTwitterOutput && (
                 <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
                     <TwitterThreadCard
-                        title={result.videoTitle}
                         threadText={twitterText}
                         tweakOpen={twTweakOpen}
                         onToggleTweak={handleTwitterToggleTweak}
@@ -592,7 +591,6 @@ function RiverResultsInner() {
             {hasLinkedInOutput && (
                 <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
                     <LinkedInPostCard
-                        title={result.videoTitle}
                         postText={linkedInText}
                         tweakOpen={liTweakOpen}
                         onToggleTweak={handleLinkedInToggleTweak}
@@ -611,8 +609,6 @@ function RiverResultsInner() {
             {/* ------------- Instagram carousel ------------- */}
             {hasIgOutput && (
                 <InstagramCarouselCard
-                    title="Instagram carousel"
-                    videoTitle={result.videoTitle}
                     slides={igSlides}
                     aspect={igAspect}
                     onToggleAspect={() =>

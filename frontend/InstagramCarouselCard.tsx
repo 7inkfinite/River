@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
 export type RegenMode = "idle" | "loading" | "success" | "error"
 
 export function InstagramCarouselCard(props: {
-    title: string
     slides: string[]
 
     aspect: "1:1" | "4:5"
@@ -25,7 +24,6 @@ export function InstagramCarouselCard(props: {
     onCopyAll: () => void
 }) {
     const {
-        title,
         slides,
         aspect,
         onToggleAspect,
@@ -125,18 +123,8 @@ export function InstagramCarouselCard(props: {
                     marginBottom: 14,
                 }}
             >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        flex: 1,
-                    }}
-                >
-                    <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
-                    <div style={{ color: "#7A7A7A", fontSize: 13 }}>
-                        {slides?.[safeIndex]?.length || 0} chars
-                    </div>
+                <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                    {slides?.[safeIndex]?.length || 0} chars
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
