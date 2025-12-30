@@ -44,7 +44,7 @@ export function InstagramCarouselCard(props: {
     const trackRef = React.useRef<HTMLDivElement | null>(null)
     const [index, setIndex] = React.useState(0)
 
-    const count = slides.length
+    const count = slides?.length || 0
     const safeIndex = Math.max(0, Math.min(index, count - 1))
     const isLoading = regenMode === "loading"
 
@@ -177,7 +177,7 @@ export function InstagramCarouselCard(props: {
                         scrollbarWidth: "none",
                     }}
                 >
-                    {slides.map((text, i) => (
+                    {slides?.map((text, i) => (
                         <div
                             key={i}
                             style={{
@@ -245,7 +245,7 @@ export function InstagramCarouselCard(props: {
                         pointerEvents: "none",
                     }}
                 >
-                    {slides.map((_, i) => (
+                    {slides?.map((_, i) => (
                         <div
                             key={i}
                             style={{
