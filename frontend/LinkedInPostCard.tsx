@@ -116,7 +116,7 @@ export function LinkedInPostCard({
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {postText.length} chars
+                        {postText?.length || 0} chars
                     </div>
                 </div>
 

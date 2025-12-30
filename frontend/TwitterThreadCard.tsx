@@ -152,7 +152,7 @@ export function TwitterThreadCard({
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {threadText.length} chars
+                        {threadText?.length || 0} chars
                     </div>
                 </div>
 
