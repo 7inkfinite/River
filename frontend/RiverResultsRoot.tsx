@@ -1381,17 +1381,58 @@ function LoadingSkeletonCard() {
                 overflow: "hidden",
             }}
         >
-            {/* Animated gradient overlay */}
+            {/* Water ripple animations - multiple ripples with different timings */}
             <div
                 style={{
                     position: "absolute",
                     inset: 0,
-                    background:
-                        "linear-gradient(90deg, transparent 0%, rgba(124, 138, 17, 0.12) 20%, rgba(124, 138, 17, 0.18) 50%, rgba(124, 138, 17, 0.12) 80%, transparent 100%)",
-                    animation: "river-gradient-flow 2.5s ease-in-out infinite",
                     borderRadius: 24,
+                    pointerEvents: "none",
                 }}
-            />
+            >
+                {/* Ripple 1 */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "30%",
+                        left: "25%",
+                        width: 120,
+                        height: 120,
+                        borderRadius: "50%",
+                        background:
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.15) 0%, rgba(124, 138, 17, 0.08) 40%, transparent 70%)",
+                        animation: "river-ripple 3s ease-out infinite",
+                    }}
+                />
+                {/* Ripple 2 */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "60%",
+                        left: "65%",
+                        width: 100,
+                        height: 100,
+                        borderRadius: "50%",
+                        background:
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.12) 0%, rgba(124, 138, 17, 0.06) 40%, transparent 70%)",
+                        animation: "river-ripple 3s ease-out infinite 0.8s",
+                    }}
+                />
+                {/* Ripple 3 */}
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "45%",
+                        left: "50%",
+                        width: 90,
+                        height: 90,
+                        borderRadius: "50%",
+                        background:
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.1) 0%, rgba(124, 138, 17, 0.05) 40%, transparent 70%)",
+                        animation: "river-ripple 3s ease-out infinite 1.6s",
+                    }}
+                />
+            </div>
 
             {/* Skeleton content structure */}
             <div
@@ -1453,12 +1494,17 @@ function LoadingSkeletonCard() {
 
             <style>
                 {`
-                @keyframes river-gradient-flow {
+                @keyframes river-ripple {
                     0% {
-                        transform: translateX(-100%);
+                        transform: scale(0.5) translate(-50%, -50%);
+                        opacity: 0;
+                    }
+                    20% {
+                        opacity: 1;
                     }
                     100% {
-                        transform: translateX(100%);
+                        transform: scale(2.5) translate(-50%, -50%);
+                        opacity: 0;
                     }
                 }
             `}
