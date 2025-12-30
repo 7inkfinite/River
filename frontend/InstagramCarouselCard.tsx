@@ -124,16 +124,25 @@ export function InstagramCarouselCard(props: {
                     marginBottom: 14,
                 }}
             >
-                <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        flex: 1,
+                    }}
+                >
+                    <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
+                    <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                        {slides[safeIndex]?.length || 0} chars
+                    </div>
+                </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <button
-                        onClick={onToggleAspect}
-                        style={pillBtn()}
-                        title="Toggle aspect ratio"
-                    >
-                        {aspect === "1:1" ? "1:1" : "4:5"}
-                    </button>
+                    <AspectRatioToggle
+                        aspect={aspect}
+                        onToggle={onToggleAspect}
+                    />
 
                     <div style={{ color: "#7A7A7A", fontSize: 13 }}>
                         {safeIndex + 1} / {count}
@@ -353,21 +362,88 @@ export function InstagramCarouselCard(props: {
 /* Shared little UI bits                                                */
 /* ------------------------------------------------------------------ */
 
-function pillBtn(): React.CSSProperties {
-    return {
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        border: "none",
-        borderRadius: 999,
-        padding: "8px 12px",
-        backgroundColor: "rgba(124, 138, 17, 0.16)",
-        cursor: "pointer",
-        color: "rgba(47,47,47,0.72)",
-        fontFamily:
-            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        fontSize: 13,
-    }
+function AspectRatioToggle({
+    aspect,
+    onToggle,
+}: {
+    aspect: "1:1" | "4:5"
+    onToggle: () => void
+}) {
+    const [hover, setHover] = React.useState(false)
+
+    return (
+        <div
+            style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: 4,
+                backgroundColor: "rgba(124, 138, 17, 0.12)",
+                borderRadius: 999,
+                fontFamily:
+                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+            }}
+        >
+            <button
+                onClick={aspect === "4:5" ? onToggle : undefined}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                style={{
+                    padding: "6px 10px",
+                    border: "none",
+                    borderRadius: 999,
+                    backgroundColor:
+                        aspect === "1:1"
+                            ? "#FAF7ED"
+                            : hover && aspect === "4:5"
+                              ? "rgba(124, 138, 17, 0.08)"
+                              : "transparent",
+                    color:
+                        aspect === "1:1"
+                            ? "rgba(47,47,47,0.85)"
+                            : "rgba(47,47,47,0.55)",
+                    cursor: aspect === "1:1" ? "default" : "pointer",
+                    transition:
+                        "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                    fontWeight: "inherit",
+                }}
+            >
+                1:1
+            </button>
+            <button
+                onClick={aspect === "1:1" ? onToggle : undefined}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                style={{
+                    padding: "6px 10px",
+                    border: "none",
+                    borderRadius: 999,
+                    backgroundColor:
+                        aspect === "4:5"
+                            ? "#FAF7ED"
+                            : hover && aspect === "1:1"
+                              ? "rgba(124, 138, 17, 0.08)"
+                              : "transparent",
+                    color:
+                        aspect === "4:5"
+                            ? "rgba(47,47,47,0.85)"
+                            : "rgba(47,47,47,0.55)",
+                    cursor: aspect === "4:5" ? "default" : "pointer",
+                    transition:
+                        "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                    fontWeight: "inherit",
+                }}
+            >
+                4:5
+            </button>
+        </div>
+    )
 }
 
 function IconOnlyActionButton({

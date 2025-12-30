@@ -120,20 +120,40 @@ export function TwitterThreadCard({
                     zIndex: 1,
                 }}
             >
-                {/* Title */}
+                {/* Title and Character Count */}
                 <div
                     style={{
                         width: "100%",
-                        textAlign: "left",
-                        fontFamily:
-                            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: 16,
-                        lineHeight: "1.3em",
-                        color: "#7A7A7A",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
                         flex: "0 0 auto",
                     }}
                 >
-                    {title}
+                    <div
+                        style={{
+                            textAlign: "left",
+                            fontFamily:
+                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                            fontSize: 16,
+                            lineHeight: "1.3em",
+                            color: "#7A7A7A",
+                        }}
+                    >
+                        {title}
+                    </div>
+                    <div
+                        style={{
+                            fontFamily:
+                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                            fontSize: 13,
+                            color: "#7A7A7A",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {threadText.length} chars
+                    </div>
                 </div>
 
                 {/* OUTPUT CONTENT BOX */}
@@ -301,8 +321,9 @@ function IconOnlyActionButton({
     disabled?: boolean
 }) {
     const [hover, setHover] = React.useState(false)
-    const baseBg = "rgba(124, 138, 17, 0.22)"
-    const hoverBg = "rgba(124, 138, 17, 0.30)"
+
+    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
         <button
@@ -320,16 +341,14 @@ function IconOnlyActionButton({
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "8px",
-                boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)",
-                backgroundColor: hover ? hoverBg : baseBg,
-                overflow: "clip",
+                backgroundColor: bg,
                 borderRadius: 24,
                 border: "none",
                 cursor: disabled ? "default" : "pointer",
                 opacity: disabled ? 0.45 : 1,
                 transition:
-                    "background-color 250ms cubic-bezier(0.25,0.1,0.25,1), opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
-                color: "#2F2F2F",
+                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                color: fg,
             }}
         >
             <span
