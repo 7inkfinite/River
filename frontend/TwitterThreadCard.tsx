@@ -13,7 +13,6 @@ function svgToDataUrl(svg: string) {
 export type RegenMode = "idle" | "loading" | "success" | "error"
 
 export type TwitterThreadCardProps = {
-    title: string
     threadText: string
 
     onToggleTweak: () => void
@@ -36,7 +35,6 @@ export type TwitterThreadCardProps = {
 }
 
 export function TwitterThreadCard({
-    title,
     threadText,
 
     onToggleTweak,
@@ -104,7 +102,7 @@ export function TwitterThreadCard({
                 }}
             />
 
-            {/* STACK containing title + output */}
+            {/* STACK containing output */}
             <div
                 style={{
                     width: "100%",
@@ -120,20 +118,26 @@ export function TwitterThreadCard({
                     zIndex: 1,
                 }}
             >
-                {/* Title */}
+                {/* Character Count */}
                 <div
                     style={{
                         width: "100%",
-                        textAlign: "left",
-                        fontFamily:
-                            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                        fontSize: 16,
-                        lineHeight: "1.3em",
-                        color: "#7A7A7A",
+                        display: "flex",
+                        justifyContent: "flex-start",
                         flex: "0 0 auto",
                     }}
                 >
-                    {title}
+                    <div
+                        style={{
+                            fontFamily:
+                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                            fontSize: 13,
+                            color: "#7A7A7A",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {threadText?.length || 0} chars
+                    </div>
                 </div>
 
                 {/* OUTPUT CONTENT BOX */}
@@ -301,8 +305,9 @@ function IconOnlyActionButton({
     disabled?: boolean
 }) {
     const [hover, setHover] = React.useState(false)
-    const baseBg = "rgba(124, 138, 17, 0.22)"
-    const hoverBg = "rgba(124, 138, 17, 0.30)"
+
+    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
         <button
@@ -320,16 +325,14 @@ function IconOnlyActionButton({
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "8px",
-                boxShadow: "0px 1px 1px 0px rgba(0, 0, 0, 0.25)",
-                backgroundColor: hover ? hoverBg : baseBg,
-                overflow: "clip",
+                backgroundColor: bg,
                 borderRadius: 24,
                 border: "none",
                 cursor: disabled ? "default" : "pointer",
                 opacity: disabled ? 0.45 : 1,
                 transition:
-                    "background-color 250ms cubic-bezier(0.25,0.1,0.25,1), opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
-                color: "#2F2F2F",
+                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                color: fg,
             }}
         >
             <span
