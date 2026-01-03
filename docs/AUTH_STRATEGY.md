@@ -172,35 +172,6 @@ CREATE POLICY "Users can view own outputs" ON outputs
 
 ---
 
-## Implementation Phases
-
-### Phase 1: Core Authentication (MVP)
-- [ ] Enable Supabase Auth (Email + Google provider)
-- [ ] Create AuthProvider.tsx for Framer
-- [ ] Create LoginForm.tsx component
-- [ ] Update validate_input.js to verify JWT
-- [ ] Add user_id columns to database
-- [ ] Basic RLS policies
-
-### Phase 2: Data Association
-- [ ] Update upsert_video.js to save user_id
-- [ ] Update save_generation.js to save user_id
-- [ ] Update check_cache.js to scope cache by user
-- [ ] Create migration for existing data
-
-### Phase 3: User Experience
-- [ ] Add logout functionality
-- [ ] Show user email/avatar in UI
-- [ ] Handle session expiry gracefully
-- [ ] Add "forgot password" flow
-
-### Phase 4: Dashboard Preparation
-- [ ] Document shared auth architecture for river-dashboard
-- [ ] Consider adding user profile table (display name, preferences)
-- [ ] Add API endpoint for listing user's generations
-
----
-
 ## Shared Auth for Dashboard (river-dashboard)
 
 Since both River and river-dashboard will use the same Supabase project:
@@ -243,26 +214,220 @@ const { data: generations } = await supabase
 
 ---
 
-## Open Questions
+## Decisions
 
-1. **Legacy data handling**: What to do with existing generations without user_id?
-   - Option A: Assign to an "admin" account
-   - Option B: Leave null, exclude from user dashboards
-   - Option C: Delete and start fresh
+| Question | Decision |
+|----------|----------|
+| **Legacy data** | Delete existing data (test data only) |
+| **Anonymous usage** | Yes - allow anonymous generation |
+| **Team support** | Not needed |
 
-2. **Anonymous usage**: Should users be able to generate without logging in?
-   - If yes: Need separate "anonymous" flow, convert to user later
-   - If no: Simpler auth gate, all generations tracked
+---
 
-3. **Team/Org support**: Future consideration for shared workspaces?
-   - Affects database schema (add organization_id?)
-   - Can be added later without breaking changes
+## Anonymous User Flow
+
+Users can generate content without logging in. Their generations are tracked via a local session and can be claimed when they sign up.
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ANONYMOUS USER JOURNEY                           │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Visit App  │────▶│  Generate    │────▶│  See Result  │
+│              │     │  (no login)  │     │              │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                            │ anonymous_session_id stored
+                            │ in localStorage + sent to API
+                            ▼
+                     ┌──────────────┐
+                     │  generations │
+                     │  table with  │
+                     │  session_id  │
+                     │  (no user_id)│
+                     └──────────────┘
+                            │
+        ┌───────────────────┴───────────────────┐
+        ▼                                       ▼
+┌──────────────┐                        ┌──────────────┐
+│ User leaves  │                        │ User signs   │
+│ (data stays  │                        │ up / logs in │
+│ 30 days)     │                        └──────────────┘
+└──────────────┘                               │
+                                               ▼
+                                        ┌──────────────┐
+                                        │ Claim flow:  │
+                                        │ UPDATE gens  │
+                                        │ SET user_id  │
+                                        │ WHERE        │
+                                        │ session_id=X │
+                                        └──────────────┘
+                                               │
+                                               ▼
+                                        ┌──────────────┐
+                                        │ Dashboard    │
+                                        │ shows all    │
+                                        │ generations  │
+                                        └──────────────┘
+```
+
+### Implementation Details
+
+**1. Session ID Generation (Frontend)**
+```typescript
+// On first visit, generate a session ID
+const getOrCreateSessionId = () => {
+  let sessionId = localStorage.getItem('river_session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('river_session_id', sessionId);
+  }
+  return sessionId;
+};
+```
+
+**2. Database Schema Addition**
+```sql
+-- Add anonymous_session_id to generations
+ALTER TABLE generations
+ADD COLUMN anonymous_session_id UUID;
+
+-- Index for claim queries
+CREATE INDEX idx_generations_session ON generations(anonymous_session_id);
+```
+
+**3. Backend Logic (validate_input.js)**
+```javascript
+// Extract user identity
+const authHeader = headers['authorization'];
+const sessionId = body.session_id;
+
+let userId = null;
+let anonymousSessionId = null;
+
+if (authHeader) {
+  // Authenticated user - verify JWT
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user } } = await supabase.auth.getUser(token);
+  userId = user?.id;
+} else if (sessionId) {
+  // Anonymous user - use session ID
+  anonymousSessionId = sessionId;
+}
+
+// Pass to downstream steps
+return { userId, anonymousSessionId, ...rest };
+```
+
+**4. Claim Flow (on signup/login)**
+```typescript
+// After successful authentication
+const claimAnonymousGenerations = async (userId: string) => {
+  const sessionId = localStorage.getItem('river_session_id');
+  if (!sessionId) return;
+
+  await supabase
+    .from('generations')
+    .update({ user_id: userId, anonymous_session_id: null })
+    .eq('anonymous_session_id', sessionId);
+
+  // Clear session ID after claiming
+  localStorage.removeItem('river_session_id');
+};
+```
+
+**5. RLS Policy Update**
+```sql
+-- Anonymous users can view their session's data
+CREATE POLICY "Anonymous can view own generations" ON generations
+  FOR SELECT USING (
+    anonymous_session_id IS NOT NULL
+    AND anonymous_session_id = current_setting('app.session_id', true)::uuid
+  );
+
+-- OR simpler: no RLS for anonymous, just filter in application code
+```
+
+### Anonymous vs Authenticated Comparison
+
+| Aspect | Anonymous | Authenticated |
+|--------|-----------|---------------|
+| Can generate | ✅ Yes | ✅ Yes |
+| Data persisted | ✅ 30 days | ✅ Forever |
+| See in dashboard | ❌ No | ✅ Yes |
+| Cross-device access | ❌ No | ✅ Yes |
+| Rate limits | Stricter | More generous |
+| Cache scoping | Per session | Per user |
+
+### Rate Limiting for Anonymous Users
+
+To prevent abuse, anonymous users should have stricter limits:
+
+```javascript
+// In validate_input.js
+const RATE_LIMITS = {
+  anonymous: { requests: 5, window: '1h' },
+  authenticated: { requests: 50, window: '1h' }
+};
+```
+
+### Data Retention
+
+- Anonymous generations: **30 days** TTL (cleanup via scheduled job)
+- Authenticated generations: **Forever** (user can delete manually)
+
+```sql
+-- Cleanup job (run daily)
+DELETE FROM generations
+WHERE user_id IS NULL
+  AND anonymous_session_id IS NOT NULL
+  AND created_at < NOW() - INTERVAL '30 days';
+```
+
+---
+
+## Updated Implementation Phases
+
+### Phase 1: Anonymous Foundation
+- [ ] Add `anonymous_session_id` column to database
+- [ ] Generate session ID in frontend (localStorage)
+- [ ] Update validate_input.js to accept session ID
+- [ ] Update save_generation.js to store session ID
+- [ ] Delete existing test data
+
+### Phase 2: Authentication Layer
+- [ ] Enable Supabase Auth (Email + Google provider)
+- [ ] Create AuthProvider.tsx for Framer
+- [ ] Create LoginForm.tsx component
+- [ ] Update validate_input.js to verify JWT
+- [ ] Add user_id columns to database
+- [ ] Basic RLS policies
+
+### Phase 3: Claim Flow
+- [ ] Implement claim function (anonymous → user)
+- [ ] Call claim on successful login/signup
+- [ ] Handle edge cases (conflicting data, etc.)
+
+### Phase 4: User Experience
+- [ ] Add logout functionality
+- [ ] Show user email/avatar in UI
+- [ ] Handle session expiry gracefully
+- [ ] Add "forgot password" flow
+- [ ] Add "Sign up to save your generations" prompt
+
+### Phase 5: Dashboard Preparation
+- [ ] Document shared auth architecture for river-dashboard
+- [ ] API endpoint for listing user's generations
+- [ ] Add anonymous data cleanup job
 
 ---
 
 ## Next Steps
 
-1. Finalize decisions on open questions
-2. Set up Google OAuth credentials in Google Cloud Console
-3. Enable Supabase Auth providers
+1. Set up Google OAuth credentials in Google Cloud Console
+2. Enable Supabase Auth providers
+3. Delete existing test data from Supabase
 4. Begin Phase 1 implementation
