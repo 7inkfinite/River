@@ -94,6 +94,11 @@ export default defineComponent({
       platforms = [target_platform];
     }
 
+    // --- Anonymous session ID for tracking generations before login ---
+    const session_id = body.session_id && typeof body.session_id === "string"
+      ? body.session_id.trim()
+      : null;
+
     // Expose to later steps as steps.validate_input.*
     const result = {
       videoId: idMatch[1],
@@ -103,6 +108,7 @@ export default defineComponent({
       force_regen,
       tweak_instructions,
       extra_options, // ✅ NEW: needed for cache key + later steps
+      session_id, // ✅ Anonymous session tracking
       source: {
         hasBody: !!evt.body,
         hasQuery: !!evt.query,
