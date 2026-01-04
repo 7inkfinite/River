@@ -199,8 +199,9 @@ Try it out and let me know what you think! Would love your feedback.
                     margin: "0 auto 8px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: 6,
+                    alignItems: "center",
                     textAlign: "center",
+                    gap: 6,
                 }}
             >
                 <div
