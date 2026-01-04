@@ -714,13 +714,10 @@ function InstagramCarouselCard(props: {
                 <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <button
-                        onClick={onToggleAspect}
-                        style={pillBtn()}
-                        title="Toggle aspect ratio"
-                    >
-                        {aspect === "1:1" ? "1:1" : "4:5"}
-                    </button>
+                    <AspectRatioToggle
+                        aspect={aspect}
+                        onToggle={onToggleAspect}
+                    />
 
                     <div style={{ color: "#7A7A7A", fontSize: 13 }}>
                         {index + 1} / {count}
@@ -948,21 +945,81 @@ function InstagramCarouselCard(props: {
 /* Shared little UI bits (same as your demo)                            */
 /* ------------------------------------------------------------------ */
 
-function pillBtn(): React.CSSProperties {
-    return {
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        border: "none",
-        borderRadius: 999,
-        padding: "8px 12px",
-        backgroundColor: "rgba(124, 138, 17, 0.16)",
-        cursor: "pointer",
-        color: "rgba(47,47,47,0.72)",
-        fontFamily:
-            "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        fontSize: 13,
-    }
+function AspectRatioToggle({
+    aspect,
+    onToggle,
+}: {
+    aspect: "1:1" | "4:5"
+    onToggle: () => void
+}) {
+    return (
+        <div
+            style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0,
+                padding: 4,
+                backgroundColor: "rgba(124, 138, 17, 0.12)",
+                borderRadius: 999,
+                fontFamily:
+                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontSize: 12,
+                fontWeight: 500,
+            }}
+        >
+            <AspectToggleButton
+                label="1:1"
+                isActive={aspect === "1:1"}
+                onClick={() => aspect !== "1:1" && onToggle()}
+            />
+            <AspectToggleButton
+                label="4:5"
+                isActive={aspect === "4:5"}
+                onClick={() => aspect !== "4:5" && onToggle()}
+            />
+        </div>
+    )
+}
+
+function AspectToggleButton({
+    label,
+    isActive,
+    onClick,
+}: {
+    label: string
+    isActive: boolean
+    onClick: () => void
+}) {
+    const [hover, setHover] = React.useState(false)
+
+    return (
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+                padding: "6px 10px",
+                border: "none",
+                borderRadius: 999,
+                backgroundColor: isActive
+                    ? "#FAF7ED"
+                    : hover
+                      ? "rgba(124, 138, 17, 0.08)"
+                      : "transparent",
+                color: isActive
+                    ? "rgba(47,47,47,0.85)"
+                    : "rgba(47,47,47,0.55)",
+                cursor: isActive ? "default" : "pointer",
+                transition:
+                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+                fontWeight: "inherit",
+            }}
+        >
+            {label}
+        </button>
+    )
 }
 
 function IconOnlyActionButton({
@@ -1326,6 +1383,8 @@ function VideoHeader({
                 margin: "0 auto 8px",
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
                 gap: 6,
             }}
         >

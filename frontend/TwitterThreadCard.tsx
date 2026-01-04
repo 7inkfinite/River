@@ -71,149 +71,158 @@ export function TwitterThreadCard({
     return (
         <div
             style={{
-                boxSizing: "border-box",
                 width: "100%",
-                maxHeight: 590,
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "flex-end",
-                padding: "40px 20px 20px 20px",
-                backgroundColor: "#FAF7ED",
-                overflow: "clip",
-                gap: 24,
-                borderRadius: 24,
-                border: "1px solid #E0CD9D",
-                position: "relative",
+                gap: 14,
             }}
         >
-            {/* PATTERN LAYER */}
+            {/* MAIN CARD */}
             <div
                 style={{
-                    position: "absolute",
-                    inset: 0,
-                    pointerEvents: "none",
-                    zIndex: 0,
-                    opacity: patternOpacity,
-                    backgroundImage: `url("${patternUrl}")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: `${patternSizePx}px ${patternSizePx}px`,
-                    backgroundPosition: `${patternOffsetX}px ${patternOffsetY}px`,
-                }}
-            />
-
-            {/* STACK containing output */}
-            <div
-                style={{
+                    boxSizing: "border-box",
                     width: "100%",
-                    flex: 1,
-                    minHeight: 0,
+                    maxHeight: 590,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-start",
-                    alignItems: "center",
-                    padding: 0,
-                    gap: 10,
+                    alignItems: "flex-end",
+                    padding: "40px 20px 20px 20px",
+                    backgroundColor: "#FAF7ED",
+                    overflow: "clip",
+                    gap: 24,
+                    borderRadius: 24,
+                    border: "1px solid #E0CD9D",
                     position: "relative",
-                    zIndex: 1,
                 }}
             >
-                {/* Character Count */}
+                {/* PATTERN LAYER */}
                 <div
                     style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        flex: "0 0 auto",
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        zIndex: 0,
+                        opacity: patternOpacity,
+                        backgroundImage: `url("${patternUrl}")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: `${patternSizePx}px ${patternSizePx}px`,
+                        backgroundPosition: `${patternOffsetX}px ${patternOffsetY}px`,
                     }}
-                >
-                    <div
-                        style={{
-                            fontFamily:
-                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                            fontSize: 13,
-                            color: "#7A7A7A",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {threadText?.length || 0} chars
-                    </div>
-                </div>
+                />
 
-                {/* OUTPUT CONTENT BOX */}
+                {/* STACK containing output */}
                 <div
                     style={{
-                        boxSizing: "border-box",
                         width: "100%",
                         flex: 1,
                         minHeight: 0,
                         display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                        padding: 16,
-                        backgroundColor: "#FAF8F0",
-                        overflowY: "auto",
-                        overflowX: "hidden",
-                        zIndex: 1,
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        padding: 0,
                         gap: 10,
-                        borderRadius: 24,
-                        boxShadow: "inset 0px 0px 5px 0px rgba(0, 0, 0, 0.13)",
-                        opacity: tweakOpen ? 0.5 : 1,
-                        transition:
-                            "opacity 300ms cubic-bezier(0.25,0.1,0.25,1)",
+                        position: "relative",
+                        zIndex: 1,
                     }}
                 >
+                    {/* Character Count */}
                     <div
                         style={{
                             width: "100%",
-                            fontFamily:
-                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                            fontSize: 16,
-                            lineHeight: 1.4,
-                            color: "#2F2F2F",
-                            whiteSpace: "pre-wrap",
+                            display: "flex",
+                            justifyContent: "flex-start",
+                            flex: "0 0 auto",
                         }}
                     >
-                        {threadText}
+                        <div
+                            style={{
+                                fontFamily:
+                                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                fontSize: 13,
+                                color: "#7A7A7A",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {threadText?.length || 0} chars
+                        </div>
                     </div>
+
+                    {/* OUTPUT CONTENT BOX */}
+                    <div
+                        style={{
+                            boxSizing: "border-box",
+                            width: "100%",
+                            flex: 1,
+                            minHeight: 0,
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            alignItems: "flex-start",
+                            padding: 16,
+                            backgroundColor: "#FAF8F0",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                            zIndex: 1,
+                            gap: 10,
+                            borderRadius: 24,
+                            boxShadow: "inset 0px 0px 5px 0px rgba(0, 0, 0, 0.13)",
+                            opacity: tweakOpen ? 0.5 : 1,
+                            transition:
+                                "opacity 300ms cubic-bezier(0.25,0.1,0.25,1)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: "100%",
+                                fontFamily:
+                                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                                fontSize: 16,
+                                lineHeight: 1.4,
+                                color: "#2F2F2F",
+                                whiteSpace: "pre-wrap",
+                            }}
+                        >
+                            {threadText}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ACTION BUTTONS (bottom-right) */}
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 12,
+                        position: "relative",
+                        zIndex: 1,
+                        flex: "0 0 auto",
+                    }}
+                >
+                    <IconOnlyActionButton
+                        icon={tweakOpen ? <X size={24} /> : <Repeat size={24} />}
+                        label={tweakOpen ? "cancel" : "edit"}
+                        onClick={onToggleTweak}
+                        disabled={tweakToggleDisabled}
+                    />
+
+                    <IconOnlyActionButton
+                        icon={<Copy size={24} />}
+                        label={copyLabel}
+                        onClick={onCopy}
+                        disabled={copyDisabled}
+                    />
                 </div>
             </div>
 
-            {/* ACTION BUTTONS (bottom-right) */}
-            <div
-                style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 12,
-                    position: "relative",
-                    zIndex: 1,
-                    flex: "0 0 auto",
-                }}
-            >
-                <IconOnlyActionButton
-                    icon={tweakOpen ? <X size={24} /> : <Repeat size={24} />}
-                    label={tweakOpen ? "cancel" : "edit"}
-                    onClick={onToggleTweak}
-                    disabled={tweakToggleDisabled}
-                />
-
-                <IconOnlyActionButton
-                    icon={<Copy size={24} />}
-                    label={copyLabel}
-                    onClick={onCopy}
-                    disabled={copyDisabled}
-                />
-            </div>
-
-            {/* TWEAK CARD */}
+            {/* TWEAK CARD - Now outside main card, below it */}
             {tweakOpen && (
                 <div
                     style={{
                         boxSizing: "border-box",
                         width: "100%",
-                        height: "min-content",
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "flex-start",
@@ -223,10 +232,8 @@ export function TwitterThreadCard({
                         gap: 20,
                         borderRadius: 24,
                         border: "1px solid #E0CD9D",
-                        position: "relative",
-                        zIndex: 1,
+                        backgroundColor: "rgba(250,247,237,0.92)",
                         backdropFilter: "blur(1px)",
-                        flex: "0 0 auto",
                     }}
                 >
                     <div
@@ -240,7 +247,7 @@ export function TwitterThreadCard({
                             color: "#7A7A7A",
                         }}
                     >
-                        tell river how to modify your post
+                        tell river how to modify your thread
                     </div>
 
                     <textarea
@@ -272,7 +279,6 @@ export function TwitterThreadCard({
                         }}
                     />
 
-                    {/* ✅ CENTER THE CTA */}
                     <div
                         style={{
                             display: "flex",
