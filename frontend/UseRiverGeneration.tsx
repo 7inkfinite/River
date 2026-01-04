@@ -3,6 +3,18 @@ import * as React from "react"
 
 const WEBHOOK_URL = "https://eo8cimuv49hq45d.m.pipedream.net"
 
+// Generate or retrieve anonymous session ID for tracking generations before login
+const getOrCreateSessionId = (): string => {
+    if (typeof window === "undefined") return ""
+
+    let sessionId = localStorage.getItem("river_session_id")
+    if (!sessionId) {
+        sessionId = crypto.randomUUID()
+        localStorage.setItem("river_session_id", sessionId)
+    }
+    return sessionId
+}
+
 // Basic YouTube URL validator (handles youtube.com / youtu.be / shorts)
 export const isYouTubeUrl = (url: string) =>
     /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+)/i.test(
@@ -115,10 +127,16 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
             }))
 
             try {
+                // Include session_id for anonymous user tracking
+                const payload = {
+                    ...inputs,
+                    session_id: getOrCreateSessionId(),
+                }
+
                 const res = await fetch(WEBHOOK_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(inputs),
+                    body: JSON.stringify(payload),
                 })
 
                 const text = await res.text().catch(() => "")

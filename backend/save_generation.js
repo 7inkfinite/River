@@ -122,6 +122,7 @@ export default defineComponent({
       completed_at: new Date().toISOString(),
       cache_key: cache.cacheKey || null,
       extra_options: v.extra_options || null,
+      anonymous_session_id: v.session_id || null, // ✅ Track anonymous users
     };
 
     const genRes = await fetch(
