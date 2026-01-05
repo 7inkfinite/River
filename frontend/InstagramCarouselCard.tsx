@@ -358,14 +358,12 @@ function AspectRatioToggle({
     aspect: "1:1" | "4:5"
     onToggle: () => void
 }) {
-    const [hover, setHover] = React.useState(false)
-
     return (
         <div
             style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 4,
+                gap: 0,
                 padding: 4,
                 backgroundColor: "rgba(124, 138, 17, 0.12)",
                 borderRadius: 999,
@@ -375,63 +373,58 @@ function AspectRatioToggle({
                 fontWeight: 500,
             }}
         >
-            <button
-                onClick={aspect === "4:5" ? onToggle : undefined}
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                style={{
-                    padding: "6px 10px",
-                    border: "none",
-                    borderRadius: 999,
-                    backgroundColor:
-                        aspect === "1:1"
-                            ? "#FAF7ED"
-                            : hover && aspect === "4:5"
-                              ? "rgba(124, 138, 17, 0.08)"
-                              : "transparent",
-                    color:
-                        aspect === "1:1"
-                            ? "rgba(47,47,47,0.85)"
-                            : "rgba(47,47,47,0.55)",
-                    cursor: aspect === "1:1" ? "default" : "pointer",
-                    transition:
-                        "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
-                    fontFamily: "inherit",
-                    fontSize: "inherit",
-                    fontWeight: "inherit",
-                }}
-            >
-                1:1
-            </button>
-            <button
-                onClick={aspect === "1:1" ? onToggle : undefined}
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-                style={{
-                    padding: "6px 10px",
-                    border: "none",
-                    borderRadius: 999,
-                    backgroundColor:
-                        aspect === "4:5"
-                            ? "#FAF7ED"
-                            : hover && aspect === "1:1"
-                              ? "rgba(124, 138, 17, 0.08)"
-                              : "transparent",
-                    color:
-                        aspect === "4:5"
-                            ? "rgba(47,47,47,0.85)"
-                            : "rgba(47,47,47,0.55)",
-                    cursor: aspect === "4:5" ? "default" : "pointer",
-                    transition:
-                        "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
-                    fontFamily: "inherit",
-                    fontSize: "inherit",
-                    fontWeight: "inherit",
-                }}
-            >
-                4:5
-            </button>
+            <AspectToggleButton
+                label="1:1"
+                isActive={aspect === "1:1"}
+                onClick={() => aspect !== "1:1" && onToggle()}
+            />
+            <AspectToggleButton
+                label="4:5"
+                isActive={aspect === "4:5"}
+                onClick={() => aspect !== "4:5" && onToggle()}
+            />
         </div>
+    )
+}
+
+function AspectToggleButton({
+    label,
+    isActive,
+    onClick,
+}: {
+    label: string
+    isActive: boolean
+    onClick: () => void
+}) {
+    const [hover, setHover] = React.useState(false)
+
+    return (
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+                padding: "6px 10px",
+                border: "none",
+                borderRadius: 999,
+                backgroundColor: isActive
+                    ? "#FAF7ED"
+                    : hover
+                      ? "rgba(124, 138, 17, 0.08)"
+                      : "transparent",
+                color: isActive
+                    ? "rgba(47,47,47,0.85)"
+                    : "rgba(47,47,47,0.55)",
+                cursor: isActive ? "default" : "pointer",
+                transition:
+                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+                fontWeight: "inherit",
+            }}
+        >
+            {label}
+        </button>
     )
 }
 
