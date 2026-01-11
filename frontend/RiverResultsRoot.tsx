@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
+import { AuthPrompt, SignUpModal } from "./AuthComponents.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -159,6 +160,9 @@ function RiverResultsInner() {
     )
 
     const resultsContainerRef = React.useRef<HTMLDivElement | null>(null)
+
+    // Auth modal state
+    const [showSignUpModal, setShowSignUpModal] = React.useState(false)
 
     // -------- Twitter card state --------
     const [twTweakOpen, setTwTweakOpen] = React.useState(false)
@@ -551,86 +555,112 @@ function RiverResultsInner() {
     }
 
     return (
-        <div
-            ref={resultsContainerRef}
-            style={{
-                width: "100%",
-                maxWidth: 880,
-                margin: "24px auto 0",
-                display: "flex",
-                flexDirection: "column",
-                gap: 18,
-            }}
-        >
-            {/* ---------------- Video Header ---------------- */}
-            <VideoHeader
-                videoTitle={result.videoTitle}
-                youtubeId={result.youtubeId}
-            />
-
-            {/* ---------------- Twitter ---------------- */}
-            {hasTwitterOutput && (
-                <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
-                    <TwitterThreadCard
-                        threadText={twitterText}
-                        tweakOpen={twTweakOpen}
-                        onToggleTweak={handleTwitterToggleTweak}
-                        tweakToggleDisabled={twIsTweakLoading}
-                        tweakText={twTweakText}
-                        onChangeTweakText={setTwTweakText}
-                        onRegenerate={handleTwitterRegenerate}
-                        regenMode={twTweakRegenMode}
-                        onCopy={handleTwitterCopy}
-                        copyLabel={twCopyLabel}
-                        copyDisabled={!hasTwitterOutput || twTweakOpen}
-                    />
-                </div>
-            )}
-
-            {/* ---------------- LinkedIn ---------------- */}
-            {hasLinkedInOutput && (
-                <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
-                    <LinkedInPostCard
-                        postText={linkedInText}
-                        tweakOpen={liTweakOpen}
-                        onToggleTweak={handleLinkedInToggleTweak}
-                        tweakToggleDisabled={liIsTweakLoading}
-                        tweakText={liTweakText}
-                        onChangeTweakText={setLiTweakText}
-                        onRegenerate={handleLinkedInRegenerate}
-                        regenMode={liTweakRegenMode}
-                        onCopy={handleLinkedInCopy}
-                        copyLabel={liCopyLabel}
-                        copyDisabled={!hasLinkedInOutput || liTweakOpen}
-                    />
-                </div>
-            )}
-
-            {/* ------------- Instagram carousel ------------- */}
-            {hasIgOutput && (
-                <InstagramCarouselCard
-                    slides={igSlides}
-                    aspect={igAspect}
-                    onToggleAspect={() =>
-                        setIgAspect((a) => (a === "1:1" ? "4:5" : "1:1"))
-                    }
-                    trackRef={igTrackRef}
-                    index={igSafeIndex}
-                    onPrev={() => scrollToIgIndex(igSafeIndex - 1)}
-                    onNext={() => scrollToIgIndex(igSafeIndex + 1)}
-                    tweakOpen={igTweakOpen}
-                    onToggleTweak={toggleIgTweak}
-                    tweakDisabled={igIsTweakLoading}
-                    tweakText={igTweakText}
-                    onChangeTweakText={setIgTweakText}
-                    onRegenerate={igRegenerate}
-                    regenMode={igTweakRegenMode}
-                    copied={igCopied}
-                    onCopySlide={igCopyThisSlide}
-                    onCopyAll={igCopyAll}
+        <>
+            <div
+                ref={resultsContainerRef}
+                style={{
+                    width: "100%",
+                    maxWidth: 1400,
+                    margin: "24px auto 0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 24,
+                }}
+            >
+                {/* ---------------- Video Header ---------------- */}
+                <VideoHeader
+                    videoTitle={result.videoTitle}
+                    youtubeId={result.youtubeId}
                 />
+
+                {/* ---------------- Cards Container (Horizontal) ---------------- */}
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        gap: 18,
+                        overflowX: "auto",
+                        padding: "0 20px",
+                    }}
+                >
+                    {/* ---------------- Twitter ---------------- */}
+                    {hasTwitterOutput && (
+                        <div style={{ flex: "0 0 420px" }}>
+                            <TwitterThreadCard
+                                threadText={twitterText}
+                                tweakOpen={twTweakOpen}
+                                onToggleTweak={handleTwitterToggleTweak}
+                                tweakToggleDisabled={twIsTweakLoading}
+                                tweakText={twTweakText}
+                                onChangeTweakText={setTwTweakText}
+                                onRegenerate={handleTwitterRegenerate}
+                                regenMode={twTweakRegenMode}
+                                onCopy={handleTwitterCopy}
+                                copyLabel={twCopyLabel}
+                                copyDisabled={!hasTwitterOutput || twTweakOpen}
+                            />
+                        </div>
+                    )}
+
+                    {/* ---------------- LinkedIn ---------------- */}
+                    {hasLinkedInOutput && (
+                        <div style={{ flex: "0 0 420px" }}>
+                            <LinkedInPostCard
+                                postText={linkedInText}
+                                tweakOpen={liTweakOpen}
+                                onToggleTweak={handleLinkedInToggleTweak}
+                                tweakToggleDisabled={liIsTweakLoading}
+                                tweakText={liTweakText}
+                                onChangeTweakText={setLiTweakText}
+                                onRegenerate={handleLinkedInRegenerate}
+                                regenMode={liTweakRegenMode}
+                                onCopy={handleLinkedInCopy}
+                                copyLabel={liCopyLabel}
+                                copyDisabled={!hasLinkedInOutput || liTweakOpen}
+                            />
+                        </div>
+                    )}
+
+                    {/* ------------- Instagram carousel ------------- */}
+                    {hasIgOutput && (
+                        <div style={{ flex: "0 0 420px" }}>
+                            <InstagramCarouselCard
+                                slides={igSlides}
+                                aspect={igAspect}
+                                onToggleAspect={() =>
+                                    setIgAspect((a) =>
+                                        a === "1:1" ? "4:5" : "1:1"
+                                    )
+                                }
+                                trackRef={igTrackRef}
+                                index={igSafeIndex}
+                                onPrev={() => scrollToIgIndex(igSafeIndex - 1)}
+                                onNext={() => scrollToIgIndex(igSafeIndex + 1)}
+                                tweakOpen={igTweakOpen}
+                                onToggleTweak={toggleIgTweak}
+                                tweakDisabled={igIsTweakLoading}
+                                tweakText={igTweakText}
+                                onChangeTweakText={setIgTweakText}
+                                onRegenerate={igRegenerate}
+                                regenMode={igTweakRegenMode}
+                                copied={igCopied}
+                                onCopySlide={igCopyThisSlide}
+                                onCopyAll={igCopyAll}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* ---------------- Auth Prompt ---------------- */}
+                <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
+            </div>
+
+            {/* ---------------- Sign Up Modal ---------------- */}
+            {showSignUpModal && (
+                <SignUpModal onClose={() => setShowSignUpModal(false)} />
             )}
-        </div>
+        </>
     )
 }
 

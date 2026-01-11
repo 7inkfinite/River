@@ -183,12 +183,12 @@ Try it out and let me know what you think! Would love your feedback.
         <div
             style={{
                 width: "100%",
-                maxWidth: 880,
+                maxWidth: 1400,
                 margin: "40px auto",
                 padding: 20,
                 display: "flex",
                 flexDirection: "column",
-                gap: 18,
+                gap: 24,
             }}
         >
             {/* Video Title Header */}
@@ -229,58 +229,72 @@ Try it out and let me know what you think! Would love your feedback.
                 </div>
             </div>
 
-            {/* Twitter Card */}
-            <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
-                <TwitterThreadCard
-                    threadText={dummyTwitterThread}
-                    tweakOpen={twTweakOpen}
-                    onToggleTweak={() => setTwTweakOpen(!twTweakOpen)}
-                    tweakToggleDisabled={twRegenMode === "loading"}
-                    tweakText={twTweakText}
-                    onChangeTweakText={setTwTweakText}
-                    onRegenerate={handleTwitterRegenerate}
-                    regenMode={twRegenMode}
-                    onCopy={handleTwitterCopy}
-                    copyLabel={twCopyLabel}
-                    copyDisabled={twTweakOpen}
-                />
-            </div>
+            {/* Cards Container (Horizontal) */}
+            <div
+                style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 18,
+                    overflowX: "auto",
+                    padding: "0 20px",
+                }}
+            >
+                {/* Twitter Card */}
+                <div style={{ flex: "0 0 420px" }}>
+                    <TwitterThreadCard
+                        threadText={dummyTwitterThread}
+                        tweakOpen={twTweakOpen}
+                        onToggleTweak={() => setTwTweakOpen(!twTweakOpen)}
+                        tweakToggleDisabled={twRegenMode === "loading"}
+                        tweakText={twTweakText}
+                        onChangeTweakText={setTwTweakText}
+                        onRegenerate={handleTwitterRegenerate}
+                        regenMode={twRegenMode}
+                        onCopy={handleTwitterCopy}
+                        copyLabel={twCopyLabel}
+                        copyDisabled={twTweakOpen}
+                    />
+                </div>
 
-            {/* LinkedIn Card */}
-            <div style={{ width: "100%", maxWidth: 840, margin: "0 auto" }}>
-                <LinkedInPostCard
-                    postText={dummyLinkedInPost}
-                    tweakOpen={liTweakOpen}
-                    onToggleTweak={() => setLiTweakOpen(!liTweakOpen)}
-                    tweakToggleDisabled={liRegenMode === "loading"}
-                    tweakText={liTweakText}
-                    onChangeTweakText={setLiTweakText}
-                    onRegenerate={handleLinkedInRegenerate}
-                    regenMode={liRegenMode}
-                    onCopy={handleLinkedInCopy}
-                    copyLabel={liCopyLabel}
-                    copyDisabled={liTweakOpen}
-                />
-            </div>
+                {/* LinkedIn Card */}
+                <div style={{ flex: "0 0 420px" }}>
+                    <LinkedInPostCard
+                        postText={dummyLinkedInPost}
+                        tweakOpen={liTweakOpen}
+                        onToggleTweak={() => setLiTweakOpen(!liTweakOpen)}
+                        tweakToggleDisabled={liRegenMode === "loading"}
+                        tweakText={liTweakText}
+                        onChangeTweakText={setLiTweakText}
+                        onRegenerate={handleLinkedInRegenerate}
+                        regenMode={liRegenMode}
+                        onCopy={handleLinkedInCopy}
+                        copyLabel={liCopyLabel}
+                        copyDisabled={liTweakOpen}
+                    />
+                </div>
 
-            {/* Instagram Carousel Card */}
-            <InstagramCarouselCard
-                slides={dummyInstagramSlides}
-                aspect={igAspect}
-                onToggleAspect={() =>
-                    setIgAspect((a) => (a === "1:1" ? "4:5" : "1:1"))
-                }
-                tweakOpen={igTweakOpen}
-                onToggleTweak={() => setIgTweakOpen(!igTweakOpen)}
-                tweakDisabled={igRegenMode === "loading"}
-                tweakText={igTweakText}
-                onChangeTweakText={setIgTweakText}
-                onRegenerate={handleIgRegenerate}
-                regenMode={igRegenMode}
-                copied={igCopied}
-                onCopySlide={handleIgCopySlide}
-                onCopyAll={handleIgCopyAll}
-            />
+                {/* Instagram Carousel Card */}
+                <div style={{ flex: "0 0 420px" }}>
+                    <InstagramCarouselCard
+                        slides={dummyInstagramSlides}
+                        aspect={igAspect}
+                        onToggleAspect={() =>
+                            setIgAspect((a) => (a === "1:1" ? "4:5" : "1:1"))
+                        }
+                        tweakOpen={igTweakOpen}
+                        onToggleTweak={() => setIgTweakOpen(!igTweakOpen)}
+                        tweakDisabled={igRegenMode === "loading"}
+                        tweakText={igTweakText}
+                        onChangeTweakText={setIgTweakText}
+                        onRegenerate={handleIgRegenerate}
+                        regenMode={igRegenMode}
+                        copied={igCopied}
+                        onCopySlide={handleIgCopySlide}
+                        onCopyAll={handleIgCopyAll}
+                    />
+                </div>
+            </div>
         </div>
     )
 }
