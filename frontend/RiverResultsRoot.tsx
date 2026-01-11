@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
-import { AuthPrompt, SignUpModal, UserDashboard, supabase } from "./AuthComponents.tsx"
+import { AuthPrompt, SignUpModal, supabase } from "./AuthComponents.tsx"
+import { UserDashboard } from "./UserDashboard.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -641,21 +642,29 @@ function RiverResultsInner() {
 
                 {/* ---------------- Cards Container (Horizontal) ---------------- */}
                 <div
-                    ref={cardsScrollRef}
                     style={{
                         position: "relative",
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        gap: 18,
-                        overflowX: "auto",
-                        overflowY: "hidden",
-                        scrollSnapType: "x mandatory",
-                        scrollBehavior: "smooth",
-                        WebkitOverflowScrolling: "touch",
-                        padding: "0 calc((100vw - 420px) / 2)",
+                        width: "100vw",
+                        marginLeft: "calc(-50vw + 50%)",
+                        overflowX: "hidden",
                     }}
                 >
+                    <div
+                        ref={cardsScrollRef}
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            gap: 18,
+                            overflowX: "auto",
+                            overflowY: "hidden",
+                            scrollSnapType: "x mandatory",
+                            scrollBehavior: "smooth",
+                            WebkitOverflowScrolling: "touch",
+                            padding: "0 calc((100vw - 420px) / 2)",
+                            scrollbarWidth: "none",
+                            msOverflowStyle: "none",
+                        }}
+                    >
                     {/* ---------------- Twitter ---------------- */}
                     {hasTwitterOutput && (
                         <div
@@ -737,6 +746,16 @@ function RiverResultsInner() {
                             />
                         </div>
                     )}
+                    </div>
+
+                    {/* Hide scrollbar with CSS */}
+                    <style>
+                        {`
+                            div::-webkit-scrollbar {
+                                display: none;
+                            }
+                        `}
+                    </style>
                 </div>
 
                 {/* ---------------- Scroll Indicator ---------------- */}
