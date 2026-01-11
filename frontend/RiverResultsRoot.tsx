@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
-import { AuthPrompt, SignUpModal } from "./AuthComponents.tsx"
+import { AuthPrompt, SignUpModal, UserDashboard, supabase } from "./AuthComponents.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -160,9 +160,75 @@ function RiverResultsInner() {
     )
 
     const resultsContainerRef = React.useRef<HTMLDivElement | null>(null)
+    const cardsScrollRef = React.useRef<HTMLDivElement | null>(null)
 
     // Auth modal state
     const [showSignUpModal, setShowSignUpModal] = React.useState(false)
+    const [showDashboard, setShowDashboard] = React.useState(false)
+    const [isAuthenticated, setIsAuthenticated] = React.useState(false)
+
+    // Scroll indicator state
+    const [canScrollRight, setCanScrollRight] = React.useState(false)
+
+    // Check authentication status
+    React.useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
+            setIsAuthenticated(!!session)
+        }
+        checkAuth()
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            const wasAuthenticated = isAuthenticated
+            const nowAuthenticated = !!session
+            setIsAuthenticated(nowAuthenticated)
+
+            // If user just authenticated, close signup modal and show dashboard
+            if (!wasAuthenticated && nowAuthenticated) {
+                setShowSignUpModal(false)
+                setShowDashboard(true)
+            }
+        })
+
+        return () => subscription.unsubscribe()
+    }, [isAuthenticated])
+
+    // Check if user can scroll right
+    const checkScrollability = React.useCallback(() => {
+        const container = cardsScrollRef.current
+        if (!container) return
+
+        const canScroll =
+            container.scrollLeft + container.clientWidth <
+            container.scrollWidth - 10
+        setCanScrollRight(canScroll)
+    }, [])
+
+    // Handle wheel scroll
+    const handleWheel = React.useCallback((e: WheelEvent) => {
+        const container = cardsScrollRef.current
+        if (!container) return
+
+        e.preventDefault()
+        container.scrollLeft += e.deltaY
+        checkScrollability()
+    }, [checkScrollability])
+
+    // Setup scroll listener
+    React.useEffect(() => {
+        const container = cardsScrollRef.current
+        if (!container) return
+
+        container.addEventListener("wheel", handleWheel, { passive: false })
+        container.addEventListener("scroll", checkScrollability)
+        checkScrollability()
+
+        return () => {
+            container.removeEventListener("wheel", handleWheel)
+            container.removeEventListener("scroll", checkScrollability)
+        }
+    }, [handleWheel, checkScrollability])
 
     // -------- Twitter card state --------
     const [twTweakOpen, setTwTweakOpen] = React.useState(false)
@@ -575,12 +641,15 @@ function RiverResultsInner() {
 
                 {/* ---------------- Cards Container (Horizontal) ---------------- */}
                 <div
+                    ref={cardsScrollRef}
                     style={{
+                        position: "relative",
                         width: "100%",
                         display: "flex",
                         flexDirection: "row",
                         gap: 18,
                         overflowX: "auto",
+                        overflowY: "hidden",
                         scrollSnapType: "x mandatory",
                         scrollBehavior: "smooth",
                         WebkitOverflowScrolling: "touch",
@@ -670,6 +739,32 @@ function RiverResultsInner() {
                     )}
                 </div>
 
+                {/* ---------------- Scroll Indicator ---------------- */}
+                {canScrollRight && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            right: 24,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 48,
+                            height: 48,
+                            borderRadius: "50%",
+                            backgroundColor: "rgba(17, 126, 138, 0.9)",
+                            boxShadow:
+                                "0px 4px 12px rgba(17, 126, 138, 0.3)",
+                            zIndex: 10,
+                            pointerEvents: "none",
+                            animation: "pulse-scroll-indicator 2s ease-in-out infinite",
+                        }}
+                    >
+                        <ChevronRight size={28} color="#EFE9DA" />
+                    </div>
+                )}
+
                 {/* ---------------- Auth Prompt ---------------- */}
                 <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
             </div>
@@ -678,6 +773,27 @@ function RiverResultsInner() {
             {showSignUpModal && (
                 <SignUpModal onClose={() => setShowSignUpModal(false)} />
             )}
+
+            {/* ---------------- User Dashboard ---------------- */}
+            {showDashboard && (
+                <UserDashboard onClose={() => setShowDashboard(false)} />
+            )}
+
+            {/* CSS Animations */}
+            <style>
+                {`
+                    @keyframes pulse-scroll-indicator {
+                        0%, 100% {
+                            transform: translateY(-50%) translateX(0);
+                            opacity: 1;
+                        }
+                        50% {
+                            transform: translateY(-50%) translateX(8px);
+                            opacity: 0.7;
+                        }
+                    }
+                `}
+            </style>
         </>
     )
 }
