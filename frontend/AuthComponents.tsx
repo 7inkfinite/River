@@ -1,14 +1,59 @@
 import * as React from "react"
 import { createClient } from "@supabase/supabase-js"
 
-// Initialize Supabase client
-// These environment variables should be set in your Framer project or .env file
-const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "YOUR_SUPABASE_URL"
-const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY"
+// Initialize Supabase client with hardcoded credentials for Framer
+const supabaseUrl = "https://reocmqlhiopossoezjve.supabase.co"
+const supabaseAnonKey = "sb_publishable_4cp236qeoslKMZyaIucU5A_Cdqxm10G"
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+/**
+ * Claims anonymous generations for the authenticated user
+ * This transfers all generations created with the anonymous session ID to the user's account
+ */
+async function claimAnonymousGenerations(userId: string): Promise<void> {
+    try {
+        // Get the anonymous session ID from localStorage
+        const anonymousSessionId = localStorage.getItem("river_session_id")
+
+        if (!anonymousSessionId) {
+            console.log("No anonymous session ID found, nothing to claim")
+            return
+        }
+
+        // Update videos table: transfer anonymous videos to user
+        const { error: videosError } = await supabase
+            .from("videos")
+            .update({ user_id: userId, anonymous_session_id: null })
+            .eq("anonymous_session_id", anonymousSessionId)
+            .is("user_id", null)
+
+        if (videosError) {
+            console.error("Error claiming anonymous videos:", videosError)
+            throw videosError
+        }
+
+        // Update generations table: transfer anonymous generations to user
+        const { error: generationsError } = await supabase
+            .from("generations")
+            .update({ user_id: userId, anonymous_session_id: null })
+            .eq("anonymous_session_id", anonymousSessionId)
+            .is("user_id", null)
+
+        if (generationsError) {
+            console.error("Error claiming anonymous generations:", generationsError)
+            throw generationsError
+        }
+
+        console.log("Successfully claimed anonymous generations for user:", userId)
+
+        // Clear the anonymous session ID after claiming
+        localStorage.removeItem("river_session_id")
+    } catch (err) {
+        console.error("Failed to claim anonymous generations:", err)
+        throw err
+    }
+}
 
 /**
  * AuthPrompt - Component that shows after results are generated
@@ -188,6 +233,9 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                 if (signUpError) throw signUpError
 
                 if (data?.user) {
+                    // Claim anonymous generations
+                    await claimAnonymousGenerations(data.user.id)
+
                     setSuccess(
                         "Account created! Please check your email to verify your account."
                     )
@@ -206,6 +254,9 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                 if (signInError) throw signInError
 
                 if (data?.user) {
+                    // Claim anonymous generations
+                    await claimAnonymousGenerations(data.user.id)
+
                     setSuccess("Signed in successfully!")
                     setTimeout(() => {
                         onClose()

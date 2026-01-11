@@ -581,12 +581,20 @@ function RiverResultsInner() {
                         flexDirection: "row",
                         gap: 18,
                         overflowX: "auto",
-                        padding: "0 20px",
+                        scrollSnapType: "x mandatory",
+                        scrollBehavior: "smooth",
+                        WebkitOverflowScrolling: "touch",
+                        padding: "0 calc((100vw - 420px) / 2)",
                     }}
                 >
                     {/* ---------------- Twitter ---------------- */}
                     {hasTwitterOutput && (
-                        <div style={{ flex: "0 0 420px" }}>
+                        <div
+                            style={{
+                                flex: "0 0 420px",
+                                scrollSnapAlign: "center",
+                            }}
+                        >
                             <TwitterThreadCard
                                 threadText={twitterText}
                                 tweakOpen={twTweakOpen}
@@ -605,7 +613,12 @@ function RiverResultsInner() {
 
                     {/* ---------------- LinkedIn ---------------- */}
                     {hasLinkedInOutput && (
-                        <div style={{ flex: "0 0 420px" }}>
+                        <div
+                            style={{
+                                flex: "0 0 420px",
+                                scrollSnapAlign: "center",
+                            }}
+                        >
                             <LinkedInPostCard
                                 postText={linkedInText}
                                 tweakOpen={liTweakOpen}
@@ -624,7 +637,12 @@ function RiverResultsInner() {
 
                     {/* ------------- Instagram carousel ------------- */}
                     {hasIgOutput && (
-                        <div style={{ flex: "0 0 420px" }}>
+                        <div
+                            style={{
+                                flex: "0 0 420px",
+                                scrollSnapAlign: "center",
+                            }}
+                        >
                             <InstagramCarouselCard
                                 slides={igSlides}
                                 aspect={igAspect}

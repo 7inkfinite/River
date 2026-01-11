@@ -237,11 +237,16 @@ Try it out and let me know what you think! Would love your feedback.
                     flexDirection: "row",
                     gap: 18,
                     overflowX: "auto",
-                    padding: "0 20px",
+                    scrollSnapType: "x mandatory",
+                    scrollBehavior: "smooth",
+                    WebkitOverflowScrolling: "touch",
+                    padding: "0 calc((100vw - 420px) / 2)",
                 }}
             >
                 {/* Twitter Card */}
-                <div style={{ flex: "0 0 420px" }}>
+                <div
+                    style={{ flex: "0 0 420px", scrollSnapAlign: "center" }}
+                >
                     <TwitterThreadCard
                         threadText={dummyTwitterThread}
                         tweakOpen={twTweakOpen}
@@ -258,7 +263,9 @@ Try it out and let me know what you think! Would love your feedback.
                 </div>
 
                 {/* LinkedIn Card */}
-                <div style={{ flex: "0 0 420px" }}>
+                <div
+                    style={{ flex: "0 0 420px", scrollSnapAlign: "center" }}
+                >
                     <LinkedInPostCard
                         postText={dummyLinkedInPost}
                         tweakOpen={liTweakOpen}
@@ -275,7 +282,9 @@ Try it out and let me know what you think! Would love your feedback.
                 </div>
 
                 {/* Instagram Carousel Card */}
-                <div style={{ flex: "0 0 420px" }}>
+                <div
+                    style={{ flex: "0 0 420px", scrollSnapAlign: "center" }}
+                >
                     <InstagramCarouselCard
                         slides={dummyInstagramSlides}
                         aspect={igAspect}
