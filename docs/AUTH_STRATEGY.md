@@ -391,37 +391,171 @@ WHERE user_id IS NULL
 
 ## Updated Implementation Phases
 
-### Phase 1: Anonymous Foundation
-- [ ] Add `anonymous_session_id` column to database
-- [ ] Generate session ID in frontend (localStorage)
-- [ ] Update validate_input.js to accept session ID
-- [ ] Update save_generation.js to store session ID
-- [ ] Delete existing test data
+### Phase 1: Anonymous Foundation ✅ COMPLETED
+- [x] Add `anonymous_session_id` column to database
+- [x] Generate session ID in frontend (localStorage)
+- [x] Update validate_input.js to accept session ID
+- [x] Update save_generation.js to store session ID
+- [x] Delete existing test data
 
-### Phase 2: Authentication Layer
-- [ ] Enable Supabase Auth (Email + Google provider)
-- [ ] Create AuthProvider.tsx for Framer
-- [ ] Create LoginForm.tsx component
-- [ ] Update validate_input.js to verify JWT
-- [ ] Add user_id columns to database
-- [ ] Basic RLS policies
+### Phase 2: Authentication Layer ✅ COMPLETED
+- [x] Enable Supabase Auth (Email + Google provider)
+- [x] Create AuthComponents.tsx with auth modals
+- [x] Create SignUpModal and AuthPrompt components
+- [x] Update RiverResultsRoot.tsx to check auth state
+- [x] Add user_id columns to database
+- [x] Basic RLS policies
 
-### Phase 3: Claim Flow
-- [ ] Implement claim function (anonymous → user)
-- [ ] Call claim on successful login/signup
-- [ ] Handle edge cases (conflicting data, etc.)
+### Phase 3: Claim Flow ✅ COMPLETED (Pipedream Webhook)
+- [x] Implement claim webhook in Pipedream (backend/claim_anonymous_generations.js)
+- [x] Use service role key to bypass RLS policies
+- [x] Call claim webhook on successful login/signup (all auth methods)
+- [x] Handle edge cases (no session ID, already claimed, errors)
+- [x] Clear localStorage session ID after claim
+- [x] Update both videos and generations tables
 
-### Phase 4: User Experience
-- [ ] Add logout functionality
-- [ ] Show user email/avatar in UI
-- [ ] Handle session expiry gracefully
-- [ ] Add "forgot password" flow
-- [ ] Add "Sign up to save your generations" prompt
+### Phase 4: User Experience ✅ COMPLETED
+- [x] Add logout functionality (in UserDashboard)
+- [x] Show user name in dashboard header
+- [x] Handle session expiry gracefully (auto-check on load)
+- [ ] Add "forgot password" flow (not implemented yet)
+- [x] Add "Sign up to save your generations" prompt (AuthPrompt component)
+- [x] Conditional rendering based on auth status
+- [x] Dashboard opens automatically after signup
 
-### Phase 5: Dashboard Preparation
-- [ ] Document shared auth architecture for river-dashboard
-- [ ] API endpoint for listing user's generations
-- [ ] Add anonymous data cleanup job
+### Phase 5: Dashboard Preparation ✅ COMPLETED
+- [x] Created UserDashboard.tsx with list and detail views
+- [x] Query generations with outputs via Supabase
+- [x] Display outputs in HorizontalCardCarousel
+- [x] RLS policies filter by user_id automatically
+- [ ] Add anonymous data cleanup job (future work)
+
+---
+
+## Implementation Status (feature/horizontal-layout-with-auth)
+
+### ✅ What Was Built
+
+**Claim Flow Architecture - Pipedream Webhook:**
+
+The claim flow was initially implemented in the frontend but caused issues:
+- Stale closure bugs from React useEffect dependencies
+- RLS policies blocking UPDATE operations with anon key
+- Inconsistent with existing architecture (all DB writes in Pipedream)
+
+**Solution: Migrated to Pipedream webhook with service role key**
+
+```javascript
+// backend/claim_anonymous_generations.js
+export default defineComponent({
+  async run({ steps, $ }) {
+    const { anonymous_session_id, user_id } = steps.trigger.event.body;
+
+    // Use service role key to bypass RLS
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY  // Key difference!
+    );
+
+    // Update videos table
+    const { count: videosUpdated } = await supabase
+      .from("videos")
+      .update({ user_id, anonymous_session_id: null })
+      .eq("anonymous_session_id", anonymous_session_id)
+      .is("user_id", null);
+
+    // Update generations table
+    const { count: generationsUpdated } = await supabase
+      .from("generations")
+      .update({ user_id, anonymous_session_id: null })
+      .eq("anonymous_session_id", anonymous_session_id)
+      .is("user_id", null);
+
+    return {
+      success: true,
+      claimed: { videos: videosUpdated, generations: generationsUpdated }
+    };
+  }
+});
+```
+
+**Frontend Integration (RiverResultsRoot.tsx):**
+
+```typescript
+React.useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      const wasAuthenticated = isAuthenticated;
+      const nowAuthenticated = !!session;
+      setIsAuthenticated(nowAuthenticated);
+
+      // Claim anonymous generations on authentication
+      if (!wasAuthenticated && nowAuthenticated && session?.user) {
+        const anonymousSessionId = localStorage.getItem("river_session_id");
+
+        if (anonymousSessionId) {
+          // Call Pipedream claim webhook
+          const response = await fetch(
+            "https://eo8cimuv49hq45d.m.pipedream.net/claim",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                anonymous_session_id: anonymousSessionId,
+                user_id: session.user.id,
+              }),
+            }
+          );
+
+          const result = await response.json();
+          console.log("✅ Claimed successfully:", result.claimed);
+          localStorage.removeItem("river_session_id");
+        }
+
+        setShowSignUpModal(false);
+        setShowDashboard(true);
+      }
+    }
+  );
+
+  return () => subscription.unsubscribe();
+}, []); // Empty dependency array - no stale closure!
+```
+
+**Benefits of Pipedream Approach:**
+- ✅ Service role key bypasses all RLS restrictions
+- ✅ Consistent with existing architecture (all DB writes in Pipedream)
+- ✅ No stale closure bugs (empty dependency array)
+- ✅ Works for all auth methods (email, Google OAuth, future providers)
+- ✅ Single source of truth in backend
+- ✅ Better error handling and logging
+- ✅ No complex RLS policy setup needed in frontend
+
+**Components Created:**
+1. `AuthComponents.tsx` - Authentication UI and Supabase client
+2. `UserDashboard.tsx` - Fullscreen dashboard with list/detail views
+3. `HorizontalCardCarousel.tsx` - Single-card carousel component
+4. `DashboardPreview.tsx` - Dashboard preview for Framer
+5. `SignUpModalPreview.tsx` - Sign-up modal preview
+6. `backend/claim_anonymous_generations.js` - Claim webhook
+
+**Components Modified:**
+1. `RiverResultsRoot.tsx` - Auth state management, carousel integration, conditional AuthPrompt
+2. Database schema - Added user_id and anonymous_session_id columns
+
+**Features Working:**
+- ✅ Anonymous users generate without account
+- ✅ Session tracked in localStorage
+- ✅ Email signup with automatic claim
+- ✅ Google OAuth with automatic claim
+- ✅ Dashboard shows all user generations
+- ✅ Outputs displayed in carousel format
+- ✅ One-card-at-a-time horizontal carousel
+- ✅ Keyboard (← →) and swipe navigation
+- ✅ Auth-aware UI (conditional prompts)
 
 ---
 

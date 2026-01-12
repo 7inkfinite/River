@@ -37,27 +37,41 @@ Transcript Source	YouTube API via RapidAPI (yt-api)
 Repository Structure
 
 /River/
-├── frontend/              # Framer canvas components (React/TSX)
-│   ├── RiverAppRoot.tsx           # Root provider wrapper
-│   ├── UseRiverGeneration.tsx     # State management hook & provider
-│   ├── RiverCTA.tsx               # Main CTA button & form
-│   ├── TwitterThreadCard.tsx      # Twitter content display & edit
-│   ├── LinkedInPostCard.tsx       # LinkedIn content display & edit
-│   └── InstagramCarouselCard.tsx  # Instagram carousel display & edit
+├── frontend/                       # Framer canvas components (React/TSX)
+│   ├── RiverAppRoot.tsx            # Root provider wrapper
+│   ├── UseRiverGeneration.tsx      # State management hook & provider
+│   ├── RiverCTA.tsx                # Main CTA button & form
+│   ├── RiverResultsRoot.tsx        # Results display with carousel & auth
+│   ├── AuthComponents.tsx          # Supabase auth (signup/signin modals)
+│   ├── UserDashboard.tsx           # User generation history dashboard
+│   ├── HorizontalCardCarousel.tsx  # Single-card carousel component
+│   ├── TwitterThreadCard.tsx       # Twitter content display & edit
+│   ├── LinkedInPostCard.tsx        # LinkedIn content display & edit
+│   ├── InstagramCarouselCard.tsx   # Instagram carousel display & edit
+│   ├── DashboardPreview.tsx        # Dashboard preview component
+│   └── SignUpModalPreview.tsx      # Sign-up modal preview component
 │
-├── backend/               # Pipedream workflow steps (Node.js)
-│   ├── validate_input.js          # Parse YouTube URL, tone, platforms
-│   ├── upsert_video.js            # Store/update video in Supabase
-│   ├── sub_pick.js                # Select best subtitle track
-│   ├── parse_sub.js               # Parse subtitle XML
-│   ├── transcript_final.js        # Normalize transcript data
-│   ├── extract_transcript.js      # Format transcript segments
-│   ├── check_cache.js             # Deterministic cache lookup
-│   ├── Call_openAI_API.js         # Generate content via OpenAI
-│   ├── save_generation.js         # Persist generation + outputs
-│   └── return_http_response       # Return result to Framer
+├── backend/                        # Pipedream workflow steps (Node.js)
+│   ├── validate_input.js           # Parse YouTube URL, tone, platforms
+│   ├── upsert_video.js             # Store/update video in Supabase
+│   ├── sub_pick.js                 # Select best subtitle track
+│   ├── parse_sub.js                # Parse subtitle XML
+│   ├── transcript_final.js         # Normalize transcript data
+│   ├── extract_transcript.js       # Format transcript segments
+│   ├── check_cache.js              # Deterministic cache lookup
+│   ├── Call_openAI_API.js          # Generate content via OpenAI
+│   ├── save_generation.js          # Persist generation + outputs
+│   ├── claim_anonymous_generations.js  # Claim webhook (service role key)
+│   └── return_http_response        # Return result to Framer
 │
-└── contracts/             # Data structure definitions (JSON schemas)
+├── docs/                           # Documentation
+│   ├── AUTH_STRATEGY.md            # Authentication strategy & architecture
+│   ├── AUTH_FLOW_AUDIT.md          # Authentication flow audit report
+│   ├── IMPLEMENTATION_SUMMARY.md   # Feature implementation summary
+│   ├── RIVER_PRD.md                # Product requirements document
+│   └── RIVER_RESULTS_DISPLAY_IMPLEMENTATION_PLAN.md  # Implementation plan
+│
+└── contracts/                      # Data structure definitions (JSON schemas)
     └── payloads/
         ├── framer-form-output-v1.json  # Input contract
         └── river-output-v1.json        # Output contract
@@ -166,6 +180,9 @@ CREATE TABLE videos (
   id UUID PRIMARY KEY,
   youtube_video_id TEXT UNIQUE,
   original_url TEXT,
+  title TEXT,
+  user_id UUID REFERENCES auth.users(id),          -- Authenticated user owner
+  anonymous_session_id UUID,                        -- Anonymous session tracking
   last_used_at TIMESTAMP,
   created_at TIMESTAMP
 );
@@ -174,12 +191,15 @@ CREATE TABLE videos (
 CREATE TABLE generations (
   id UUID PRIMARY KEY,
   video_id UUID REFERENCES videos(id),
+  user_id UUID REFERENCES auth.users(id),          -- Authenticated user owner
+  anonymous_session_id UUID,                        -- Anonymous session tracking
   tone TEXT,
   platforms TEXT[],
   status TEXT,
   prompt_version TEXT,
   cache_key TEXT,
   extra_options JSONB,
+  inputs JSONB,                                     -- Original generation inputs
   completed_at TIMESTAMP,
   created_at TIMESTAMP
 );
@@ -244,6 +264,52 @@ River optimizes for:
     Platform flexibility — Easy to extend to new platforms without architectural changes
 
 This is a system meant to scale without becoming brittle.
+Authentication & User Management
+
+River supports both anonymous and authenticated usage:
+
+Anonymous Users:
+
+    Generate content without creating an account
+    Session tracked via localStorage (river_session_id UUID)
+    Generations stored with anonymous_session_id
+    Can sign up later to claim all anonymous generations
+
+Authenticated Users:
+
+    Email/password signup via Supabase Auth
+    Google OAuth support
+    All generations stored with user_id
+    Access to user dashboard showing generation history
+    View and copy previous generations
+
+Anonymous-to-Authenticated Migration:
+
+    When anonymous user signs up/signs in:
+    1. Global auth listener detects authentication event
+    2. Calls Pipedream claim webhook with session ID and user ID
+    3. Webhook uses service role key to bypass RLS
+    4. Updates videos and generations tables: user_id set, anonymous_session_id cleared
+    5. localStorage river_session_id removed
+    6. User dashboard opens showing claimed generations
+
+Claim Webhook (backend/claim_anonymous_generations.js):
+
+    Endpoint: https://eo8cimuv49hq45d.m.pipedream.net/claim
+    Method: POST with { anonymous_session_id, user_id }
+    Uses SUPABASE_SERVICE_ROLE_KEY to bypass RLS
+    Updates both videos and generations tables
+    Returns { success: true, claimed: { videos: N, generations: M } }
+
+UI Components:
+
+    AuthPrompt — Sign-up banner shown to anonymous users after generation
+    SignUpModal — Email/password and Google OAuth authentication modal
+    UserDashboard — Fullscreen dashboard with two views:
+        List View: Grid of all user generations with metadata
+        Detail View: Full carousel display of generation outputs
+    HorizontalCardCarousel — Single-card carousel with navigation
+
 External Services & Integrations
 Service	Purpose	Integration
 OpenAI API	Content generation (gpt-4o-mini)	Direct POST to /v1/chat/completions
@@ -255,16 +321,26 @@ Development Status
 
 Status: In active development
 
-Recently Completed:
+Recently Completed (feature/horizontal-layout-with-auth):
+
+    ✅ Authentication system with Supabase (email + Google OAuth)
+    ✅ Anonymous session tracking with automatic claim on signup
+    ✅ Pipedream webhook for anonymous generation claiming (service role key)
+    ✅ Horizontal card carousel (one card visible at a time)
+    ✅ User dashboard with generation history
+    ✅ Results display with carousel integration
+    ✅ Auth-aware UI (conditional sign-up prompts)
+    ✅ Snap scroll with keyboard & swipe navigation
+    ✅ Complete authentication flow for anonymous → authenticated migration
+
+Previously Completed:
 
     ✅ HTTP response webhook integration
     ✅ save_generation component (Step 13)
     ✅ OpenAI API call implementation
     ✅ Check cache functionality
     ✅ Transcript extraction pipeline
-    ✅ Instagram carousel support (being refined)
-
-Current Branch: claude/update-project-readme-XXRqi
+    ✅ Instagram carousel support
 Workflow Pipeline (14 Steps)
 Step	Component	Purpose
 1	trigger.json	HTTP webhook listener

@@ -9,66 +9,11 @@ const supabaseAnonKey = "sb_publishable_4cp236qeoslKMZyaIucU5A_Cdqxm10G"
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 /**
- * Claims anonymous generations for the authenticated user
- * This transfers all generations created with the anonymous session ID to the user's account
+ * NOTE: Claim logic has been moved to Pipedream webhook
+ * The global auth state listener in RiverResultsRoot.tsx now calls
+ * the Pipedream claim endpoint when user authenticates.
+ * This ensures claims work with service role key (bypassing RLS).
  */
-async function claimAnonymousGenerations(userId: string): Promise<void> {
-    try {
-        // Get the anonymous session ID from localStorage
-        const anonymousSessionId = localStorage.getItem("river_session_id")
-
-        console.log("🔍 Starting claim process...")
-        console.log("User ID:", userId)
-        console.log("Anonymous Session ID:", anonymousSessionId)
-
-        if (!anonymousSessionId) {
-            console.log("No anonymous session ID found, nothing to claim")
-            return
-        }
-
-        // Update videos table: transfer anonymous videos to user
-        console.log("📹 Updating videos table...")
-        const { data: videosData, error: videosError } = await supabase
-            .from("videos")
-            .update({ user_id: userId, anonymous_session_id: null })
-            .eq("anonymous_session_id", anonymousSessionId)
-            .is("user_id", null)
-            .select()
-
-        if (videosError) {
-            console.error("❌ Error claiming anonymous videos:", videosError)
-            throw videosError
-        }
-
-        console.log("✅ Videos updated:", videosData?.length || 0, "rows")
-        console.log("Videos data:", videosData)
-
-        // Update generations table: transfer anonymous generations to user
-        console.log("🎨 Updating generations table...")
-        const { data: generationsData, error: generationsError } = await supabase
-            .from("generations")
-            .update({ user_id: userId, anonymous_session_id: null })
-            .eq("anonymous_session_id", anonymousSessionId)
-            .is("user_id", null)
-            .select()
-
-        if (generationsError) {
-            console.error("❌ Error claiming anonymous generations:", generationsError)
-            throw generationsError
-        }
-
-        console.log("✅ Generations updated:", generationsData?.length || 0, "rows")
-        console.log("Generations data:", generationsData)
-
-        console.log("🎉 Successfully claimed anonymous generations for user:", userId)
-
-        // Clear the anonymous session ID after claiming
-        localStorage.removeItem("river_session_id")
-    } catch (err) {
-        console.error("❌ Failed to claim anonymous generations:", err)
-        throw err
-    }
-}
 
 /**
  * AuthPrompt - Component that shows after results are generated
@@ -248,9 +193,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                 if (signUpError) throw signUpError
 
                 if (data?.user) {
-                    // Claim anonymous generations
-                    await claimAnonymousGenerations(data.user.id)
-
+                    // Claim happens automatically via RiverResultsRoot auth listener
                     setSuccess(
                         "Account created! Please check your email to verify your account."
                     )
@@ -267,9 +210,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                 if (signInError) throw signInError
 
                 if (data?.user) {
-                    // Claim anonymous generations
-                    await claimAnonymousGenerations(data.user.id)
-
+                    // Claim happens automatically via RiverResultsRoot auth listener
                     setSuccess("Signed in successfully!")
                     // Don't auto-close - let user close manually
                 }

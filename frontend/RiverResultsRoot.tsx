@@ -5,6 +5,7 @@ import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
 import { AuthPrompt, SignUpModal, supabase } from "./AuthComponents.tsx"
 import { UserDashboard } from "./UserDashboard.tsx"
+import { HorizontalCardCarousel } from "./HorizontalCardCarousel.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -161,15 +162,11 @@ function RiverResultsInner() {
     )
 
     const resultsContainerRef = React.useRef<HTMLDivElement | null>(null)
-    const cardsScrollRef = React.useRef<HTMLDivElement | null>(null)
 
     // Auth modal state
     const [showSignUpModal, setShowSignUpModal] = React.useState(false)
     const [showDashboard, setShowDashboard] = React.useState(false)
     const [isAuthenticated, setIsAuthenticated] = React.useState(false)
-
-    // Scroll indicator state
-    const [canScrollRight, setCanScrollRight] = React.useState(false)
 
     // Check authentication status
     React.useEffect(() => {
@@ -180,56 +177,58 @@ function RiverResultsInner() {
         checkAuth()
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             const wasAuthenticated = isAuthenticated
             const nowAuthenticated = !!session
             setIsAuthenticated(nowAuthenticated)
 
-            // If user just authenticated, close signup modal and show dashboard
-            if (!wasAuthenticated && nowAuthenticated) {
+            // If user just authenticated, claim anonymous generations
+            if (!wasAuthenticated && nowAuthenticated && session?.user) {
+                try {
+                    const anonymousSessionId = localStorage.getItem("river_session_id")
+
+                    if (anonymousSessionId) {
+                        console.log("🔄 Claiming anonymous generations via Pipedream")
+
+                        // Call Pipedream claim webhook
+                        const response = await fetch("https://eoj6g1c9blmwckv.m.pipedream.net", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify({
+                                anonymous_session_id: anonymousSessionId,
+                                user_id: session.user.id
+                            })
+                        })
+
+                        if (!response.ok) {
+                            const error = await response.json()
+                            console.error("❌ Claim failed:", error)
+                            throw new Error(error.error || "Claim request failed")
+                        }
+
+                        const result = await response.json()
+                        console.log("✅ Claimed successfully:", result.claimed)
+
+                        // Clear session ID after successful claim
+                        localStorage.removeItem("river_session_id")
+                    } else {
+                        console.log("ℹ️ No anonymous session to claim")
+                    }
+                } catch (error) {
+                    console.error("❌ Error claiming anonymous generations:", error)
+                }
+
+                // Close signup modal and show dashboard
                 setShowSignUpModal(false)
                 setShowDashboard(true)
             }
         })
 
         return () => subscription.unsubscribe()
-    }, [isAuthenticated])
-
-    // Check if user can scroll right
-    const checkScrollability = React.useCallback(() => {
-        const container = cardsScrollRef.current
-        if (!container) return
-
-        const canScroll =
-            container.scrollLeft + container.clientWidth <
-            container.scrollWidth - 10
-        setCanScrollRight(canScroll)
     }, [])
-
-    // Handle wheel scroll
-    const handleWheel = React.useCallback((e: WheelEvent) => {
-        const container = cardsScrollRef.current
-        if (!container) return
-
-        e.preventDefault()
-        container.scrollLeft += e.deltaY
-        checkScrollability()
-    }, [checkScrollability])
-
-    // Setup scroll listener
-    React.useEffect(() => {
-        const container = cardsScrollRef.current
-        if (!container) return
-
-        container.addEventListener("wheel", handleWheel, { passive: false })
-        container.addEventListener("scroll", checkScrollability)
-        checkScrollability()
-
-        return () => {
-            container.removeEventListener("wheel", handleWheel)
-            container.removeEventListener("scroll", checkScrollability)
-        }
-    }, [handleWheel, checkScrollability])
 
     // -------- Twitter card state --------
     const [twTweakOpen, setTwTweakOpen] = React.useState(false)
@@ -640,39 +639,11 @@ function RiverResultsInner() {
                     youtubeId={result.youtubeId}
                 />
 
-                {/* ---------------- Cards Container (Horizontal) ---------------- */}
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100vw",
-                        marginLeft: "calc(-50vw + 50%)",
-                        overflowX: "hidden",
-                    }}
-                >
-                    <div
-                        ref={cardsScrollRef}
-                        style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            gap: 18,
-                            overflowX: "auto",
-                            overflowY: "hidden",
-                            scrollSnapType: "x mandatory",
-                            scrollBehavior: "smooth",
-                            WebkitOverflowScrolling: "touch",
-                            padding: "0 calc((100vw - 420px) / 2)",
-                            scrollbarWidth: "none",
-                            msOverflowStyle: "none",
-                        }}
-                    >
-                    {/* ---------------- Twitter ---------------- */}
-                    {hasTwitterOutput && (
-                        <div
-                            style={{
-                                flex: "0 0 420px",
-                                scrollSnapAlign: "center",
-                            }}
-                        >
+                {/* ---------------- Carousel Container ---------------- */}
+                <HorizontalCardCarousel
+                    cards={[
+                        // Twitter Card
+                        hasTwitterOutput && (
                             <TwitterThreadCard
                                 threadText={twitterText}
                                 tweakOpen={twTweakOpen}
@@ -686,17 +657,9 @@ function RiverResultsInner() {
                                 copyLabel={twCopyLabel}
                                 copyDisabled={!hasTwitterOutput || twTweakOpen}
                             />
-                        </div>
-                    )}
-
-                    {/* ---------------- LinkedIn ---------------- */}
-                    {hasLinkedInOutput && (
-                        <div
-                            style={{
-                                flex: "0 0 420px",
-                                scrollSnapAlign: "center",
-                            }}
-                        >
+                        ),
+                        // LinkedIn Card
+                        hasLinkedInOutput && (
                             <LinkedInPostCard
                                 postText={linkedInText}
                                 tweakOpen={liTweakOpen}
@@ -710,17 +673,9 @@ function RiverResultsInner() {
                                 copyLabel={liCopyLabel}
                                 copyDisabled={!hasLinkedInOutput || liTweakOpen}
                             />
-                        </div>
-                    )}
-
-                    {/* ------------- Instagram carousel ------------- */}
-                    {hasIgOutput && (
-                        <div
-                            style={{
-                                flex: "0 0 420px",
-                                scrollSnapAlign: "center",
-                            }}
-                        >
+                        ),
+                        // Instagram Carousel Card
+                        hasIgOutput && (
                             <InstagramCarouselCard
                                 slides={igSlides}
                                 aspect={igAspect}
@@ -744,48 +699,14 @@ function RiverResultsInner() {
                                 onCopySlide={igCopyThisSlide}
                                 onCopyAll={igCopyAll}
                             />
-                        </div>
-                    )}
-                    </div>
-
-                    {/* Hide scrollbar with CSS */}
-                    <style>
-                        {`
-                            div::-webkit-scrollbar {
-                                display: none;
-                            }
-                        `}
-                    </style>
-                </div>
-
-                {/* ---------------- Scroll Indicator ---------------- */}
-                {canScrollRight && (
-                    <div
-                        style={{
-                            position: "fixed",
-                            right: 24,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 48,
-                            height: 48,
-                            borderRadius: "50%",
-                            backgroundColor: "rgba(17, 126, 138, 0.9)",
-                            boxShadow:
-                                "0px 4px 12px rgba(17, 126, 138, 0.3)",
-                            zIndex: 10,
-                            pointerEvents: "none",
-                            animation: "pulse-scroll-indicator 2s ease-in-out infinite",
-                        }}
-                    >
-                        <ChevronRight size={28} color="#EFE9DA" />
-                    </div>
-                )}
+                        ),
+                    ].filter(Boolean)}
+                />
 
                 {/* ---------------- Auth Prompt ---------------- */}
-                <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
+                {!isAuthenticated && (
+                    <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
+                )}
             </div>
 
             {/* ---------------- Sign Up Modal ---------------- */}
@@ -798,21 +719,6 @@ function RiverResultsInner() {
                 <UserDashboard onClose={() => setShowDashboard(false)} />
             )}
 
-            {/* CSS Animations */}
-            <style>
-                {`
-                    @keyframes pulse-scroll-indicator {
-                        0%, 100% {
-                            transform: translateY(-50%) translateX(0);
-                            opacity: 1;
-                        }
-                        50% {
-                            transform: translateY(-50%) translateX(8px);
-                            opacity: 0.7;
-                        }
-                    }
-                `}
-            </style>
         </>
     )
 }
