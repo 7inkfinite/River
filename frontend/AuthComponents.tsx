@@ -2,9 +2,10 @@ import * as React from "react"
 import { createClient } from "@supabase/supabase-js"
 import { X } from "lucide-react"
 
-// Initialize Supabase client with hardcoded credentials for Framer
-const supabaseUrl = "https://reocmqlhiopossoezjve.supabase.co"
-const supabaseAnonKey = "sb_publishable_4cp236qeoslKMZyaIucU5A_Cdqxm10G"
+// TODO: Replace with your Supabase credentials before using in Framer
+// See secrets.md for actual values
+const supabaseUrl = "YOUR_SUPABASE_URL_HERE"
+const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY_HERE"
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -253,6 +254,15 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
         return () => window.removeEventListener("keydown", handleEscape)
     }, [onClose])
 
+    // Lock body scroll when modal is open
+    React.useEffect(() => {
+        const originalOverflow = document.body.style.overflow
+        document.body.style.overflow = "hidden"
+        return () => {
+            document.body.style.overflow = originalOverflow
+        }
+    }, [])
+
     // Close on background click
     const handleBackgroundClick = (e: React.MouseEvent) => {
         if (e.target === e.currentTarget) onClose()
@@ -280,29 +290,26 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                 zIndex: 9999,
                 backdropFilter: "blur(4px)",
                 WebkitBackdropFilter: "blur(4px)",
+                padding: "20px",
+                overflowY: "auto",
             }}
         >
             {/* Modal Container */}
             <div
                 style={{
                     boxSizing: "border-box",
-                    width: 652,
-                    maxWidth: "90vw",
-                    height: "min-content",
-                    maxHeight: "90vh",
-                    overflowY: "auto",
+                    width: "100%",
+                    maxWidth: 480,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    padding: "60px 40px 60px 40px",
-                    backgroundColor: "#6F735F",
-                    overflow: "clip",
-                    alignContent: "center",
-                    flexWrap: "nowrap",
-                    gap: 32,
+                    padding: "48px 32px 40px",
+                    backgroundColor: "#FFFFFF",
+                    gap: 24,
                     borderRadius: 24,
                     position: "relative",
+                    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.2)",
                 }}
             >
                 {/* Close Button */}
@@ -310,13 +317,13 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                     onClick={onClose}
                     style={{
                         position: "absolute",
-                        top: 20,
-                        right: 20,
+                        top: 16,
+                        right: 16,
                         width: 40,
                         height: 40,
                         borderRadius: "50%",
                         border: "none",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
+                        backgroundColor: "rgba(47, 47, 47, 0.06)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -326,84 +333,56 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor =
-                            "rgba(255, 255, 255, 0.3)"
+                            "rgba(47, 47, 47, 0.1)"
                     }}
                     onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor =
-                            "rgba(255, 255, 255, 0.2)"
+                            "rgba(47, 47, 47, 0.06)"
                     }}
                 >
-                    <X size={20} color="#FFFFFF" />
+                    <X size={20} color="#2F2F2F" />
                 </button>
-                {/* SVG Illustration */}
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="250"
-                    height="118.571"
-                    viewBox="0 0 500 237.142"
-                    fill="none"
-                    overflow="visible"
-                    style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        opacity: 0.6,
-                        pointerEvents: "none",
-                    }}
-                >
-                    <path
-                        d="M 34.775 237.142 C 34.775 237.142 -21.82 197.513 9.388 170.6 C -5.852 196.802 41.121 229.694 41.121 229.694 L 493.654 229.693 L 493.654 237.141 Z M 58.823 152.236 C 175.28 132.035 306.393 220.785 376.754 175.771 C 384.068 171.091 388.676 166.633 391.167 162.328 C 388.959 164.288 386.286 166.284 383.1 168.323 C 312.739 213.337 181.626 124.587 65.17 144.788 C 31.743 150.586 15.524 160.051 9.388 170.6 C 18.058 163.123 33.505 156.627 58.823 152.236 Z M 361.055 41.051 C 455.068 -24.107 493.654 25.56 493.654 25.56 L 493.654 229.693 L 500 229.693 L 500 18.112 C 500 18.112 461.414 -31.555 367.401 33.604 C 357.115 40.733 350.11 47.376 345.699 53.613 C 349.694 49.596 354.76 45.415 361.055 41.051 Z M 391.167 162.328 C 411.033 127.988 296.238 103.352 345.699 53.613 C 311.622 101.797 432.378 125.739 391.167 162.328 Z"
-                        fill="rgb(177, 181, 143)"
-                        strokeWidth="0.2"
-                        stroke="rgb(242, 240, 233)"
-                    />
-                </svg>
 
                 {/* Welcome Text */}
                 <div
                     style={{
                         fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                        fontSize: 32,
+                        fontSize: "clamp(24px, 5vw, 28px)",
                         fontWeight: 600,
                         color: "#2F2F2F",
                         textAlign: "center",
-                        zIndex: 1,
                     }}
                 >
-                    {mode === "signup" ? "Welcome!" : "Welcome Back!"}
+                    {mode === "signup" ? "Create Account" : "Welcome Back"}
                 </div>
 
-                {/* Sign In / Sign Up Toggle */}
+                {/* Sign In / Sign Up Toggle - Pill style */}
                 <div
                     style={{
                         display: "flex",
-                        gap: 16,
+                        gap: 4,
                         alignItems: "center",
-                        zIndex: 1,
+                        backgroundColor: "rgba(47, 47, 47, 0.06)",
+                        borderRadius: 12,
+                        padding: 4,
                     }}
                 >
                     <button
                         type="button"
                         onClick={() => setMode("signin")}
                         style={{
-                            background: "none",
+                            background: mode === "signin" ? "#FFFFFF" : "transparent",
                             border: "none",
-                            padding: "8px 16px",
+                            padding: "10px 20px",
                             cursor: "pointer",
                             fontFamily:
                                 '"Inter", "Inter Placeholder", sans-serif',
-                            fontSize: 15,
-                            fontWeight: mode === "signin" ? 600 : 400,
-                            color:
-                                mode === "signin"
-                                    ? "#2F2F2F"
-                                    : "rgba(47, 47, 47, 0.5)",
-                            borderBottom:
-                                mode === "signin"
-                                    ? "2px solid #2F2F2F"
-                                    : "2px solid transparent",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            color: mode === "signin" ? "#2F2F2F" : "#7A7A7A",
+                            borderRadius: 8,
                             transition: "all 200ms ease",
+                            boxShadow: mode === "signin" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
                         }}
                     >
                         Sign In
@@ -412,23 +391,18 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         type="button"
                         onClick={() => setMode("signup")}
                         style={{
-                            background: "none",
+                            background: mode === "signup" ? "#FFFFFF" : "transparent",
                             border: "none",
-                            padding: "8px 16px",
+                            padding: "10px 20px",
                             cursor: "pointer",
                             fontFamily:
                                 '"Inter", "Inter Placeholder", sans-serif',
-                            fontSize: 15,
-                            fontWeight: mode === "signup" ? 600 : 400,
-                            color:
-                                mode === "signup"
-                                    ? "#2F2F2F"
-                                    : "rgba(47, 47, 47, 0.5)",
-                            borderBottom:
-                                mode === "signup"
-                                    ? "2px solid #2F2F2F"
-                                    : "2px solid transparent",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            color: mode === "signup" ? "#2F2F2F" : "#7A7A7A",
+                            borderRadius: 8,
                             transition: "all 200ms ease",
+                            boxShadow: mode === "signup" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
                         }}
                     >
                         Sign Up
@@ -441,15 +415,13 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         style={{
                             width: "100%",
                             padding: "12px 16px",
-                            backgroundColor: "rgba(220, 38, 38, 0.1)",
-                            border: "1px solid rgba(220, 38, 38, 0.3)",
-                            borderRadius: 8,
-                            color: "#991b1b",
+                            backgroundColor: "rgba(220, 38, 38, 0.08)",
+                            borderRadius: 12,
+                            color: "#B91C1C",
                             fontSize: 14,
                             fontFamily:
                                 '"Inter", "Inter Placeholder", sans-serif',
                             textAlign: "center",
-                            zIndex: 1,
                         }}
                     >
                         {error}
@@ -462,15 +434,13 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         style={{
                             width: "100%",
                             padding: "12px 16px",
-                            backgroundColor: "rgba(34, 197, 94, 0.1)",
-                            border: "1px solid rgba(34, 197, 94, 0.3)",
-                            borderRadius: 8,
-                            color: "#166534",
+                            backgroundColor: "rgba(34, 197, 94, 0.08)",
+                            borderRadius: 12,
+                            color: "#15803D",
                             fontSize: 14,
                             fontFamily:
                                 '"Inter", "Inter Placeholder", sans-serif',
                             textAlign: "center",
-                            zIndex: 1,
                         }}
                     >
                         {success}
@@ -484,8 +454,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         width: "100%",
                         display: "flex",
                         flexDirection: "column",
-                        gap: 20,
-                        zIndex: 1,
+                        gap: 16,
                     }}
                 >
                     {/* Name Field (Sign Up only) */}
@@ -494,7 +463,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: 8,
+                                gap: 6,
                             }}
                         >
                             <label
@@ -504,7 +473,6 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                     fontSize: 14,
                                     fontWeight: 500,
                                     color: "#4F4F4F",
-                                    textAlign: "center",
                                 }}
                             >
                                 Name
@@ -521,12 +489,12 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 disabled={loading}
                                 style={{
                                     width: "100%",
-                                    padding: "14px 18px",
+                                    padding: "14px 16px",
                                     borderRadius: 12,
                                     border: nameError
-                                        ? "1px solid rgba(220, 38, 38, 0.5)"
-                                        : "1px solid rgba(111, 115, 95, 0.2)",
-                                    backgroundColor: "rgba(255, 255, 255, 0.7)",
+                                        ? "1px solid #EF4444"
+                                        : "1px solid #E5E7EB",
+                                    backgroundColor: "#FFFFFF",
                                     fontSize: 15,
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
@@ -534,16 +502,16 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                     outline: "none",
                                     boxSizing: "border-box",
                                     opacity: loading ? 0.6 : 1,
+                                    transition: "border-color 200ms ease",
                                 }}
                             />
                             {nameError && (
                                 <div
                                     style={{
                                         fontSize: 12,
-                                        color: "#991b1b",
+                                        color: "#EF4444",
                                         fontFamily:
                                             '"Inter", "Inter Placeholder", sans-serif',
-                                        textAlign: "center",
                                     }}
                                 >
                                     {nameError}
@@ -557,7 +525,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         style={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 8,
+                            gap: 6,
                         }}
                     >
                         <label
@@ -567,7 +535,6 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 fontSize: 14,
                                 fontWeight: 500,
                                 color: "#4F4F4F",
-                                textAlign: "center",
                             }}
                         >
                             Email
@@ -580,16 +547,16 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 if (emailError) validateEmail(e.target.value)
                             }}
                             onBlur={(e) => validateEmail(e.target.value)}
-                            placeholder="jane@framer.com"
+                            placeholder="jane@example.com"
                             disabled={loading}
                             style={{
                                 width: "100%",
-                                padding: "14px 18px",
+                                padding: "14px 16px",
                                 borderRadius: 12,
                                 border: emailError
-                                    ? "1px solid rgba(220, 38, 38, 0.5)"
-                                    : "1px solid rgba(111, 115, 95, 0.2)",
-                                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                                    ? "1px solid #EF4444"
+                                    : "1px solid #E5E7EB",
+                                backgroundColor: "#FFFFFF",
                                 fontSize: 15,
                                 fontFamily:
                                     '"Inter", "Inter Placeholder", sans-serif',
@@ -597,16 +564,16 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 outline: "none",
                                 boxSizing: "border-box",
                                 opacity: loading ? 0.6 : 1,
+                                transition: "border-color 200ms ease",
                             }}
                         />
                         {emailError && (
                             <div
                                 style={{
                                     fontSize: 12,
-                                    color: "#991b1b",
+                                    color: "#EF4444",
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
-                                    textAlign: "center",
                                 }}
                             >
                                 {emailError}
@@ -619,7 +586,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                         style={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 8,
+                            gap: 6,
                         }}
                     >
                         <label
@@ -629,7 +596,6 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 fontSize: 14,
                                 fontWeight: 500,
                                 color: "#4F4F4F",
-                                textAlign: "center",
                             }}
                         >
                             Password
@@ -643,16 +609,16 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                     validatePassword(e.target.value)
                             }}
                             onBlur={(e) => validatePassword(e.target.value)}
-                            placeholder="choose strong one"
+                            placeholder="Min 6 characters"
                             disabled={loading}
                             style={{
                                 width: "100%",
-                                padding: "14px 18px",
+                                padding: "14px 16px",
                                 borderRadius: 12,
                                 border: passwordError
-                                    ? "1px solid rgba(220, 38, 38, 0.5)"
-                                    : "1px solid rgba(111, 115, 95, 0.2)",
-                                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                                    ? "1px solid #EF4444"
+                                    : "1px solid #E5E7EB",
+                                backgroundColor: "#FFFFFF",
                                 fontSize: 15,
                                 fontFamily:
                                     '"Inter", "Inter Placeholder", sans-serif',
@@ -660,16 +626,16 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                                 outline: "none",
                                 boxSizing: "border-box",
                                 opacity: loading ? 0.6 : 1,
+                                transition: "border-color 200ms ease",
                             }}
                         />
                         {passwordError && (
                             <div
                                 style={{
                                     fontSize: 12,
-                                    color: "#991b1b",
+                                    color: "#EF4444",
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
-                                    textAlign: "center",
                                 }}
                             >
                                 {passwordError}

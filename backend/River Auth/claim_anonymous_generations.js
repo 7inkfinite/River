@@ -1,7 +1,7 @@
 // Pipedream Webhook: Claim Anonymous Generations
 // Purpose: Migrate anonymous generations to authenticated user
 // Method: POST
-// URL: https://eo8cimuv49hq45d.m.pipedream.net/claim
+// URL: https://YOUR_CLAIM_WEBHOOK.m.pipedream.net
 
 import { createClient } from "@supabase/supabase-js"
 

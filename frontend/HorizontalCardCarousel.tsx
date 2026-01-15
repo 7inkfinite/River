@@ -16,11 +16,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 interface HorizontalCardCarouselProps {
     cards: React.ReactNode[]
     initialIndex?: number
+    navigationDisabled?: boolean // When true, grey out nav arrows (e.g., during tweak mode)
 }
 
 export function HorizontalCardCarousel({
     cards,
     initialIndex = 0,
+    navigationDisabled = false,
 }: HorizontalCardCarouselProps) {
     const [currentIndex, setCurrentIndex] = React.useState(initialIndex)
     const [touchStart, setTouchStart] = React.useState<number | null>(null)
@@ -51,9 +53,10 @@ export function HorizontalCardCarousel({
         goToIndex(safeIndex + 1)
     }, [goToIndex, safeIndex])
 
-    // Keyboard navigation
+    // Keyboard navigation (disabled when navigationDisabled)
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (navigationDisabled) return
             if (e.key === "ArrowLeft") {
                 e.preventDefault()
                 goToPrev()
@@ -65,7 +68,7 @@ export function HorizontalCardCarousel({
 
         window.addEventListener("keydown", handleKeyDown)
         return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [goToPrev, goToNext])
+    }, [goToPrev, goToNext, navigationDisabled])
 
     // Touch handlers for swipe gestures
     const onTouchStart = (e: React.TouchEvent) => {
@@ -78,7 +81,7 @@ export function HorizontalCardCarousel({
     }
 
     const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return
+        if (!touchStart || !touchEnd || navigationDisabled) return
 
         const distance = touchStart - touchEnd
         const isLeftSwipe = distance > minSwipeDistance
@@ -103,63 +106,92 @@ export function HorizontalCardCarousel({
             style={{
                 position: "relative",
                 width: "100%",
-                maxWidth: 880,
-                margin: "0 auto",
                 display: "flex",
                 flexDirection: "column",
                 gap: 20,
             }}
         >
-            {/* Cards Container */}
+            {/* Main layout: Nav Arrow - Card - Nav Arrow */}
             <div
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
                 style={{
-                    position: "relative",
-                    width: "100%",
-                    minHeight: 400,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "visible",
+                    gap: 0,
+                    width: "100%",
                 }}
             >
-                {/* Render all cards but only show the current one */}
-                {cards.map((card, index) => (
-                    <div
-                        key={index}
-                        style={{
-                            position: index === safeIndex ? "relative" : "absolute",
-                            width: "100%",
-                            opacity: index === safeIndex ? 1 : 0,
-                            transform: `translateX(${(index - safeIndex) * 100}%)`,
-                            transition:
-                                "opacity 400ms cubic-bezier(0.25,0.1,0.25,1), transform 400ms cubic-bezier(0.25,0.1,0.25,1)",
-                            pointerEvents: index === safeIndex ? "auto" : "none",
-                        }}
-                    >
-                        {card}
-                    </div>
-                ))}
+                {/* Left Nav Arrow - pushed to edge */}
+                <div
+                    style={{
+                        flexShrink: 0,
+                        width: 60,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    {safeIndex > 0 && (
+                        <NavigationButton
+                            direction="prev"
+                            onClick={goToPrev}
+                            disabled={navigationDisabled}
+                        />
+                    )}
+                </div>
 
-                {/* Previous Button */}
-                {safeIndex > 0 && (
-                    <NavigationButton
-                        direction="prev"
-                        onClick={goToPrev}
-                        style={{ left: -60 }}
-                    />
-                )}
+                {/* Cards Container - centered with fixed height */}
+                <div
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                    style={{
+                        position: "relative",
+                        flex: 1,
+                        minHeight: 520,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                    }}
+                >
+                    {/* Render all cards but only show the current one */}
+                    {cards.map((card, index) => (
+                        <div
+                            key={index}
+                            style={{
+                                position: index === safeIndex ? "relative" : "absolute",
+                                width: "100%",
+                                maxWidth: 720,
+                                opacity: index === safeIndex ? 1 : 0,
+                                transform: `translateX(${(index - safeIndex) * 100}%)`,
+                                transition:
+                                    "opacity 400ms cubic-bezier(0.25,0.1,0.25,1), transform 400ms cubic-bezier(0.25,0.1,0.25,1)",
+                                pointerEvents: index === safeIndex ? "auto" : "none",
+                            }}
+                        >
+                            {card}
+                        </div>
+                    ))}
+                </div>
 
-                {/* Next Button */}
-                {safeIndex < cardCount - 1 && (
-                    <NavigationButton
-                        direction="next"
-                        onClick={goToNext}
-                        style={{ right: -60 }}
-                    />
-                )}
+                {/* Right Nav Arrow - pushed to edge */}
+                <div
+                    style={{
+                        flexShrink: 0,
+                        width: 60,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    {safeIndex < cardCount - 1 && (
+                        <NavigationButton
+                            direction="next"
+                            onClick={goToNext}
+                            disabled={navigationDisabled}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* Dot Indicators */}
@@ -176,7 +208,8 @@ export function HorizontalCardCarousel({
                     {cards.map((_, index) => (
                         <button
                             key={index}
-                            onClick={() => goToIndex(index)}
+                            onClick={() => !navigationDisabled && goToIndex(index)}
+                            disabled={navigationDisabled}
                             aria-label={`Go to card ${index + 1}`}
                             style={{
                                 width: index === safeIndex ? 32 : 10,
@@ -187,10 +220,11 @@ export function HorizontalCardCarousel({
                                     index === safeIndex
                                         ? "#117E8A"
                                         : "rgba(124, 138, 17, 0.25)",
-                                cursor: "pointer",
+                                cursor: navigationDisabled ? "not-allowed" : "pointer",
                                 transition:
                                     "all 300ms cubic-bezier(0.25,0.1,0.25,1)",
                                 padding: 0,
+                                opacity: navigationDisabled ? 0.4 : 1,
                             }}
                         />
                     ))}
@@ -219,13 +253,13 @@ export function HorizontalCardCarousel({
 interface NavigationButtonProps {
     direction: "prev" | "next"
     onClick: () => void
-    style?: React.CSSProperties
+    disabled?: boolean
 }
 
 function NavigationButton({
     direction,
     onClick,
-    style,
+    disabled = false,
 }: NavigationButtonProps) {
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
@@ -233,45 +267,48 @@ function NavigationButton({
     const Icon = direction === "prev" ? ChevronLeft : ChevronRight
     const label = direction === "prev" ? "Previous card" : "Next card"
 
-    const backgroundColor = pressed
-        ? "#0F6B75"
-        : hover
-          ? "#148A97"
-          : "rgba(17, 126, 138, 0.9)"
+    // When disabled, show greyed out state
+    const backgroundColor = disabled
+        ? "rgba(124, 138, 17, 0.15)"
+        : pressed
+            ? "#0F6B75"
+            : hover
+                ? "#148A97"
+                : "rgba(17, 126, 138, 0.9)"
+
+    const iconColor = disabled ? "rgba(47, 47, 47, 0.3)" : "#EFE9DA"
 
     return (
         <button
-            onClick={onClick}
-            onMouseEnter={() => setHover(true)}
+            onClick={disabled ? undefined : onClick}
+            onMouseEnter={() => !disabled && setHover(true)}
             onMouseLeave={() => {
                 setHover(false)
                 setPressed(false)
             }}
-            onMouseDown={() => setPressed(true)}
+            onMouseDown={() => !disabled && setPressed(true)}
             onMouseUp={() => setPressed(false)}
+            disabled={disabled}
             aria-label={label}
-            title={label}
+            title={disabled ? "Navigation disabled" : label}
             style={{
-                position: "absolute",
-                top: "50%",
-                transform: "translateY(-50%)",
                 width: 48,
                 height: 48,
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor,
-                boxShadow: "0px 4px 12px rgba(17, 126, 138, 0.3)",
+                boxShadow: disabled ? "none" : "0px 4px 12px rgba(17, 126, 138, 0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
+                cursor: disabled ? "not-allowed" : "pointer",
                 zIndex: 10,
                 transition:
-                    "background-color 300ms cubic-bezier(0.25,0.1,0.25,1), transform 200ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 300ms cubic-bezier(0.25,0.1,0.25,1)",
-                ...style,
+                    "background-color 300ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 300ms cubic-bezier(0.25,0.1,0.25,1), opacity 300ms ease",
+                opacity: disabled ? 0.5 : 1,
             }}
         >
-            <Icon size={28} color="#EFE9DA" strokeWidth={2.5} />
+            <Icon size={28} color={iconColor} strokeWidth={2.5} />
         </button>
     )
 }

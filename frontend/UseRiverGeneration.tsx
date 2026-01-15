@@ -1,7 +1,9 @@
 // code/UseRiverGeneration.tsx
 import * as React from "react"
 
-const WEBHOOK_URL = "https://eo8cimuv49hq45d.m.pipedream.net"
+// TODO: Replace with your Pipedream webhook URL before using in Framer
+// See secrets.md for actual URL
+const WEBHOOK_URL = "YOUR_MAIN_WEBHOOK_URL_HERE"
 
 // Generate or retrieve anonymous session ID for tracking generations before login
 const getOrCreateSessionId = (): string => {

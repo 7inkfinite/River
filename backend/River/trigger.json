@@ -3,7 +3,7 @@
 //NOTE! This is a sample values. Use this to understand the structure.
 //domains - pipedream.net
 //authorization - none
-//url to trigger the workflow - https://eo8cimuv49hq45d.m.pipedream.net
+//url to trigger the workflow - https://YOUR_MAIN_WEBHOOK.m.pipedream.net
 {
   "context": {
     "id": "37L8BRU1Kd7UDqDYvEJ0Q65Lrx4",
@@ -43,7 +43,7 @@
       "accept-language": "en-US,en;q=0.5",
       "content-length": "132",
       "content-type": "application/json",
-      "host": "eo8cimuv49hq45d.m.pipedream.net",
+      "host": "YOUR_MAIN_WEBHOOK.m.pipedream.net",
       "origin": "https://project-mk1zm382lghqeexqliym.framercanvas.com",
       "priority": "u=0",
       "referer": "https://project-mk1zm382lghqeexqliym.framercanvas.com/",
@@ -56,6 +56,6 @@
     "method": "POST",
     "path": "/",
     "query": {},
-    "url": "https://eo8cimuv49hq45d.m.pipedream.net/"
+    "url": "https://YOUR_MAIN_WEBHOOK.m.pipedream.net/"
   }
 }

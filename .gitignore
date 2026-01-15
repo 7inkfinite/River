@@ -1,0 +1,49 @@
+# Secrets file (personal reference only)
+secrets.md
+
+# MCP configuration (contains project-specific credentials)
+.mcp.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary
+tmp/
+temp/
+
+# claude code instructions
+claude.md
+
+# Private development tracking (scratchpad system)
+scratchpad.md
+buglog-private.md
+TODO_PRIVATE.md
+development-notes.md
+
+# Work-in-progress drafts
+*.wip.md
+draft-*.md
