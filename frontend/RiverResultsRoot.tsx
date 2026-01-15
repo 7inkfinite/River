@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
@@ -30,7 +30,6 @@ function splitSlidesFromContent(content: string): string[] {
     const text = String(content || "").trim()
     if (!text) return []
 
-    // Prefer explicit separators if present
     if (text.includes("\n\n---\n\n")) {
         return text
             .split("\n\n---\n\n")
@@ -38,13 +37,11 @@ function splitSlidesFromContent(content: string): string[] {
             .filter(Boolean)
     }
 
-    // Otherwise try chunking on double-newlines (best-effort)
     const parts = text
         .split(/\n\n+/)
         .map((s) => s.trim())
         .filter(Boolean)
 
-    // If it became too fragmented, fall back to single slide
     if (parts.length > 12) return [text]
     return parts.length ? parts : [text]
 }
@@ -70,7 +67,6 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
         ? inputs.platforms
         : []
 
-    // ---------- Twitter ----------
     let twitterThread: { tweets: string[]; raw: string } | undefined
     const twitterOut = outputs.twitter
     if (twitterOut) {
@@ -89,7 +85,6 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
         }
     }
 
-    // ---------- LinkedIn post ----------
     let linkedInPost: { post: string; raw: string } | undefined
     const linkedInOut = outputs.linkedin
     if (linkedInOut) {
@@ -107,7 +102,6 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
         }
     }
 
-    // ---------- Instagram carousel ----------
     let instagramCarousel: { slides: string[]; raw: string } | undefined
     const carouselOut = outputs.carousel
     if (carouselOut) {
@@ -157,16 +151,50 @@ export function RiverResultsRoot() {
 function RiverResultsInner() {
     const { state, regenerate } = UseRiverGeneration()
 
-    const [result, setResult] = React.useState<NormalizedRiverResult | null>(
-        null
-    )
-
+    const [result, setResult] = React.useState<NormalizedRiverResult | null>(null)
     const resultsContainerRef = React.useRef<HTMLDivElement | null>(null)
 
-    // Auth modal state
+    // Auth state
     const [showSignUpModal, setShowSignUpModal] = React.useState(false)
     const [showDashboard, setShowDashboard] = React.useState(false)
     const [isAuthenticated, setIsAuthenticated] = React.useState(false)
+    const [dashboardKey, setDashboardKey] = React.useState(0)
+
+    const claimGenerations = React.useCallback(async (session: any) => {
+        const anonymousSessionId = localStorage.getItem("river_session_id")
+        if (!anonymousSessionId) return
+
+        try {
+            console.log("🔄 Claiming anonymous generations via Pipedream")
+
+            const response = await fetch("YOUR_CLAIM_WEBHOOK_URL_HERE", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    anonymous_session_id: anonymousSessionId,
+                    user_id: session.user.id
+                })
+            })
+
+            if (!response.ok) {
+                const error = await response.json()
+                console.error("❌ Claim failed:", error)
+                // Don't throw, just log
+                return
+            }
+
+            const claimResult = await response.json()
+            console.log("✅ Claimed successfully:", claimResult.claimed)
+            localStorage.removeItem("river_session_id")
+            // Increment key to force dashboard remount with fresh fetch
+            setDashboardKey(prev => prev + 1)
+        } catch (error) {
+            console.error("❌ Error claiming anonymous generations:", error)
+        }
+    }, [])
 
     // Check authentication status
     React.useEffect(() => {
@@ -176,92 +204,57 @@ function RiverResultsInner() {
         }
         checkAuth()
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             const wasAuthenticated = isAuthenticated
             const nowAuthenticated = !!session
             setIsAuthenticated(nowAuthenticated)
 
-            // If user just authenticated, claim anonymous generations
             if (!wasAuthenticated && nowAuthenticated && session?.user) {
-                try {
-                    const anonymousSessionId = localStorage.getItem("river_session_id")
-
-                    if (anonymousSessionId) {
-                        console.log("🔄 Claiming anonymous generations via Pipedream")
-
-                        // Call Pipedream claim webhook
-                        const response = await fetch("https://eoj6g1c9blmwckv.m.pipedream.net", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${session.access_token}`
-                            },
-                            body: JSON.stringify({
-                                anonymous_session_id: anonymousSessionId,
-                                user_id: session.user.id
-                            })
-                        })
-
-                        if (!response.ok) {
-                            const error = await response.json()
-                            console.error("❌ Claim failed:", error)
-                            throw new Error(error.error || "Claim request failed")
-                        }
-
-                        const result = await response.json()
-                        console.log("✅ Claimed successfully:", result.claimed)
-
-                        // Clear session ID after successful claim
-                        localStorage.removeItem("river_session_id")
-                    } else {
-                        console.log("ℹ️ No anonymous session to claim")
-                    }
-                } catch (error) {
-                    console.error("❌ Error claiming anonymous generations:", error)
-                }
-
-                // Close signup modal and show dashboard
+                await claimGenerations(session)
                 setShowSignUpModal(false)
                 setShowDashboard(true)
             }
         })
 
         return () => subscription.unsubscribe()
-    }, [])
+    }, [isAuthenticated, claimGenerations])
 
-    // -------- Twitter card state --------
+    // ✅ NEW: Claim immediately after generation if logged in
+    React.useEffect(() => {
+        const justGenerated = state.status === "success" && state.lastAction === "generate"
+        if (justGenerated && isAuthenticated) {
+            supabase.auth.getSession().then(({ data }) => {
+                if (data.session) {
+                    claimGenerations(data.session)
+                }
+            })
+        }
+    }, [state.status, state.lastAction, isAuthenticated, claimGenerations])
+
+    // Twitter card state
     const [twTweakOpen, setTwTweakOpen] = React.useState(false)
     const [twTweakText, setTwTweakText] = React.useState("")
-    const [twCopyLabel, setTwCopyLabel] = React.useState<"copy" | "copied!">(
-        "copy"
-    )
+    const [twCopyLabel, setTwCopyLabel] = React.useState<"copy" | "copied!">("copy")
     const twCopyTimerRef = React.useRef<number | null>(null)
     const twCollapseTimerRef = React.useRef<number | null>(null)
 
-    // -------- LinkedIn card state --------
+    // LinkedIn card state
     const [liTweakOpen, setLiTweakOpen] = React.useState(false)
     const [liTweakText, setLiTweakText] = React.useState("")
-    const [liCopyLabel, setLiCopyLabel] = React.useState<"copy" | "copied!">(
-        "copy"
-    )
+    const [liCopyLabel, setLiCopyLabel] = React.useState<"copy" | "copied!">("copy")
     const liCopyTimerRef = React.useRef<number | null>(null)
     const liCollapseTimerRef = React.useRef<number | null>(null)
 
-    // -------- IG card state --------
+    // IG card state
     const [igAspect, setIgAspect] = React.useState<"1:1" | "4:5">("1:1")
     const [igIndex, setIgIndex] = React.useState(0)
     const igTrackRef = React.useRef<HTMLDivElement | null>(null)
-
     const [igTweakOpen, setIgTweakOpen] = React.useState(false)
     const [igTweakText, setIgTweakText] = React.useState("")
     const [igCopied, setIgCopied] = React.useState<null | "slide" | "all">(null)
     const igCollapseTimerRef = React.useRef<number | null>(null)
 
-    // ✅ derived tweak loading flags (shared store, but only matters when panel open)
-    const isTweakLoading =
-        state.lastAction === "tweak" && state.status === "loading"
-
+    const isTweakLoading = state.lastAction === "tweak" && state.status === "loading"
     const twIsTweakLoading = twTweakOpen && isTweakLoading
     const liIsTweakLoading = liTweakOpen && isTweakLoading
     const igIsTweakLoading = igTweakOpen && isTweakLoading
@@ -306,26 +299,17 @@ function RiverResultsInner() {
     // Cleanup timers
     React.useEffect(() => {
         return () => {
-            if (twCopyTimerRef.current)
-                window.clearTimeout(twCopyTimerRef.current)
-            if (twCollapseTimerRef.current)
-                window.clearTimeout(twCollapseTimerRef.current)
-            if (liCopyTimerRef.current)
-                window.clearTimeout(liCopyTimerRef.current)
-            if (liCollapseTimerRef.current)
-                window.clearTimeout(liCollapseTimerRef.current)
-            if (igCollapseTimerRef.current)
-                window.clearTimeout(igCollapseTimerRef.current)
+            if (twCopyTimerRef.current) window.clearTimeout(twCopyTimerRef.current)
+            if (twCollapseTimerRef.current) window.clearTimeout(twCollapseTimerRef.current)
+            if (liCopyTimerRef.current) window.clearTimeout(liCopyTimerRef.current)
+            if (liCollapseTimerRef.current) window.clearTimeout(liCollapseTimerRef.current)
+            if (igCollapseTimerRef.current) window.clearTimeout(igCollapseTimerRef.current)
         }
     }, [])
 
-    // ✅ Auto-collapse Twitter tweak panel ~2.5s after tweak success
+    // Auto-collapse Twitter tweak panel
     React.useEffect(() => {
-        const isTweakSuccess =
-            twTweakOpen &&
-            state.lastAction === "tweak" &&
-            state.status === "success"
-
+        const isTweakSuccess = twTweakOpen && state.lastAction === "tweak" && state.status === "success"
         if (!isTweakSuccess) return
 
         if (twCollapseTimerRef.current) {
@@ -347,13 +331,9 @@ function RiverResultsInner() {
         }
     }, [twTweakOpen, state.lastAction, state.status])
 
-    // ✅ Auto-collapse LinkedIn tweak panel ~2.5s after tweak success
+    // Auto-collapse LinkedIn tweak panel
     React.useEffect(() => {
-        const isTweakSuccess =
-            liTweakOpen &&
-            state.lastAction === "tweak" &&
-            state.status === "success"
-
+        const isTweakSuccess = liTweakOpen && state.lastAction === "tweak" && state.status === "success"
         if (!isTweakSuccess) return
 
         if (liCollapseTimerRef.current) {
@@ -375,13 +355,9 @@ function RiverResultsInner() {
         }
     }, [liTweakOpen, state.lastAction, state.status])
 
-    // ✅ Auto-collapse IG tweak panel ~2.5s after tweak success
+    // Auto-collapse IG tweak panel
     React.useEffect(() => {
-        const isTweakSuccess =
-            igTweakOpen &&
-            state.lastAction === "tweak" &&
-            state.status === "success"
-
+        const isTweakSuccess = igTweakOpen && state.lastAction === "tweak" && state.status === "success"
         if (!isTweakSuccess) return
 
         if (igCollapseTimerRef.current) {
@@ -448,11 +424,7 @@ function RiverResultsInner() {
         }
     }, [result])
 
-    // Check if we're loading initial generation (not a tweak)
-    const isInitialLoading =
-        state.status === "loading" &&
-        state.lastAction === "generate" &&
-        !result
+    const isInitialLoading = state.status === "loading" && state.lastAction === "generate" && !result
 
     // Show loading skeletons during initial generation
     if (isInitialLoading && state.lastInputs) {
@@ -478,18 +450,11 @@ function RiverResultsInner() {
 
     if (!result) return null
 
-    // ---------- Twitter derived ----------
-    const twitterText =
-        result.twitterThread?.raw ||
-        result.twitterThread?.tweets?.join("\n\n") ||
-        ""
+    // Derived values
+    const twitterText = result.twitterThread?.raw || result.twitterThread?.tweets?.join("\n\n") || ""
     const hasTwitterOutput = Boolean(twitterText)
-
-    // ---------- LinkedIn derived ----------
     const linkedInText = result.linkedInPost?.post || ""
     const hasLinkedInOutput = Boolean(linkedInText)
-
-    // ---------- Instagram derived ----------
     const igSlides = result.instagramCarousel?.slides || []
     const igCount = igSlides.length
     const igSafeIndex = Math.max(0, Math.min(igIndex, igCount - 1))
@@ -505,18 +470,14 @@ function RiverResultsInner() {
         setIgIndex(next)
     }
 
-    // ---------- Handlers ----------
+    // Handlers
     const handleTwitterCopy = async () => {
         if (!hasTwitterOutput) return
         try {
             await navigator.clipboard.writeText(twitterText)
             setTwCopyLabel("copied!")
-            if (twCopyTimerRef.current)
-                window.clearTimeout(twCopyTimerRef.current)
-            twCopyTimerRef.current = window.setTimeout(
-                () => setTwCopyLabel("copy"),
-                1400
-            )
+            if (twCopyTimerRef.current) window.clearTimeout(twCopyTimerRef.current)
+            twCopyTimerRef.current = window.setTimeout(() => setTwCopyLabel("copy"), 1400)
         } catch (e) {
             console.warn("Clipboard not available", e)
         }
@@ -548,12 +509,8 @@ function RiverResultsInner() {
         try {
             await navigator.clipboard.writeText(linkedInText)
             setLiCopyLabel("copied!")
-            if (liCopyTimerRef.current)
-                window.clearTimeout(liCopyTimerRef.current)
-            liCopyTimerRef.current = window.setTimeout(
-                () => setLiCopyLabel("copy"),
-                1400
-            )
+            if (liCopyTimerRef.current) window.clearTimeout(liCopyTimerRef.current)
+            liCopyTimerRef.current = window.setTimeout(() => setLiCopyLabel("copy"), 1400)
         } catch (e) {
             console.warn("Clipboard not available", e)
         }
@@ -633,16 +590,13 @@ function RiverResultsInner() {
                     gap: 24,
                 }}
             >
-                {/* ---------------- Video Header ---------------- */}
-                <VideoHeader
-                    videoTitle={result.videoTitle}
-                    youtubeId={result.youtubeId}
-                />
+                {/* Video Header */}
+                <VideoHeader videoTitle={result.videoTitle} youtubeId={result.youtubeId} />
 
-                {/* ---------------- Carousel Container ---------------- */}
+                {/* Carousel Container */}
                 <HorizontalCardCarousel
+                    navigationDisabled={twTweakOpen || liTweakOpen || igTweakOpen}
                     cards={[
-                        // Twitter Card
                         hasTwitterOutput && (
                             <TwitterThreadCard
                                 threadText={twitterText}
@@ -658,7 +612,6 @@ function RiverResultsInner() {
                                 copyDisabled={!hasTwitterOutput || twTweakOpen}
                             />
                         ),
-                        // LinkedIn Card
                         hasLinkedInOutput && (
                             <LinkedInPostCard
                                 postText={linkedInText}
@@ -674,16 +627,13 @@ function RiverResultsInner() {
                                 copyDisabled={!hasLinkedInOutput || liTweakOpen}
                             />
                         ),
-                        // Instagram Carousel Card
                         hasIgOutput && (
                             <InstagramCarouselCard
+                                title="Instagram Carousel"
+                                videoTitle={result.videoTitle}
                                 slides={igSlides}
                                 aspect={igAspect}
-                                onToggleAspect={() =>
-                                    setIgAspect((a) =>
-                                        a === "1:1" ? "4:5" : "1:1"
-                                    )
-                                }
+                                onToggleAspect={() => setIgAspect((a) => (a === "1:1" ? "4:5" : "1:1"))}
                                 trackRef={igTrackRef}
                                 index={igSafeIndex}
                                 onPrev={() => scrollToIgIndex(igSafeIndex - 1)}
@@ -703,28 +653,27 @@ function RiverResultsInner() {
                     ].filter(Boolean)}
                 />
 
-                {/* ---------------- Auth Prompt ---------------- */}
+                {/* Auth Prompt (for anon users only) */}
                 {!isAuthenticated && (
                     <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
                 )}
             </div>
 
-            {/* ---------------- Sign Up Modal ---------------- */}
+            {/* Sign Up Modal */}
             {showSignUpModal && (
                 <SignUpModal onClose={() => setShowSignUpModal(false)} />
             )}
 
-            {/* ---------------- User Dashboard ---------------- */}
+            {/* User Dashboard */}
             {showDashboard && (
-                <UserDashboard onClose={() => setShowDashboard(false)} />
+                <UserDashboard key={dashboardKey} onClose={() => setShowDashboard(false)} />
             )}
-
         </>
     )
 }
 
 /* ------------------------------------------------------------------ */
-/* Instagram carousel card (wired)                                      */
+/* Instagram carousel card                                              */
 /* ------------------------------------------------------------------ */
 
 function InstagramCarouselCard(props: {
@@ -733,12 +682,10 @@ function InstagramCarouselCard(props: {
     slides: string[]
     aspect: "1:1" | "4:5"
     onToggleAspect: () => void
-
     trackRef: React.RefObject<HTMLDivElement>
     index: number
     onPrev: () => void
     onNext: () => void
-
     tweakOpen: boolean
     onToggleTweak: () => void
     tweakDisabled: boolean
@@ -746,7 +693,6 @@ function InstagramCarouselCard(props: {
     onChangeTweakText: (v: string) => void
     onRegenerate: () => void
     regenMode: RegenMode
-
     copied: null | "slide" | "all"
     onCopySlide: () => void
     onCopyAll: () => void
@@ -786,8 +732,7 @@ function InstagramCarouselCard(props: {
                 padding: 20,
                 position: "relative",
                 overflow: "visible",
-                fontFamily:
-                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
         >
             {/* HEADER */}
@@ -803,11 +748,7 @@ function InstagramCarouselCard(props: {
                 <div style={{ color: "#7A7A7A", fontSize: 16 }}>{title}</div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <AspectRatioToggle
-                        aspect={aspect}
-                        onToggle={onToggleAspect}
-                    />
-
+                    <AspectRatioToggle aspect={aspect} onToggle={onToggleAspect} />
                     <div style={{ color: "#7A7A7A", fontSize: 13 }}>
                         {index + 1} / {count}
                     </div>
@@ -854,8 +795,7 @@ function InstagramCarouselCard(props: {
                                 justifyContent: "center",
                                 gap: 16,
                                 opacity: tweakOpen ? 0.55 : 1,
-                                transition:
-                                    "opacity 300ms cubic-bezier(0.25,0.1,0.25,1)",
+                                transition: "opacity 300ms cubic-bezier(0.25,0.1,0.25,1)",
                             }}
                         >
                             <div
@@ -884,16 +824,8 @@ function InstagramCarouselCard(props: {
                 </div>
 
                 {/* ARROWS */}
-                <ArrowButton
-                    side="left"
-                    disabled={index === 0}
-                    onClick={onPrev}
-                />
-                <ArrowButton
-                    side="right"
-                    disabled={index === count - 1}
-                    onClick={onNext}
-                />
+                <ArrowButton side="left" disabled={index === 0} onClick={onPrev} />
+                <ArrowButton side="right" disabled={index === count - 1} onClick={onNext} />
 
                 {/* DOTS */}
                 <div
@@ -916,9 +848,7 @@ function InstagramCarouselCard(props: {
                                 height: 7,
                                 borderRadius: 999,
                                 backgroundColor:
-                                    i === index
-                                        ? "rgba(47,47,47,0.55)"
-                                        : "rgba(47,47,47,0.18)",
+                                    i === index ? "rgba(47,47,47,0.55)" : "rgba(47,47,47,0.18)",
                             }}
                         />
                     ))}
@@ -942,7 +872,6 @@ function InstagramCarouselCard(props: {
                     onClick={onToggleTweak}
                     disabled={tweakDisabled}
                 />
-
                 <CopyMenuButton
                     disabled={false}
                     copied={copied}
@@ -969,13 +898,7 @@ function InstagramCarouselCard(props: {
                         overflow: "visible",
                     }}
                 >
-                    <div
-                        style={{
-                            textAlign: "center",
-                            color: "#7A7A7A",
-                            fontSize: 16,
-                        }}
-                    >
+                    <div style={{ textAlign: "center", color: "#7A7A7A", fontSize: 16 }}>
                         tell river how to modify your carousel
                     </div>
 
@@ -994,15 +917,13 @@ function InstagramCarouselCard(props: {
                             outline: "none",
                             padding: "18px 20px",
                             resize: "vertical",
-                            fontFamily:
-                                "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                            fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                             fontSize: 14,
                             lineHeight: "1.3em",
                             color: "#2F2F2F",
                             boxShadow: "inset 0px 0px 5px rgba(0,0,0,0.13)",
                             opacity: isLoading ? 0.75 : 1,
-                            transition:
-                                "opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
+                            transition: "opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
                         }}
                     />
 
@@ -1012,10 +933,10 @@ function InstagramCarouselCard(props: {
                                 regenMode === "loading"
                                     ? "Holding the thread…"
                                     : regenMode === "success"
-                                      ? "There you go!"
-                                      : regenMode === "error"
-                                        ? "Try again"
-                                        : "Let it flow"
+                                        ? "There you go!"
+                                        : regenMode === "error"
+                                            ? "Try again"
+                                            : "Let it flow"
                             }
                             onClick={onRegenerate}
                             disabled={isLoading}
@@ -1031,16 +952,10 @@ function InstagramCarouselCard(props: {
 }
 
 /* ------------------------------------------------------------------ */
-/* Shared little UI bits (same as your demo)                            */
+/* Shared UI components                                                 */
 /* ------------------------------------------------------------------ */
 
-function AspectRatioToggle({
-    aspect,
-    onToggle,
-}: {
-    aspect: "1:1" | "4:5"
-    onToggle: () => void
-}) {
+function AspectRatioToggle({ aspect, onToggle }: { aspect: "1:1" | "4:5"; onToggle: () => void }) {
     return (
         <div
             style={{
@@ -1050,35 +965,18 @@ function AspectRatioToggle({
                 padding: 4,
                 backgroundColor: "rgba(124, 138, 17, 0.12)",
                 borderRadius: 999,
-                fontFamily:
-                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 fontSize: 12,
                 fontWeight: 500,
             }}
         >
-            <AspectToggleButton
-                label="1:1"
-                isActive={aspect === "1:1"}
-                onClick={() => aspect !== "1:1" && onToggle()}
-            />
-            <AspectToggleButton
-                label="4:5"
-                isActive={aspect === "4:5"}
-                onClick={() => aspect !== "4:5" && onToggle()}
-            />
+            <AspectToggleButton label="1:1" isActive={aspect === "1:1"} onClick={() => aspect !== "1:1" && onToggle()} />
+            <AspectToggleButton label="4:5" isActive={aspect === "4:5"} onClick={() => aspect !== "4:5" && onToggle()} />
         </div>
     )
 }
 
-function AspectToggleButton({
-    label,
-    isActive,
-    onClick,
-}: {
-    label: string
-    isActive: boolean
-    onClick: () => void
-}) {
+function AspectToggleButton({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) {
     const [hover, setHover] = React.useState(false)
 
     return (
@@ -1090,17 +988,10 @@ function AspectToggleButton({
                 padding: "6px 10px",
                 border: "none",
                 borderRadius: 999,
-                backgroundColor: isActive
-                    ? "#FAF7ED"
-                    : hover
-                      ? "rgba(124, 138, 17, 0.08)"
-                      : "transparent",
-                color: isActive
-                    ? "rgba(47,47,47,0.85)"
-                    : "rgba(47,47,47,0.55)",
+                backgroundColor: isActive ? "#FAF7ED" : hover ? "rgba(124, 138, 17, 0.08)" : "transparent",
+                color: isActive ? "rgba(47,47,47,0.85)" : "rgba(47,47,47,0.55)",
                 cursor: isActive ? "default" : "pointer",
-                transition:
-                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                transition: "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
                 fontFamily: "inherit",
                 fontSize: "inherit",
                 fontWeight: "inherit",
@@ -1111,19 +1002,8 @@ function AspectToggleButton({
     )
 }
 
-function IconOnlyActionButton({
-    icon,
-    label,
-    onClick,
-    disabled,
-}: {
-    icon: React.ReactNode
-    label: string
-    onClick?: () => void
-    disabled?: boolean
-}) {
+function IconOnlyActionButton({ icon, label, onClick, disabled }: { icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }) {
     const [hover, setHover] = React.useState(false)
-
     const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
@@ -1148,22 +1028,11 @@ function IconOnlyActionButton({
                 border: "none",
                 cursor: disabled ? "default" : "pointer",
                 opacity: disabled ? 0.45 : 1,
-                transition:
-                    "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                transition: "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
                 color: fg,
             }}
         >
-            <span
-                style={{
-                    display: "flex",
-                    width: 24,
-                    height: 24,
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                {icon}
-            </span>
+            <span style={{ display: "flex", width: 24, height: 24, alignItems: "center", justifyContent: "center" }}>{icon}</span>
         </button>
     )
 }
@@ -1213,15 +1082,11 @@ function CopyMenuButton({
         setOpen(false)
     }
 
-    const labelSlide =
-        copied === "slide" ? "Copied this slide" : "Copy this slide"
+    const labelSlide = copied === "slide" ? "Copied this slide" : "Copy this slide"
     const labelAll = copied === "all" ? "Copied all slides" : "Copy all slides"
 
     return (
-        <div
-            ref={wrapRef}
-            style={{ position: "relative", overflow: "visible" }}
-        >
+        <div ref={wrapRef} style={{ position: "relative", overflow: "visible" }}>
             <button
                 onClick={() => setOpen((v) => !v)}
                 disabled={disabled}
@@ -1242,20 +1107,11 @@ function CopyMenuButton({
                     border: "none",
                     cursor: disabled ? "default" : "pointer",
                     opacity: disabled ? 0.45 : 1,
-                    transition:
-                        "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
+                    transition: "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), opacity 220ms cubic-bezier(0.25,0.1,0.25,1)",
                     color: fg,
                 }}
             >
-                <span
-                    style={{
-                        display: "flex",
-                        width: 24,
-                        height: 24,
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
+                <span style={{ display: "flex", width: 24, height: 24, alignItems: "center", justifyContent: "center" }}>
                     <Copy size={22} />
                 </span>
             </button>
@@ -1300,17 +1156,13 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
                 border: "none",
                 borderRadius: 24,
                 padding: "10px 12px",
-                backgroundColor: hover
-                    ? "rgba(124, 138, 17, 0.14)"
-                    : "transparent",
+                backgroundColor: hover ? "rgba(124, 138, 17, 0.14)" : "transparent",
                 cursor: "pointer",
                 color: "rgba(47,47,47,0.72)",
                 fontSize: 13,
                 textAlign: "left",
-                fontFamily:
-                    "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                transition:
-                    "background-color 180ms cubic-bezier(0.25,0.1,0.25,1)",
+                fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                transition: "background-color 180ms cubic-bezier(0.25,0.1,0.25,1)",
             }}
         >
             {label}
@@ -1318,15 +1170,7 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
     )
 }
 
-function ArrowButton({
-    side,
-    onClick,
-    disabled,
-}: {
-    side: "left" | "right"
-    onClick: () => void
-    disabled?: boolean
-}) {
+function ArrowButton({ side, onClick, disabled }: { side: "left" | "right"; onClick: () => void; disabled?: boolean }) {
     const [hover, setHover] = React.useState(false)
     const Icon = side === "left" ? ChevronLeft : ChevronRight
 
@@ -1366,17 +1210,7 @@ function ArrowButton({
     )
 }
 
-function RiverMiniCTA({
-    label,
-    onClick,
-    disabled,
-    loading = false,
-}: {
-    label: string
-    onClick: () => void
-    disabled?: boolean
-    loading?: boolean
-}) {
+function RiverMiniCTA({ label, onClick, disabled, loading = false }: { label: string; onClick: () => void; disabled?: boolean; loading?: boolean }) {
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
@@ -1407,22 +1241,17 @@ function RiverMiniCTA({
                 border: "none",
                 outline: "none",
                 backgroundColor,
-                boxShadow:
-                    !disabled && pressed
-                        ? "0px 2px 2px rgba(48, 28, 10, 0.35)"
-                        : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
+                boxShadow: !disabled && pressed ? "0px 2px 2px rgba(48, 28, 10, 0.35)" : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
                 color: "#EFE9DA",
                 fontSize: 14,
                 fontWeight: 500,
                 lineHeight: 1.1,
-                fontFamily:
-                    "General Sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontFamily: "General Sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 whiteSpace: "nowrap",
                 cursor: disabled ? "default" : "pointer",
                 userSelect: "none",
                 opacity: disabled ? 0.75 : 1,
-                transition:
-                    "background-color 400ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 400ms cubic-bezier(0.25,0.1,0.25,1), opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
+                transition: "background-color 400ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 400ms cubic-bezier(0.25,0.1,0.25,1), opacity 250ms cubic-bezier(0.25,0.1,0.25,1)",
             }}
         >
             {loading && (
@@ -1453,17 +1282,7 @@ function RiverMiniCTA({
     )
 }
 
-/* ------------------------------------------------------------------ */
-/* Video Header Component                                               */
-/* ------------------------------------------------------------------ */
-
-function VideoHeader({
-    videoTitle,
-    youtubeId,
-}: {
-    videoTitle: string
-    youtubeId: string | null
-}) {
+function VideoHeader({ videoTitle, youtubeId }: { videoTitle: string; youtubeId: string | null }) {
     return (
         <div
             style={{
@@ -1479,8 +1298,7 @@ function VideoHeader({
         >
             <div
                 style={{
-                    fontFamily:
-                        "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                     fontSize: 24,
                     fontWeight: 600,
                     lineHeight: 1.3,
@@ -1491,8 +1309,7 @@ function VideoHeader({
             </div>
             <div
                 style={{
-                    fontFamily:
-                        "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                     fontSize: 14,
                     lineHeight: 1.4,
                     color: "#7A7A7A",
@@ -1503,10 +1320,6 @@ function VideoHeader({
         </div>
     )
 }
-
-/* ------------------------------------------------------------------ */
-/* Loading Skeleton Card with Gradient Animation                        */
-/* ------------------------------------------------------------------ */
 
 function LoadingSkeletonCard() {
     return (
@@ -1525,16 +1338,7 @@ function LoadingSkeletonCard() {
                 overflow: "hidden",
             }}
         >
-            {/* Water ripple animations - multiple ripples with different timings */}
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 24,
-                    pointerEvents: "none",
-                }}
-            >
-                {/* Ripple 1 */}
+            <div style={{ position: "absolute", inset: 0, borderRadius: 24, pointerEvents: "none" }}>
                 <div
                     style={{
                         position: "absolute",
@@ -1543,12 +1347,10 @@ function LoadingSkeletonCard() {
                         width: 120,
                         height: 120,
                         borderRadius: "50%",
-                        background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.15) 0%, rgba(124, 138, 17, 0.08) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.15) 0%, rgba(124, 138, 17, 0.08) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite",
                     }}
                 />
-                {/* Ripple 2 */}
                 <div
                     style={{
                         position: "absolute",
@@ -1557,12 +1359,10 @@ function LoadingSkeletonCard() {
                         width: 100,
                         height: 100,
                         borderRadius: "50%",
-                        background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.12) 0%, rgba(124, 138, 17, 0.06) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.12) 0%, rgba(124, 138, 17, 0.06) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 0.8s",
                     }}
                 />
-                {/* Ripple 3 */}
                 <div
                     style={{
                         position: "absolute",
@@ -1571,68 +1371,18 @@ function LoadingSkeletonCard() {
                         width: 90,
                         height: 90,
                         borderRadius: "50%",
-                        background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.1) 0%, rgba(124, 138, 17, 0.05) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.1) 0%, rgba(124, 138, 17, 0.05) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 1.6s",
                     }}
                 />
             </div>
 
-            {/* Skeleton content structure */}
-            <div
-                style={{
-                    position: "relative",
-                    zIndex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 14,
-                }}
-            >
-                {/* Title skeleton */}
-                <div
-                    style={{
-                        width: "40%",
-                        height: 18,
-                        backgroundColor: "rgba(124, 138, 17, 0.08)",
-                        borderRadius: 12,
-                    }}
-                />
-
-                {/* Content box skeleton */}
-                <div
-                    style={{
-                        width: "100%",
-                        height: 240,
-                        backgroundColor: "rgba(124, 138, 17, 0.06)",
-                        borderRadius: 24,
-                        boxShadow: "inset 0px 0px 5px rgba(0, 0, 0, 0.08)",
-                    }}
-                />
-
-                {/* Action buttons skeleton */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: 12,
-                    }}
-                >
-                    <div
-                        style={{
-                            width: 40,
-                            height: 40,
-                            backgroundColor: "rgba(124, 138, 17, 0.08)",
-                            borderRadius: 24,
-                        }}
-                    />
-                    <div
-                        style={{
-                            width: 40,
-                            height: 40,
-                            backgroundColor: "rgba(124, 138, 17, 0.08)",
-                            borderRadius: 24,
-                        }}
-                    />
+            <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ width: "40%", height: 18, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 12 }} />
+                <div style={{ width: "100%", height: 240, backgroundColor: "rgba(124, 138, 17, 0.06)", borderRadius: 24, boxShadow: "inset 0px 0px 5px rgba(0, 0, 0, 0.08)" }} />
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 24 }} />
+                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 24 }} />
                 </div>
             </div>
 

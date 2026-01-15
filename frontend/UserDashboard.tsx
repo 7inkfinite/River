@@ -29,6 +29,9 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
 
     React.useEffect(() => {
         const fetchUserAndGenerations = async () => {
+            // Small delay to ensure claim transaction has committed
+            await new Promise(resolve => setTimeout(resolve, 300))
+
             try {
                 // Get current user
                 const {
@@ -52,10 +55,9 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
                         created_at,
                         tone,
                         platforms,
-                        inputs,
+                        platforms,
                         video:videos(
                             id,
-                            title,
                             youtube_video_id,
                             original_url
                         ),
@@ -409,11 +411,11 @@ function DashboardDetailView({
                 key="twitter"
                 threadText={threadText}
                 tweakOpen={false}
-                onToggleTweak={() => {}}
+                onToggleTweak={() => { }}
                 tweakToggleDisabled={true}
                 tweakText=""
-                onChangeTweakText={() => {}}
-                onRegenerate={() => {}}
+                onChangeTweakText={() => { }}
+                onRegenerate={() => { }}
                 regenMode="idle"
                 onCopy={async () => {
                     try {
@@ -435,11 +437,11 @@ function DashboardDetailView({
                 key="linkedin"
                 postText={postText}
                 tweakOpen={false}
-                onToggleTweak={() => {}}
+                onToggleTweak={() => { }}
                 tweakToggleDisabled={true}
                 tweakText=""
-                onChangeTweakText={() => {}}
-                onRegenerate={() => {}}
+                onChangeTweakText={() => { }}
+                onRegenerate={() => { }}
                 regenMode="idle"
                 onCopy={async () => {
                     try {
