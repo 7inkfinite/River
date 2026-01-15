@@ -4,14 +4,14 @@ Transform YouTube videos into platform-optimized social media content using AI.
 
 ## Documentation
 
-- **[OVERVIEW.md](docs/OVERVIEW.md)** - Project overview, user journeys, business strategy
-- **[TECHNICAL.md](docs/TECHNICAL.md)** - Technical architecture and implementation details
-- **[claude.md](docs/claude.md)** - Session directives for LLM assistance
+- **[OVERVIEW.md](OVERVIEW.md)** - Project overview, user journeys, business strategy
+- **[TECHNICAL.md](TECHNICAL.md)** - Technical architecture and implementation details
+- **[claude.md](claude.md)** - Session directives for LLM assistance
 
 ## Project Status
 
-- **[CHANGELOG.md](docs/CHANGELOG.md)** - Release history and notable changes
-- **[BUGLOG.md](docs/BUGLOG.md)** - Detailed bug fix history
+- **[CHANGELOG.md](CHANGELOG.md)** - Release history and notable changes
+- **[BUGLOG.md](BUGLOG.md)** - Detailed bug fix history
 
 ## Architecture
 
