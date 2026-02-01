@@ -105,10 +105,181 @@ export function AuthPrompt({ onSignUpClick }: { onSignUpClick: () => void }) {
 }
 
 /**
+ * SuccessView - Celebration view after successful authentication
+ * Shows checkmark animation and auto-redirects to dashboard
+ */
+function SuccessView({
+    userName,
+    claimedCount,
+    onClose
+}: {
+    userName?: string | null
+    claimedCount?: number | null
+    onClose: () => void
+}) {
+    const [countdown, setCountdown] = React.useState(3)
+    const [isAnimating, setIsAnimating] = React.useState(true)
+
+    // Auto-redirect countdown
+    React.useEffect(() => {
+        if (countdown <= 0) {
+            window.location.href = "/dashboard"
+            return
+        }
+
+        const timer = setTimeout(() => {
+            setCountdown(countdown - 1)
+        }, 1000)
+
+        return () => clearTimeout(timer)
+    }, [countdown])
+
+    // Trigger animation end
+    React.useEffect(() => {
+        const timer = setTimeout(() => setIsAnimating(false), 600)
+        return () => clearTimeout(timer)
+    }, [])
+
+    return (
+        <div style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
+            textAlign: "center"
+        }}>
+            {/* Success Icon with animation */}
+            <div style={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                backgroundColor: "rgba(34, 197, 94, 0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 8,
+                animation: isAnimating ? "successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)" : "none",
+                boxShadow: "0 0 0 8px rgba(34, 197, 94, 0.06)"
+            }}>
+                <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#15803D"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                        animation: isAnimating ? "checkDraw 0.4s ease-out 0.2s both" : "none"
+                    }}
+                >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{
+                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                    fontSize: 26,
+                    fontWeight: 600,
+                    color: "#2F2F2F",
+                    animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.3s both" : "none"
+                }}>
+                    Welcome to River{userName ? `, ${userName.split(' ')[0]}` : ''}!
+                </div>
+
+                <div style={{
+                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                    fontSize: 16,
+                    color: "#4F4F4F",
+                    lineHeight: 1.5,
+                    maxWidth: 300,
+                    animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.4s both" : "none"
+                }}>
+                    {claimedCount && claimedCount > 0
+                        ? `Your ${claimedCount} previous generation${claimedCount > 1 ? 's are' : ' is'} now saved to your account.`
+                        : "You're all set! Start creating content."
+                    }
+                </div>
+            </div>
+
+            <button
+                onClick={() => {
+                    window.location.href = "/dashboard"
+                    onClose()
+                }}
+                style={{
+                    width: "100%",
+                    padding: "16px 24px",
+                    backgroundColor: "#3C82F6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 12,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    fontFamily: '"Inter", sans-serif',
+                    cursor: "pointer",
+                    marginTop: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    transition: "background-color 200ms ease",
+                    animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.5s both" : "none"
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = "#2563EB"}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = "#3C82F6"}
+            >
+                <span>Open My Dashboard</span>
+                <span style={{
+                    opacity: 0.8,
+                    fontSize: 14,
+                    fontWeight: 500
+                }}>
+                    ({countdown}s)
+                </span>
+            </button>
+
+            <style>
+                {`
+                    @keyframes successPop {
+                        0% { transform: scale(0); opacity: 0; }
+                        50% { transform: scale(1.1); }
+                        100% { transform: scale(1); opacity: 1; }
+                    }
+                    @keyframes checkDraw {
+                        0% { stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0; }
+                        100% { stroke-dasharray: 100; stroke-dashoffset: 0; opacity: 1; }
+                    }
+                    @keyframes fadeSlideUp {
+                        0% { transform: translateY(10px); opacity: 0; }
+                        100% { transform: translateY(0); opacity: 1; }
+                    }
+                `}
+            </style>
+        </div>
+    )
+}
+
+/**
  * SignUpModal - Modal overlay with sign up/sign in form
  * Shows when user clicks Sign Up button
  */
-export function SignUpModal({ onClose }: { onClose: () => void }) {
+export function SignUpModal({
+    onClose,
+    isAuthenticated,
+    claimedCount,
+    isClaiming,
+    userName
+}: {
+    onClose: () => void
+    isAuthenticated?: boolean
+    claimedCount?: number | null
+    isClaiming?: boolean
+    userName?: string | null
+}) {
     const [mode, setMode] = React.useState<"signup" | "signin">("signup")
     const [email, setEmail] = React.useState("")
     const [password, setPassword] = React.useState("")
@@ -300,6 +471,8 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                     boxSizing: "border-box",
                     width: "100%",
                     maxWidth: 480,
+                    maxHeight: "calc(100vh - 40px)",
+                    overflowY: "auto",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-start",
@@ -310,6 +483,7 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                     borderRadius: 24,
                     position: "relative",
                     boxShadow: "0 24px 80px rgba(0, 0, 0, 0.2)",
+                    margin: "auto",
                 }}
             >
                 {/* Close Button */}
@@ -343,378 +517,423 @@ export function SignUpModal({ onClose }: { onClose: () => void }) {
                     <X size={20} color="#2F2F2F" />
                 </button>
 
-                {/* Welcome Text */}
-                <div
-                    style={{
-                        fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                        fontSize: "clamp(24px, 5vw, 28px)",
-                        fontWeight: 600,
-                        color: "#2F2F2F",
-                        textAlign: "center",
-                    }}
-                >
-                    {mode === "signup" ? "Create Account" : "Welcome Back"}
-                </div>
-
-                {/* Sign In / Sign Up Toggle - Pill style */}
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 4,
-                        alignItems: "center",
-                        backgroundColor: "rgba(47, 47, 47, 0.06)",
-                        borderRadius: 12,
-                        padding: 4,
-                    }}
-                >
-                    <button
-                        type="button"
-                        onClick={() => setMode("signin")}
-                        style={{
-                            background: mode === "signin" ? "#FFFFFF" : "transparent",
-                            border: "none",
-                            padding: "10px 20px",
-                            cursor: "pointer",
-                            fontFamily:
-                                '"Inter", "Inter Placeholder", sans-serif',
-                            fontSize: 14,
-                            fontWeight: 500,
-                            color: mode === "signin" ? "#2F2F2F" : "#7A7A7A",
-                            borderRadius: 8,
-                            transition: "all 200ms ease",
-                            boxShadow: mode === "signin" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
-                        }}
-                    >
-                        Sign In
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setMode("signup")}
-                        style={{
-                            background: mode === "signup" ? "#FFFFFF" : "transparent",
-                            border: "none",
-                            padding: "10px 20px",
-                            cursor: "pointer",
-                            fontFamily:
-                                '"Inter", "Inter Placeholder", sans-serif',
-                            fontSize: 14,
-                            fontWeight: 500,
-                            color: mode === "signup" ? "#2F2F2F" : "#7A7A7A",
-                            borderRadius: 8,
-                            transition: "all 200ms ease",
-                            boxShadow: mode === "signup" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
-                        }}
-                    >
-                        Sign Up
-                    </button>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                    <div
-                        style={{
-                            width: "100%",
-                            padding: "12px 16px",
-                            backgroundColor: "rgba(220, 38, 38, 0.08)",
-                            borderRadius: 12,
-                            color: "#B91C1C",
-                            fontSize: 14,
-                            fontFamily:
-                                '"Inter", "Inter Placeholder", sans-serif',
-                            textAlign: "center",
-                        }}
-                    >
-                        {error}
-                    </div>
-                )}
-
-                {/* Success Message */}
-                {success && (
-                    <div
-                        style={{
-                            width: "100%",
-                            padding: "12px 16px",
-                            backgroundColor: "rgba(34, 197, 94, 0.08)",
-                            borderRadius: 12,
-                            color: "#15803D",
-                            fontSize: 14,
-                            fontFamily:
-                                '"Inter", "Inter Placeholder", sans-serif',
-                            textAlign: "center",
-                        }}
-                    >
-                        {success}
-                    </div>
-                )}
-
-                {/* Form */}
-                <form
-                    onSubmit={handleSubmit}
-                    style={{
+                {/* SUCCESS VIEW - shown when authenticated and done claiming */}
+                {isAuthenticated && !isClaiming ? (
+                    <SuccessView
+                        userName={userName}
+                        claimedCount={claimedCount}
+                        onClose={onClose}
+                    />
+                ) : isClaiming ? (
+                    <div style={{
                         width: "100%",
                         display: "flex",
                         flexDirection: "column",
-                        gap: 16,
-                    }}
-                >
-                    {/* Name Field (Sign Up only) */}
-                    {mode === "signup" && (
+                        alignItems: "center",
+                        gap: 24,
+                        padding: "40px 0"
+                    }}>
+                        <div style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            border: "3px solid #E5E7EB",
+                            borderTopColor: "#3C82F6",
+                            animation: "spin 1s linear infinite"
+                        }} />
+                        <div style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 16,
+                            color: "#4F4F4F",
+                            fontWeight: 500
+                        }}>
+                            Setting up your dashboard...
+                        </div>
+                        <style>
+                            {`
+                                @keyframes spin {
+                                    from { transform: rotate(0deg); }
+                                    to { transform: rotate(360deg); }
+                                }
+                            `}
+                        </style>
+                    </div>
+                ) : (
+                    <>
+                        {/* Welcome Text */}
+                        <div
+                            style={{
+                                fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                fontSize: "clamp(24px, 5vw, 28px)",
+                                fontWeight: 600,
+                                color: "#2F2F2F",
+                                textAlign: "center",
+                            }}
+                        >
+                            {mode === "signup" ? "Create Account" : "Welcome Back"}
+                        </div>
+
+                        {/* Sign In / Sign Up Toggle - Pill style */}
                         <div
                             style={{
                                 display: "flex",
-                                flexDirection: "column",
-                                gap: 6,
+                                gap: 4,
+                                alignItems: "center",
+                                backgroundColor: "rgba(47, 47, 47, 0.06)",
+                                borderRadius: 12,
+                                padding: 4,
                             }}
                         >
-                            <label
+                            <button
+                                type="button"
+                                onClick={() => setMode("signin")}
                                 style={{
+                                    background: mode === "signin" ? "#FFFFFF" : "transparent",
+                                    border: "none",
+                                    padding: "10px 20px",
+                                    cursor: "pointer",
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
                                     fontSize: 14,
                                     fontWeight: 500,
-                                    color: "#4F4F4F",
+                                    color: mode === "signin" ? "#2F2F2F" : "#7A7A7A",
+                                    borderRadius: 8,
+                                    transition: "all 200ms ease",
+                                    boxShadow: mode === "signin" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
                                 }}
                             >
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => {
-                                    setName(e.target.value)
-                                    if (nameError) validateName(e.target.value)
-                                }}
-                                onBlur={(e) => validateName(e.target.value)}
-                                placeholder="Jane Smith"
-                                disabled={loading}
+                                Sign In
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode("signup")}
                                 style={{
-                                    width: "100%",
-                                    padding: "14px 16px",
-                                    borderRadius: 12,
-                                    border: nameError
-                                        ? "1px solid #EF4444"
-                                        : "1px solid #E5E7EB",
-                                    backgroundColor: "#FFFFFF",
-                                    fontSize: 15,
+                                    background: mode === "signup" ? "#FFFFFF" : "transparent",
+                                    border: "none",
+                                    padding: "10px 20px",
+                                    cursor: "pointer",
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
-                                    color: "#2F2F2F",
-                                    outline: "none",
-                                    boxSizing: "border-box",
-                                    opacity: loading ? 0.6 : 1,
-                                    transition: "border-color 200ms ease",
+                                    fontSize: 14,
+                                    fontWeight: 500,
+                                    color: mode === "signup" ? "#2F2F2F" : "#7A7A7A",
+                                    borderRadius: 8,
+                                    transition: "all 200ms ease",
+                                    boxShadow: mode === "signup" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
                                 }}
+                            >
+                                Sign Up
+                            </button>
+                        </div>
+
+                        {/* Error Message */}
+                        {error && (
+                            <div
+                                style={{
+                                    width: "100%",
+                                    padding: "12px 16px",
+                                    backgroundColor: "rgba(220, 38, 38, 0.08)",
+                                    borderRadius: 12,
+                                    color: "#B91C1C",
+                                    fontSize: 14,
+                                    fontFamily:
+                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    textAlign: "center",
+                                }}
+                            >
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Success Message */}
+                        {success && (
+                            <div
+                                style={{
+                                    width: "100%",
+                                    padding: "12px 16px",
+                                    backgroundColor: "rgba(34, 197, 94, 0.08)",
+                                    borderRadius: 12,
+                                    color: "#15803D",
+                                    fontSize: 14,
+                                    fontFamily:
+                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    textAlign: "center",
+                                }}
+                            >
+                                {success}
+                            </div>
+                        )}
+
+                        {/* Form */}
+                        <form
+                            onSubmit={handleSubmit}
+                            style={{
+                                width: "100%",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 16,
+                            }}
+                        >
+                            {/* Name Field (Sign Up only) */}
+                            {mode === "signup" && (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 6,
+                                    }}
+                                >
+                                    <label
+                                        style={{
+                                            fontFamily:
+                                                '"Inter", "Inter Placeholder", sans-serif',
+                                            fontSize: 14,
+                                            fontWeight: 500,
+                                            color: "#4F4F4F",
+                                        }}
+                                    >
+                                        Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => {
+                                            setName(e.target.value)
+                                            if (nameError) validateName(e.target.value)
+                                        }}
+                                        onBlur={(e) => validateName(e.target.value)}
+                                        placeholder="Jane Smith"
+                                        disabled={loading}
+                                        style={{
+                                            width: "100%",
+                                            padding: "14px 16px",
+                                            borderRadius: 12,
+                                            border: nameError
+                                                ? "1px solid #EF4444"
+                                                : "1px solid #E5E7EB",
+                                            backgroundColor: "#FFFFFF",
+                                            fontSize: 15,
+                                            fontFamily:
+                                                '"Inter", "Inter Placeholder", sans-serif',
+                                            color: "#2F2F2F",
+                                            outline: "none",
+                                            boxSizing: "border-box",
+                                            opacity: loading ? 0.6 : 1,
+                                            transition: "border-color 200ms ease",
+                                        }}
+                                    />
+                                    {nameError && (
+                                        <div
+                                            style={{
+                                                fontSize: 12,
+                                                color: "#EF4444",
+                                                fontFamily:
+                                                    '"Inter", "Inter Placeholder", sans-serif',
+                                            }}
+                                        >
+                                            {nameError}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Email Field */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 6,
+                                }}
+                            >
+                                <label
+                                    style={{
+                                        fontFamily:
+                                            '"Inter", "Inter Placeholder", sans-serif',
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        color: "#4F4F4F",
+                                    }}
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value)
+                                        if (emailError) validateEmail(e.target.value)
+                                    }}
+                                    onBlur={(e) => validateEmail(e.target.value)}
+                                    placeholder="jane@example.com"
+                                    disabled={loading}
+                                    style={{
+                                        width: "100%",
+                                        padding: "14px 16px",
+                                        borderRadius: 12,
+                                        border: emailError
+                                            ? "1px solid #EF4444"
+                                            : "1px solid #E5E7EB",
+                                        backgroundColor: "#FFFFFF",
+                                        fontSize: 15,
+                                        fontFamily:
+                                            '"Inter", "Inter Placeholder", sans-serif',
+                                        color: "#2F2F2F",
+                                        outline: "none",
+                                        boxSizing: "border-box",
+                                        opacity: loading ? 0.6 : 1,
+                                        transition: "border-color 200ms ease",
+                                    }}
+                                />
+                                {emailError && (
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: "#EF4444",
+                                            fontFamily:
+                                                '"Inter", "Inter Placeholder", sans-serif',
+                                        }}
+                                    >
+                                        {emailError}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Password Field */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 6,
+                                }}
+                            >
+                                <label
+                                    style={{
+                                        fontFamily:
+                                            '"Inter", "Inter Placeholder", sans-serif',
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        color: "#4F4F4F",
+                                    }}
+                                >
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value)
+                                        if (passwordError)
+                                            validatePassword(e.target.value)
+                                    }}
+                                    onBlur={(e) => validatePassword(e.target.value)}
+                                    placeholder="Min 6 characters"
+                                    disabled={loading}
+                                    style={{
+                                        width: "100%",
+                                        padding: "14px 16px",
+                                        borderRadius: 12,
+                                        border: passwordError
+                                            ? "1px solid #EF4444"
+                                            : "1px solid #E5E7EB",
+                                        backgroundColor: "#FFFFFF",
+                                        fontSize: 15,
+                                        fontFamily:
+                                            '"Inter", "Inter Placeholder", sans-serif',
+                                        color: "#2F2F2F",
+                                        outline: "none",
+                                        boxSizing: "border-box",
+                                        opacity: loading ? 0.6 : 1,
+                                        transition: "border-color 200ms ease",
+                                    }}
+                                />
+                                {passwordError && (
+                                    <div
+                                        style={{
+                                            fontSize: 12,
+                                            color: "#EF4444",
+                                            fontFamily:
+                                                '"Inter", "Inter Placeholder", sans-serif',
+                                        }}
+                                    >
+                                        {passwordError}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Submit Button */}
+                            <ConfirmButton
+                                loading={loading}
+                                label={
+                                    mode === "signup"
+                                        ? loading
+                                            ? "Creating Account..."
+                                            : "Confirm"
+                                        : loading
+                                            ? "Signing In..."
+                                            : "Sign In"
+                                }
                             />
-                            {nameError && (
+
+                            {/* Terms & Conditions (Sign Up only) */}
+                            {mode === "signup" && (
                                 <div
                                     style={{
                                         fontSize: 12,
-                                        color: "#EF4444",
+                                        color: "#7A7A7A",
                                         fontFamily:
                                             '"Inter", "Inter Placeholder", sans-serif',
+                                        textAlign: "center",
+                                        lineHeight: 1.5,
                                     }}
                                 >
-                                    {nameError}
+                                    By signing up, you agree to our{" "}
+                                    <a
+                                        href="/terms"
+                                        target="_blank"
+                                        style={{
+                                            color: "#2F2F2F",
+                                            textDecoration: "underline",
+                                        }}
+                                    >
+                                        Terms of Service
+                                    </a>{" "}
+                                    and{" "}
+                                    <a
+                                        href="/privacy"
+                                        target="_blank"
+                                        style={{
+                                            color: "#2F2F2F",
+                                            textDecoration: "underline",
+                                        }}
+                                    >
+                                        Privacy Policy
+                                    </a>
                                 </div>
                             )}
-                        </div>
-                    )}
 
-                    {/* Email Field */}
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 6,
-                        }}
-                    >
-                        <label
-                            style={{
-                                fontFamily:
-                                    '"Inter", "Inter Placeholder", sans-serif',
-                                fontSize: 14,
-                                fontWeight: 500,
-                                color: "#4F4F4F",
-                            }}
-                        >
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value)
-                                if (emailError) validateEmail(e.target.value)
-                            }}
-                            onBlur={(e) => validateEmail(e.target.value)}
-                            placeholder="jane@example.com"
-                            disabled={loading}
-                            style={{
-                                width: "100%",
-                                padding: "14px 16px",
-                                borderRadius: 12,
-                                border: emailError
-                                    ? "1px solid #EF4444"
-                                    : "1px solid #E5E7EB",
-                                backgroundColor: "#FFFFFF",
-                                fontSize: 15,
-                                fontFamily:
-                                    '"Inter", "Inter Placeholder", sans-serif',
-                                color: "#2F2F2F",
-                                outline: "none",
-                                boxSizing: "border-box",
-                                opacity: loading ? 0.6 : 1,
-                                transition: "border-color 200ms ease",
-                            }}
-                        />
-                        {emailError && (
+                            {/* Divider */}
                             <div
                                 style={{
-                                    fontSize: 12,
-                                    color: "#EF4444",
+                                    width: "100%",
+                                    textAlign: "center",
+                                    color: "#7A7A7A",
+                                    fontSize: 14,
                                     fontFamily:
                                         '"Inter", "Inter Placeholder", sans-serif',
+                                    margin: "8px 0",
                                 }}
                             >
-                                {emailError}
+                                or just use your google account
                             </div>
-                        )}
-                    </div>
 
-                    {/* Password Field */}
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 6,
-                        }}
-                    >
-                        <label
-                            style={{
-                                fontFamily:
-                                    '"Inter", "Inter Placeholder", sans-serif',
-                                fontSize: 14,
-                                fontWeight: 500,
-                                color: "#4F4F4F",
-                            }}
-                        >
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => {
-                                setPassword(e.target.value)
-                                if (passwordError)
-                                    validatePassword(e.target.value)
-                            }}
-                            onBlur={(e) => validatePassword(e.target.value)}
-                            placeholder="Min 6 characters"
-                            disabled={loading}
-                            style={{
-                                width: "100%",
-                                padding: "14px 16px",
-                                borderRadius: 12,
-                                border: passwordError
-                                    ? "1px solid #EF4444"
-                                    : "1px solid #E5E7EB",
-                                backgroundColor: "#FFFFFF",
-                                fontSize: 15,
-                                fontFamily:
-                                    '"Inter", "Inter Placeholder", sans-serif',
-                                color: "#2F2F2F",
-                                outline: "none",
-                                boxSizing: "border-box",
-                                opacity: loading ? 0.6 : 1,
-                                transition: "border-color 200ms ease",
-                            }}
-                        />
-                        {passwordError && (
-                            <div
-                                style={{
-                                    fontSize: 12,
-                                    color: "#EF4444",
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
-                                }}
-                            >
-                                {passwordError}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Submit Button */}
-                    <ConfirmButton
-                        loading={loading}
-                        label={
-                            mode === "signup"
-                                ? loading
-                                    ? "Creating Account..."
-                                    : "Confirm"
-                                : loading
-                                  ? "Signing In..."
-                                  : "Sign In"
-                        }
-                    />
-
-                    {/* Terms & Conditions (Sign Up only) */}
-                    {mode === "signup" && (
-                        <div
-                            style={{
-                                fontSize: 12,
-                                color: "#7A7A7A",
-                                fontFamily:
-                                    '"Inter", "Inter Placeholder", sans-serif',
-                                textAlign: "center",
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            By signing up, you agree to our{" "}
-                            <a
-                                href="/terms"
-                                target="_blank"
-                                style={{
-                                    color: "#2F2F2F",
-                                    textDecoration: "underline",
-                                }}
-                            >
-                                Terms of Service
-                            </a>{" "}
-                            and{" "}
-                            <a
-                                href="/privacy"
-                                target="_blank"
-                                style={{
-                                    color: "#2F2F2F",
-                                    textDecoration: "underline",
-                                }}
-                            >
-                                Privacy Policy
-                            </a>
-                        </div>
-                    )}
-
-                    {/* Divider */}
-                    <div
-                        style={{
-                            width: "100%",
-                            textAlign: "center",
-                            color: "#7A7A7A",
-                            fontSize: 14,
-                            fontFamily:
-                                '"Inter", "Inter Placeholder", sans-serif',
-                            margin: "8px 0",
-                        }}
-                    >
-                        or just use your google account
-                    </div>
-
-                    {/* Google Sign In Button */}
-                    <GoogleSignInButton
-                        onClick={handleGoogleSignIn}
-                        disabled={loading}
-                    />
-                </form>
+                            {/* Google Sign In Button */}
+                            <GoogleSignInButton
+                                onClick={handleGoogleSignIn}
+                                disabled={loading}
+                            />
+                        </form>
+                    </>
+                )}
             </div>
         </div>
     )
@@ -812,8 +1031,8 @@ function GoogleSignInButton({
     const backgroundColor = pressed
         ? "rgba(255, 255, 255, 0.95)"
         : hover
-          ? "rgba(255, 255, 255, 1)"
-          : "rgba(255, 255, 255, 0.9)"
+            ? "rgba(255, 255, 255, 1)"
+            : "rgba(255, 255, 255, 0.9)"
 
     return (
         <button

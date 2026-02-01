@@ -1,11 +1,11 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid, ExternalLink } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
-import { AuthPrompt, SignUpModal, supabase } from "./AuthComponents.tsx"
-import { UserDashboard } from "./UserDashboard.tsx"
+import { AuthPrompt } from "./AuthComponents.tsx"
 import { HorizontalCardCarousel } from "./HorizontalCardCarousel.tsx"
+import { useAuthGate } from "./AuthGate.tsx"
 import type { RegenMode } from "./TwitterThreadCard.tsx"
 
 type RawRiverResult = any
@@ -144,92 +144,24 @@ function normalizeRiverResult(raw: RawRiverResult): NormalizedRiverResult {
     }
 }
 
-export function RiverResultsRoot() {
-    return <RiverResultsInner />
+export function RiverResultsRoot({
+    disableAuthUI = false,
+}: {
+    disableAuthUI?: boolean
+}) {
+    return <RiverResultsInner disableAuthUI={disableAuthUI} />
 }
 
-function RiverResultsInner() {
+function RiverResultsInner({
+    disableAuthUI = false,
+}: {
+    disableAuthUI?: boolean
+}) {
     const { state, regenerate } = UseRiverGeneration()
+    const { isAuthenticated, openSignUpModal } = useAuthGate()
 
     const [result, setResult] = React.useState<NormalizedRiverResult | null>(null)
     const resultsContainerRef = React.useRef<HTMLDivElement | null>(null)
-
-    // Auth state
-    const [showSignUpModal, setShowSignUpModal] = React.useState(false)
-    const [showDashboard, setShowDashboard] = React.useState(false)
-    const [isAuthenticated, setIsAuthenticated] = React.useState(false)
-    const [dashboardKey, setDashboardKey] = React.useState(0)
-
-    const claimGenerations = React.useCallback(async (session: any) => {
-        const anonymousSessionId = localStorage.getItem("river_session_id")
-        if (!anonymousSessionId) return
-
-        try {
-            console.log("🔄 Claiming anonymous generations via Pipedream")
-
-            const response = await fetch("YOUR_CLAIM_WEBHOOK_URL_HERE", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({
-                    anonymous_session_id: anonymousSessionId,
-                    user_id: session.user.id
-                })
-            })
-
-            if (!response.ok) {
-                const error = await response.json()
-                console.error("❌ Claim failed:", error)
-                // Don't throw, just log
-                return
-            }
-
-            const claimResult = await response.json()
-            console.log("✅ Claimed successfully:", claimResult.claimed)
-            localStorage.removeItem("river_session_id")
-            // Increment key to force dashboard remount with fresh fetch
-            setDashboardKey(prev => prev + 1)
-        } catch (error) {
-            console.error("❌ Error claiming anonymous generations:", error)
-        }
-    }, [])
-
-    // Check authentication status
-    React.useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            setIsAuthenticated(!!session)
-        }
-        checkAuth()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            const wasAuthenticated = isAuthenticated
-            const nowAuthenticated = !!session
-            setIsAuthenticated(nowAuthenticated)
-
-            if (!wasAuthenticated && nowAuthenticated && session?.user) {
-                await claimGenerations(session)
-                setShowSignUpModal(false)
-                setShowDashboard(true)
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [isAuthenticated, claimGenerations])
-
-    // ✅ NEW: Claim immediately after generation if logged in
-    React.useEffect(() => {
-        const justGenerated = state.status === "success" && state.lastAction === "generate"
-        if (justGenerated && isAuthenticated) {
-            supabase.auth.getSession().then(({ data }) => {
-                if (data.session) {
-                    claimGenerations(data.session)
-                }
-            })
-        }
-    }, [state.status, state.lastAction, isAuthenticated, claimGenerations])
 
     // Twitter card state
     const [twTweakOpen, setTwTweakOpen] = React.useState(false)
@@ -653,21 +585,16 @@ function RiverResultsInner() {
                     ].filter(Boolean)}
                 />
 
-                {/* Auth Prompt (for anon users only) */}
-                {!isAuthenticated && (
-                    <AuthPrompt onSignUpClick={() => setShowSignUpModal(true)} />
+                {/* Auth Prompt (for anon users only, when auth UI enabled) */}
+                {!disableAuthUI && !isAuthenticated && (
+                    <AuthPrompt onSignUpClick={openSignUpModal} />
+                )}
+
+                {/* Post-Auth CTA (for authenticated users, when auth UI enabled) */}
+                {!disableAuthUI && isAuthenticated && (
+                    <PostAuthCTA />
                 )}
             </div>
-
-            {/* Sign Up Modal */}
-            {showSignUpModal && (
-                <SignUpModal onClose={() => setShowSignUpModal(false)} />
-            )}
-
-            {/* User Dashboard */}
-            {showDashboard && (
-                <UserDashboard key={dashboardKey} onClose={() => setShowDashboard(false)} />
-            )}
         </>
     )
 }
@@ -1403,6 +1330,64 @@ function LoadingSkeletonCard() {
                 }
             `}
             </style>
+        </div>
+    )
+}
+
+/**
+ * PostAuthCTA - Shows "Saved to Dashboard" message with link for authenticated users
+ */
+function PostAuthCTA() {
+    const [hover, setHover] = React.useState(false)
+
+    return (
+        <div
+            style={{
+                width: "100%",
+                maxWidth: 840,
+                margin: "0 auto",
+                padding: "20px 24px",
+                borderRadius: 16,
+                backgroundColor: "rgba(60, 130, 246, 0.08)",
+                border: "1px solid rgba(60, 130, 246, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            }}
+        >
+            <div
+                style={{
+                    color: "#2F2F2F",
+                    fontSize: 15,
+                    fontWeight: 500,
+                }}
+            >
+                Saved to your dashboard
+            </div>
+
+            <a
+                href="/dashboard"
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "10px 16px",
+                    borderRadius: 24,
+                    backgroundColor: hover ? "#3C82F6" : "rgba(60, 130, 246, 0.12)",
+                    color: hover ? "#FFFFFF" : "#3C82F6",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                    transition: "all 200ms ease",
+                }}
+            >
+                <span>View Dashboard</span>
+                <ExternalLink size={14} />
+            </a>
         </div>
     )
 }
