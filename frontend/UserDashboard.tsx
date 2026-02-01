@@ -286,6 +286,24 @@ function GenerationsProgressBar({
 
 type DashboardView = "list" | "detail"
 
+// Helper function to group generations by date
+function groupGenerationsByDate(generations: any[]): [string, any[]][] {
+    const groups: { [date: string]: any[] } = {}
+
+    generations.forEach((gen) => {
+        const date = new Date(gen.created_at).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        })
+        if (!groups[date]) groups[date] = []
+        groups[date].push(gen)
+    })
+
+    return Object.entries(groups) // Returns [date, generations[]]
+}
+
 export function UserDashboard({
     onNavigateToCreate,
 }: {
@@ -439,6 +457,9 @@ export function UserDashboard({
 
 /**
  * DashboardListView - List of user generations (Updated Figma design)
+ * Features:
+ * - Date grouping: Generations grouped by creation date
+ * - Infinite scroll: Loads more items as user scrolls
  */
 function DashboardListView({
     userName,
@@ -451,6 +472,29 @@ function DashboardListView({
     onViewGeneration: (gen: any) => void
     onNavigateToCreate?: () => void
 }) {
+    // Infinite scroll state
+    const [visibleCount, setVisibleCount] = React.useState(12)
+    const observerRef = React.useRef<HTMLDivElement>(null)
+
+    // Intersection Observer for infinite scroll
+    React.useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && visibleCount < generations.length) {
+                    setVisibleCount((prev) => Math.min(prev + 12, generations.length))
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        if (observerRef.current) observer.observe(observerRef.current)
+        return () => observer.disconnect()
+    }, [visibleCount, generations.length])
+
+    // Get visible generations and group by date
+    const visibleGenerations = generations.slice(0, visibleCount)
+    const groupedGenerations = groupGenerationsByDate(visibleGenerations)
+
     return (
         <div
             style={{
@@ -519,7 +563,7 @@ function DashboardListView({
                 }}
             />
 
-            {/* Generations Grid */}
+            {/* Generations Grid - Grouped by Date */}
             {generations.length === 0 ? (
                 <div
                     style={{
@@ -564,20 +608,79 @@ function DashboardListView({
                     )}
                 </div>
             ) : (
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: 16,
-                    }}
-                >
-                    {generations.map((gen) => (
-                        <GenerationCard
-                            key={gen.id}
-                            generation={gen}
-                            onClick={() => onViewGeneration(gen)}
-                        />
+                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    {groupedGenerations.map(([date, gens]) => (
+                        <div key={date}>
+                            {/* Date Header with horizontal line */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 16,
+                                    marginBottom: 16,
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        fontFamily: '"Inter", sans-serif',
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        color: "#7A7A7A",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {date}
+                                </span>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor: "#E2D0A2",
+                                    }}
+                                />
+                            </div>
+
+                            {/* Cards Grid for this date */}
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(3, 1fr)",
+                                    gap: 16,
+                                }}
+                            >
+                                {gens.map((gen: any) => (
+                                    <GenerationCard
+                                        key={gen.id}
+                                        generation={gen}
+                                        onClick={() => onViewGeneration(gen)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     ))}
+
+                    {/* Infinite scroll sentinel */}
+                    {visibleCount < generations.length && (
+                        <div
+                            ref={observerRef}
+                            style={{
+                                height: 50,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontFamily: '"Inter", sans-serif',
+                                    fontSize: 14,
+                                    color: "#7A7A7A",
+                                }}
+                            >
+                                Loading more...
+                            </span>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
