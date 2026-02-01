@@ -50,7 +50,12 @@ export function SignUpModalPreview() {
             </button>
 
             {showModal && (
-                <SignUpModal onClose={() => setShowModal(false)} />
+                <SignUpModal
+                    onClose={() => setShowModal(false)}
+                    isAuthenticated={false}
+                    isClaiming={false}
+                    claimedCount={0}
+                />
             )}
         </div>
     )

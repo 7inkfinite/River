@@ -1,10 +1,22 @@
 import * as React from "react"
-import { X, ArrowLeft } from "lucide-react"
+import { ArrowLeft, Linkedin, Instagram, Play, LogOut, Home, Plus } from "lucide-react"
 import { supabase } from "./AuthComponents.tsx"
 import { HorizontalCardCarousel } from "./HorizontalCardCarousel.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
 import { InstagramCarouselCard } from "./InstagramCarouselCard.tsx"
+
+// X (Twitter) logo SVG component
+function XLogo({ size = 24, color = "#2F2F2F" }: { size?: number; color?: string }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                fill={color}
+            />
+        </svg>
+    )
+}
 
 /**
  * UserDashboard - Enhanced dashboard showing generation history and outputs
@@ -16,9 +28,269 @@ import { InstagramCarouselCard } from "./InstagramCarouselCard.tsx"
  * - Fetches outputs from database
  */
 
+// Helper function to fetch video title from YouTube oEmbed API
+async function fetchVideoTitle(youtubeId: string): Promise<string | null> {
+    try {
+        const response = await fetch(
+            `https://www.youtube.com/oembed?url=https://youtube.com/watch?v=${youtubeId}&format=json`
+        )
+        if (!response.ok) return null
+        const data = await response.json()
+        return data.title || null
+    } catch (error) {
+        console.warn("Failed to fetch video title:", error)
+        return null
+    }
+}
+
+// Helper function to get YouTube thumbnail URL
+function getYouTubeThumbnail(youtubeId: string): string {
+    return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+}
+
+// Platform icon component with active/inactive states (matching Figma design)
+function PlatformIcon({ platform, active = true }: { platform: string; active?: boolean }) {
+    const platformLower = platform.toLowerCase()
+    const inactiveColor = "#CCCCCC"
+
+    if (platformLower.includes("twitter") || platformLower.includes("x")) {
+        return <XLogo size={24} color={active ? "#2F2F2F" : inactiveColor} />
+    } else if (platformLower.includes("linkedin")) {
+        return <Linkedin size={24} color={active ? "#0A66C2" : inactiveColor} />
+    } else if (platformLower.includes("instagram") || platformLower.includes("carousel")) {
+        return <Instagram size={24} color={active ? "#E4405F" : inactiveColor} />
+    }
+    return null
+}
+
+// Status bar component - Updated to match Figma design
+function StatusBar({
+    onNavigateToCreate,
+    onLogout,
+}: {
+    onNavigateToCreate?: () => void
+    onLogout: () => void
+}) {
+    const [homeHover, setHomeHover] = React.useState(false)
+    const [newHover, setNewHover] = React.useState(false)
+    const [logoutHover, setLogoutHover] = React.useState(false)
+
+    return (
+        <div
+            style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 64,
+                backgroundColor: "#FAF8F0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 60px",
+                zIndex: 100,
+            }}
+        >
+            {/* Home icon on left */}
+            <button
+                onClick={() => window.location.href = "/"}
+                onMouseEnter={() => setHomeHover(true)}
+                onMouseLeave={() => setHomeHover(false)}
+                style={{
+                    width: 40,
+                    height: 40,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "none",
+                    backgroundColor: "transparent",
+                    cursor: "pointer",
+                    opacity: homeHover ? 0.7 : 1,
+                    transition: "opacity 200ms ease",
+                }}
+            >
+                <Home size={24} color="#2F2F2F" />
+            </button>
+
+            {/* Right side: New button and Logout */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {onNavigateToCreate && (
+                    <button
+                        onClick={onNavigateToCreate}
+                        onMouseEnter={() => setNewHover(true)}
+                        onMouseLeave={() => setNewHover(false)}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 14,
+                            width: 111,
+                            padding: "8px 12px",
+                            borderRadius: 24,
+                            border: "none",
+                            backgroundColor: newHover ? "#3570D4" : "#4688F7",
+                            cursor: "pointer",
+                            transition: "background-color 200ms ease",
+                        }}
+                    >
+                        <span
+                            style={{
+                                color: "#FAF8F0",
+                                fontSize: 20,
+                                fontWeight: 400,
+                                fontFamily: '"Inter", sans-serif',
+                            }}
+                        >
+                            New
+                        </span>
+                        <Plus size={14} color="#FAF8F0" strokeWidth={2.5} />
+                    </button>
+                )}
+                <button
+                    onClick={onLogout}
+                    onMouseEnter={() => setLogoutHover(true)}
+                    onMouseLeave={() => setLogoutHover(false)}
+                    style={{
+                        width: 40,
+                        height: 40,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        cursor: "pointer",
+                        opacity: logoutHover ? 0.7 : 1,
+                        transition: "opacity 200ms ease",
+                    }}
+                >
+                    <LogOut size={24} color="#2F2F2F" />
+                </button>
+            </div>
+        </div>
+    )
+}
+
+// Generations progress bar component (matching Figma design)
+function GenerationsProgressBar({
+    generationsUsed = 0,
+    generationsLimit = 30,
+}: {
+    generationsUsed?: number
+    generationsLimit?: number
+}) {
+    const [upgradeHover, setUpgradeHover] = React.useState(false)
+    const generationsLeft = Math.max(0, generationsLimit - generationsUsed)
+    const progressPercentage = Math.min(100, (generationsUsed / generationsLimit) * 100)
+
+    return (
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 16,
+                width: 403,
+            }}
+        >
+            {/* Progress bar */}
+            <div
+                style={{
+                    width: "100%",
+                    height: 21,
+                    borderRadius: 12,
+                    backgroundColor: "#F0EBDA",
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    paddingRight: 12,
+                    boxShadow: "inset -2px 2px 2.4px 0px rgba(0,0,0,0.19)",
+                }}
+            >
+                {/* Progress fill */}
+                <div
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        height: "100%",
+                        width: `${progressPercentage}%`,
+                        minWidth: progressPercentage > 0 ? 20 : 0,
+                        maxWidth: "100%",
+                        borderRadius: 12,
+                        backgroundColor: "#4688F7",
+                        boxShadow: "inset 0px -4px 3.2px 0px #2776C5, inset 0px 2px 3.4px 0px rgba(254,254,254,0.44)",
+                    }}
+                />
+                {/* Text */}
+                <span
+                    style={{
+                        position: "relative",
+                        zIndex: 1,
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: 12,
+                        fontWeight: 400,
+                        color: "#5D6226",
+                    }}
+                >
+                    {generationsLeft} generations left
+                </span>
+            </div>
+
+            {/* Upgrade CTA */}
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    width: "100%",
+                }}
+            >
+                <span
+                    style={{
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: 14,
+                        fontWeight: 400,
+                        color: "#2F2F2F",
+                    }}
+                >
+                    To keep using the app and unlock more benefits,
+                </span>
+                <button
+                    onClick={() => {
+                        // TODO: Open upgrade modal or navigate to upgrade page
+                        console.log("Upgrade clicked")
+                    }}
+                    onMouseEnter={() => setUpgradeHover(true)}
+                    onMouseLeave={() => setUpgradeHover(false)}
+                    style={{
+                        padding: "6px 12px",
+                        borderRadius: 24,
+                        border: "none",
+                        backgroundColor: upgradeHover ? "#1F1F1F" : "#2F2F2F",
+                        color: "#FAF8F0",
+                        fontSize: 14,
+                        fontWeight: 400,
+                        fontFamily: '"Inter", sans-serif',
+                        cursor: "pointer",
+                        transition: "background-color 200ms ease",
+                    }}
+                >
+                    Upgrade
+                </button>
+            </div>
+        </div>
+    )
+}
+
 type DashboardView = "list" | "detail"
 
-export function UserDashboard({ onClose }: { onClose: () => void }) {
+export function UserDashboard({
+    onNavigateToCreate,
+}: {
+    onNavigateToCreate?: () => void
+}) {
     const [user, setUser] = React.useState<any>(null)
     const [generations, setGenerations] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(true)
@@ -29,9 +301,6 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
 
     React.useEffect(() => {
         const fetchUserAndGenerations = async () => {
-            // Small delay to ensure claim transaction has committed
-            await new Promise(resolve => setTimeout(resolve, 300))
-
             try {
                 // Get current user
                 const {
@@ -102,19 +371,17 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
         return (
             <div
                 style={{
-                    position: "fixed",
-                    inset: 0,
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    width: "100%",
+                    minHeight: "100vh",
+                    backgroundColor: "#FAF8F0",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    zIndex: 9999,
-                    backdropFilter: "blur(4px)",
                 }}
             >
                 <div
                     style={{
-                        color: "#FFFFFF",
+                        color: "#7A7A7A",
                         fontSize: 18,
                         fontFamily: '"Inter", sans-serif',
                     }}
@@ -127,22 +394,37 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
 
     const userName = user?.user_metadata?.full_name || "there"
 
+    const handleLogout = async () => {
+        try {
+            await supabase.auth.signOut()
+            window.location.href = "/"
+        } catch (error) {
+            console.error("Error signing out:", error)
+        }
+    }
+
     return (
         <div
             style={{
-                position: "fixed",
-                inset: 0,
-                backgroundColor: "#FAF7ED",
-                zIndex: 9999,
+                width: "100%",
+                minHeight: "100vh",
+                backgroundColor: "#FAF8F0",
                 overflowY: "auto",
+                position: "relative",
             }}
         >
+            {/* Status Bar */}
+            <StatusBar
+                onNavigateToCreate={onNavigateToCreate}
+                onLogout={handleLogout}
+            />
+
             {view === "list" ? (
                 <DashboardListView
                     userName={userName}
                     generations={generations}
                     onViewGeneration={handleViewGeneration}
-                    onClose={onClose}
+                    onNavigateToCreate={onNavigateToCreate}
                 />
             ) : (
                 <DashboardDetailView
@@ -156,87 +438,86 @@ export function UserDashboard({ onClose }: { onClose: () => void }) {
 }
 
 /**
- * DashboardListView - List of user generations
+ * DashboardListView - List of user generations (Updated Figma design)
  */
 function DashboardListView({
     userName,
     generations,
     onViewGeneration,
-    onClose,
+    onNavigateToCreate,
 }: {
     userName: string
     generations: any[]
     onViewGeneration: (gen: any) => void
-    onClose: () => void
+    onNavigateToCreate?: () => void
 }) {
     return (
         <div
             style={{
-                maxWidth: 1200,
+                maxWidth: 1360,
                 margin: "0 auto",
-                padding: "40px 20px",
+                padding: "120px 60px 40px 60px",
                 minHeight: "100vh",
+                position: "relative",
             }}
         >
-            {/* Header with Close Button */}
+            {/* Header Row - Greeting left, Progress bar right */}
             <div
                 style={{
                     display: "flex",
+                    alignItems: "center",
                     justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: 40,
+                    marginBottom: 16,
                 }}
             >
-                <div>
-                    <div
-                        style={{
-                            fontFamily: '"Inter", sans-serif',
-                            fontSize: 36,
-                            fontWeight: 600,
-                            color: "#2F2F2F",
-                            marginBottom: 12,
-                        }}
-                    >
-                        Hey {userName}! 👋
-                    </div>
-                    <div
-                        style={{
-                            fontFamily: '"Inter", sans-serif',
-                            fontSize: 18,
-                            color: "#7A7A7A",
-                        }}
-                    >
-                        You've generated {generations.length}{" "}
-                        {generations.length === 1 ? "post" : "posts"} so far
-                    </div>
-                </div>
-
-                <button
-                    onClick={onClose}
+                {/* Greeting */}
+                <div
                     style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: "50%",
-                        border: "none",
-                        backgroundColor: "rgba(124, 138, 17, 0.12)",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        transition: "background-color 200ms ease",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                            "rgba(124, 138, 17, 0.18)"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                            "rgba(124, 138, 17, 0.12)"
+                        flexDirection: "column",
+                        gap: 8,
                     }}
                 >
-                    <X size={22} color="#2F2F2F" />
-                </button>
+                    <p
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 32,
+                            fontWeight: 500,
+                            color: "#2F2F2F",
+                            margin: 0,
+                        }}
+                    >
+                        Hi {userName}!
+                    </p>
+                    <p
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 20,
+                            fontWeight: 400,
+                            color: "#2F2F2F",
+                            margin: 0,
+                        }}
+                    >
+                        You can find all your previous generations here.
+                    </p>
+                </div>
+
+                {/* Generations Progress Bar */}
+                <GenerationsProgressBar
+                    generationsUsed={generations.length}
+                    generationsLimit={30}
+                />
             </div>
+
+            {/* Horizontal Divider */}
+            <div
+                style={{
+                    width: "100%",
+                    height: 1,
+                    backgroundColor: "#E2D0A2",
+                    marginBottom: 16,
+                }}
+            />
 
             {/* Generations Grid */}
             {generations.length === 0 ? (
@@ -244,20 +525,50 @@ function DashboardListView({
                     style={{
                         padding: 80,
                         textAlign: "center",
-                        color: "#7A7A7A",
-                        fontSize: 18,
                         fontFamily: '"Inter", sans-serif',
                     }}
                 >
-                    No generations yet. Create your first one!
+                    <p
+                        style={{
+                            color: "#7A7A7A",
+                            fontSize: 18,
+                            marginBottom: 24,
+                        }}
+                    >
+                        No generations yet.
+                    </p>
+                    {onNavigateToCreate && (
+                        <button
+                            onClick={onNavigateToCreate}
+                            style={{
+                                padding: "12px 24px",
+                                borderRadius: 8,
+                                border: "none",
+                                backgroundColor: "#4688F7",
+                                color: "#FFFFFF",
+                                fontSize: 14,
+                                fontWeight: 500,
+                                cursor: "pointer",
+                                fontFamily: '"Inter", sans-serif',
+                                transition: "background-color 200ms ease",
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "#3570D4"
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "#4688F7"
+                            }}
+                        >
+                            Create your first generation
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns:
-                            "repeat(auto-fill, minmax(320px, 1fr))",
-                        gap: 20,
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: 16,
                     }}
                 >
                     {generations.map((gen) => (
@@ -274,7 +585,10 @@ function DashboardListView({
 }
 
 /**
- * GenerationCard - Card showing generation metadata
+ * GenerationCard - Card matching Figma design
+ * - Tan thumbnail area with rounded top corners
+ * - Bottom section with video title and platform icons
+ * - Hover state with shadow
  */
 function GenerationCard({
     generation,
@@ -284,11 +598,23 @@ function GenerationCard({
     onClick: () => void
 }) {
     const [hover, setHover] = React.useState(false)
+    const [fetchedTitle, setFetchedTitle] = React.useState<string | null>(null)
 
-    const videoTitle = generation.video?.title || "Untitled Video"
+    const youtubeId = generation.video?.youtube_video_id
+    const dbTitle = generation.video?.title
     const platforms = generation.inputs?.platforms || generation.platforms || []
-    const createdAt = new Date(generation.created_at).toLocaleDateString()
-    const outputCount = generation.outputs?.length || 0
+
+    // Fetch title from oEmbed if not in database
+    React.useEffect(() => {
+        if (!dbTitle && youtubeId) {
+            fetchVideoTitle(youtubeId).then((title) => {
+                if (title) setFetchedTitle(title)
+            })
+        }
+    }, [dbTitle, youtubeId])
+
+    // Determine final title to display
+    const displayTitle = dbTitle || fetchedTitle || (youtubeId ? `Video (${youtubeId})` : "Video Title")
 
     return (
         <button
@@ -297,82 +623,89 @@ function GenerationCard({
             onMouseLeave={() => setHover(false)}
             style={{
                 width: "100%",
-                padding: 24,
-                borderRadius: 20,
-                border: "1px solid #E0CD9D",
-                backgroundColor: hover ? "#FFFFFF" : "#FAF8F0",
+                padding: 0,
+                border: "none",
+                backgroundColor: "#FAF8F0",
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
                 textAlign: "left",
-                transition: "all 250ms cubic-bezier(0.25,0.1,0.25,1)",
+                borderRadius: 12,
+                overflow: "hidden",
+                transition: "box-shadow 200ms ease",
                 boxShadow: hover
-                    ? "0px 4px 16px rgba(124, 138, 17, 0.15)"
+                    ? "0px 4px 8px 0px #C6C6C6"
                     : "none",
-                transform: hover ? "translateY(-2px)" : "translateY(0)",
             }}
         >
-            {/* Video Title */}
+            {/* Thumbnail area - tan/beige color */}
             <div
                 style={{
-                    fontFamily: '"Inter", sans-serif',
-                    fontSize: 20,
-                    fontWeight: 600,
-                    color: "#2F2F2F",
-                    lineHeight: 1.3,
+                    width: "100%",
+                    height: 180,
+                    backgroundColor: "#E2D0A2",
+                    borderTopLeftRadius: 12,
+                    borderTopRightRadius: 12,
                 }}
-            >
-                {videoTitle}
-            </div>
+            />
 
-            {/* Metadata */}
+            {/* Bottom content area */}
             <div
                 style={{
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 16px 16px 16px",
+                    borderLeft: "1px solid #E2D0A2",
+                    borderRight: "1px solid #E2D0A2",
+                    borderBottom: "1px solid #E2D0A2",
+                    borderBottomLeftRadius: 12,
+                    borderBottomRightRadius: 12,
                 }}
             >
-                {/* Platforms */}
+                {/* Video Title */}
+                <p
+                    style={{
+                        fontFamily: '"Inter", sans-serif',
+                        fontSize: 20,
+                        fontWeight: 400,
+                        color: "#2F2F2F",
+                        margin: 0,
+                        width: 260,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {displayTitle}
+                </p>
+
+                {/* Platform Icons - Always show all 3, active/inactive based on selection */}
                 <div
                     style={{
                         display: "flex",
                         gap: 8,
-                        flexWrap: "wrap",
-                    }}
-                >
-                    {platforms.map((platform: string) => (
-                        <div
-                            key={platform}
-                            style={{
-                                padding: "6px 14px",
-                                borderRadius: 12,
-                                backgroundColor: "rgba(124, 138, 17, 0.12)",
-                                fontSize: 13,
-                                fontWeight: 500,
-                                color: "#4F4F4F",
-                                fontFamily: '"Inter", sans-serif',
-                            }}
-                        >
-                            {platform}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Date and Output Count */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
                         alignItems: "center",
-                        fontSize: 14,
-                        color: "#7A7A7A",
-                        fontFamily: '"Inter", sans-serif',
                     }}
                 >
-                    <span>{createdAt}</span>
-                    <span>{outputCount} outputs</span>
+                    <PlatformIcon
+                        platform="twitter"
+                        active={platforms.some((p: string) =>
+                            p.toLowerCase().includes("twitter") || p.toLowerCase().includes("x")
+                        )}
+                    />
+                    <PlatformIcon
+                        platform="linkedin"
+                        active={platforms.some((p: string) =>
+                            p.toLowerCase().includes("linkedin")
+                        )}
+                    />
+                    <PlatformIcon
+                        platform="instagram"
+                        active={platforms.some((p: string) =>
+                            p.toLowerCase().includes("instagram") || p.toLowerCase().includes("carousel")
+                        )}
+                    />
                 </div>
             </div>
         </button>
@@ -468,7 +801,7 @@ function DashboardDetailView({
             style={{
                 maxWidth: 1200,
                 margin: "0 auto",
-                padding: "40px 20px",
+                padding: "80px 20px 40px 20px",
                 minHeight: "100vh",
             }}
         >
@@ -480,9 +813,9 @@ function DashboardDetailView({
                     alignItems: "center",
                     gap: 8,
                     padding: "10px 16px",
-                    borderRadius: 12,
-                    border: "none",
-                    backgroundColor: "rgba(124, 138, 17, 0.12)",
+                    borderRadius: 8,
+                    border: "1px solid #E2D0A2",
+                    backgroundColor: "transparent",
                     color: "#2F2F2F",
                     fontSize: 15,
                     fontWeight: 500,
@@ -492,45 +825,91 @@ function DashboardDetailView({
                     transition: "background-color 200ms ease",
                 }}
                 onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                        "rgba(124, 138, 17, 0.18)"
+                    e.currentTarget.style.backgroundColor = "#F5F0E3"
                 }}
                 onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                        "rgba(124, 138, 17, 0.12)"
+                    e.currentTarget.style.backgroundColor = "transparent"
                 }}
             >
                 <ArrowLeft size={18} />
                 Back to List
             </button>
 
-            {/* Video Header */}
+            {/* Video Header with Thumbnail */}
             <div
                 style={{
-                    textAlign: "center",
                     marginBottom: 40,
                 }}
             >
-                <div
-                    style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 28,
-                        fontWeight: 600,
-                        color: "#2F2F2F",
-                        marginBottom: 8,
-                    }}
-                >
-                    {videoTitle}
-                </div>
-                <div
-                    style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 15,
-                        color: "#7A7A7A",
-                    }}
-                >
-                    {youtubeId ? `YouTube Video • ${youtubeId}` : "YouTube Video"} •{" "}
-                    {createdAt}
+                {/* Thumbnail Banner */}
+                {youtubeId && (
+                    <div
+                        style={{
+                            width: "100%",
+                            maxWidth: 800,
+                            margin: "0 auto 24px auto",
+                            borderRadius: 16,
+                            overflow: "hidden",
+                            backgroundColor: "#E2D0A2",
+                            position: "relative",
+                        }}
+                    >
+                        <img
+                            src={getYouTubeThumbnail(youtubeId)}
+                            alt={videoTitle}
+                            style={{
+                                width: "100%",
+                                height: "auto",
+                                display: "block",
+                            }}
+                            onError={(e) => {
+                                e.currentTarget.style.display = "none"
+                            }}
+                        />
+                        {/* Play icon overlay */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                width: 64,
+                                height: 64,
+                                borderRadius: "50%",
+                                backgroundColor: "rgba(0, 0, 0, 0.7)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Play size={32} color="#FFFFFF" fill="#FFFFFF" />
+                        </div>
+                    </div>
+                )}
+
+                {/* Title and Meta */}
+                <div style={{ textAlign: "center" }}>
+                    <div
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 28,
+                            fontWeight: 600,
+                            color: "#2F2F2F",
+                            marginBottom: 8,
+                        }}
+                    >
+                        {videoTitle}
+                    </div>
+                    <div
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 15,
+                            color: "#7A7A7A",
+                        }}
+                    >
+                        {youtubeId ? `YouTube Video • ${youtubeId}` : "YouTube Video"} •{" "}
+                        {createdAt}
+                    </div>
                 </div>
             </div>
 
@@ -597,8 +976,8 @@ function InstagramCarouselCardStatic({ slides }: { slides: string[] }) {
                 width: "100%",
                 boxSizing: "border-box",
                 borderRadius: 24,
-                border: "1px solid #E0CD9D",
-                backgroundColor: "#FAF7ED",
+                border: "1px solid #E2D0A2",
+                backgroundColor: "#FAF8F0",
                 padding: 20,
             }}
         >

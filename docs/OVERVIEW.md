@@ -26,9 +26,9 @@ River transforms YouTube videos into ready-to-publish social media content for T
 
 Built with Framer and React. This is what you see and interact with:
 
-- **Form page:** Where you paste YouTube URLs and choose platforms
+- **Form page:** Where you paste YouTube URLs and choose platforms (available at `/` for everyone and `/form` for signed-in users)
 - **Results page:** Shows your generated content in cards (Twitter, LinkedIn, Instagram)
-- **User dashboard:** See all your previous generations when signed in
+- **User dashboard:** See all your previous generations (protected route)
 - **Sign up/Login:** Email or Google authentication
 
 ### 2. The Backend Brain (Pipedream Workflows)
@@ -108,20 +108,20 @@ River regenerates just that platform while keeping the rest intact.
 13. Decide to sign up (realizes they want to keep history)
 14. Click "Sign Up"
 15. Enter email/password or use Google
-16. All previous work automatically appears in dashboard
-17. Browse generation history
-18. Click any previous generation to view/copy again
+16. See success modal with claimed generations count
+17. Click "Open My Dashboard"
+18. View generation history in dashboard
 
 ### Authenticated Power User
 
 1. Sign in immediately
-2. Generate content for 5 different videos
-3. Go to dashboard, see all 5 generations
-4. Click generation #3 to view
-5. Click "Edit" on LinkedIn post
-6. Type "make it shorter, under 150 words"
-7. Get new version instantly (cached)
-8. Copy and publish
+2. Land on Home page, see "Go to Dashboard" button
+3. Go to Dashboard, click "Create New"
+4. Navigate to dedicated form page (`/form`)
+5. Generate content
+6. Click "Back to Dashboard" to view history
+7. Click any generation to view/edit
+8. Edit, regenerate, and copy
 9. Come back next week, all history preserved
 
 ## Technical Highlights (Non-Technical Explanation)

@@ -56,6 +56,7 @@ type RiverState = {
     fromCache: boolean
     lastInputs: RiverInputs | null
     lastAction?: Action
+    generationId: string | null
 }
 
 type RiverAPI = {
@@ -72,6 +73,8 @@ type RiverAPI = {
     resetError: () => void
     clearResult: () => void
     setError: (message: string, action?: Action) => void
+    reset: () => void
+    generationId: string | null
 }
 
 // ------------------------------------------------------------
@@ -87,6 +90,7 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
         fromCache: false,
         lastInputs: null,
         lastAction: undefined,
+        generationId: null,
     })
 
     const resetError = React.useCallback(() => {
@@ -113,6 +117,18 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
             error: message,
             lastAction: action ?? s.lastAction,
         }))
+    }, [])
+
+    const reset = React.useCallback(() => {
+        setState({
+            status: "idle",
+            error: null,
+            result: null,
+            fromCache: false,
+            lastInputs: null,
+            lastAction: undefined,
+            generationId: null,
+        })
     }, [])
 
     // ✅ Single internal request function that preserves action ownership
@@ -160,6 +176,7 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
                 const parsed = text ? JSON.parse(text) : null
                 const body = parsed?.body ?? parsed
                 const fromCache = !!(parsed?.fromCache ?? body?.fromCache)
+                const generationId = body?.generation?.id || null
 
                 setState((s) => ({
                     ...s,
@@ -168,6 +185,7 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
                     fromCache,
                     error: null,
                     lastAction: action, // ✅ keep ownership stable
+                    generationId,
                 }))
 
                 return body
@@ -222,8 +240,12 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
                 force_regen,
                 tweak_instructions,
 
-                // ✅ NEW: pass through to pipedream (for targeting carousel/twitter/etc.)
-                extra_options,
+                // ✅ Pass through to pipedream (for targeting carousel/twitter/etc.)
+                // Include generation_id for more reliable updates
+                extra_options: {
+                    ...extra_options,
+                    generation_id: state.generationId,
+                },
             }
 
             return request(merged, "tweak")
@@ -239,8 +261,10 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
             resetError,
             clearResult,
             setError,
+            reset,
+            generationId: state.generationId,
         }),
-        [state, generate, regenerate, resetError, clearResult, setError]
+        [state, generate, regenerate, resetError, clearResult, setError, reset]
     )
 
     return <RiverContext.Provider value={api}>{children}</RiverContext.Provider>

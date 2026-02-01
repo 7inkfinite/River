@@ -20,6 +20,21 @@ Frontend (Framer/React) → Pipedream Workflows → Supabase (PostgreSQL) → Op
 - AI: OpenAI gpt-4o-mini (JSON mode)
 - External: RapidAPI (YouTube subtitles)
 
+Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/form)
+┌─────────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
+│ AuthGateProvider        │      │ AuthGateProvider        │      │ AuthGateProvider        │
+│  └─ RiverProvider       │      │  └─ HOC: ProtectedRoute │      │  └─ HOC: ProtectedRoute │
+│      └─ RiverAppRoot    │      │      └─ UserDashboard   │      │      └─ FormPageRoot    │
+│          ├─ CTA/Results │      └─────────────────────────┘      └─────────────────────────┘
+│          └─ SignUpCTA   │
+└─────────────────────────┘
+
+**Key Points:**
+- **Route Protection**: `/dashboard` and `/form` are wrapped in `ProtectedRoute`, which redirects anonymous users to `/`.
+- **Home Page Logic**: `RiverAppRoot` conditionally renders the form (anonymous) or a "Go to Dashboard" CTA (authenticated).
+- **Navigation**: Dashboard has no tabs; "Create New" button links to `/form`.
+- **AuthGate**: Owns the single auth listener and claim orchestration.
+
 ---
 
 ## Component Reference Map
@@ -28,16 +43,24 @@ Frontend (Framer/React) → Pipedream Workflows → Supabase (PostgreSQL) → Op
 
 | Component | File | Purpose | Key Responsibilities |
 |-----------|------|---------|---------------------|
-| RiverAppRoot | `frontend/RiverAppRoot.tsx` | Root wrapper | Provides context to entire app |
+| RiverAppRoot | `frontend/RiverAppRoot.tsx` | Root wrapper | Conditionally renders form or Dashboard redirect based on auth |
+| AuthGate | `frontend/AuthGate.tsx` | Auth state provider | Single auth listener, claim orchestration, refreshKey, modal state |
 | UseRiverGeneration | `frontend/UseRiverGeneration.tsx` | State management | Context + API calls + session ID management |
 | RiverCTA | `frontend/RiverCTA.tsx` | Form interface | URL validation, platform selection, generate action |
-| RiverResultsRoot | `frontend/RiverResultsRoot.tsx` | Results orchestrator | Normalization, auth listener, dashboard toggle, claim webhook |
+| RiverResultsRoot | `frontend/RiverResultsRoot.tsx` | Results orchestrator | Normalization, uses AuthGate context, PostAuthCTA |
 | HorizontalCardCarousel | `frontend/HorizontalCardCarousel.tsx` | Navigation UI | Position-based rendering, keyboard/swipe navigation |
 | TwitterThreadCard | `frontend/TwitterThreadCard.tsx` | Twitter display | Thread rendering, edit mode, copy, regenerate |
 | LinkedInPostCard | `frontend/LinkedInPostCard.tsx` | LinkedIn display | Post rendering, edit mode, copy, regenerate |
 | InstagramCarouselCard | `frontend/InstagramCarouselCard.tsx` | Instagram display | Slide navigation, aspect ratio toggle |
-| AuthComponents | `frontend/AuthComponents.tsx` | Auth UI | SignUpModal, AuthPrompt, Supabase client |
-| UserDashboard | `frontend/UserDashboard.tsx` | History view | List + detail views, generation history, output carousel |
+| AuthComponents | `frontend/AuthComponents.tsx` | Auth UI | SignUpModal (with success view), AuthPrompt, Supabase client |
+| SignUpCTA | `frontend/SignUpCTA.tsx` | Sign-up button | Hidden on protected pages & when authenticated |
+| UserDashboard | `frontend/UserDashboard.tsx` | History view | Fetches and displays user generations with status bar, progress bar, and generation cards |
+| UserDashboardShell | `frontend/UserDashboardShell.tsx` | Dashboard UI | Shell for dashboard, handles "Create New" navigation |
+| PostGenerationActions | `frontend/PostGenerationActions.tsx` | Post-generation UI | Shows "Saved to dashboard" confirmation and "Start New Generation" button |
+| DashboardPageRoot | `frontend/DashboardPageRoot.tsx` | Dashboard root | Framer component for /dashboard, uses ProtectedRoute |
+| FormPageRoot | `frontend/FormPageRoot.tsx` | Form page root | Framer component for /form, uses ProtectedRoute |
+| ProtectedRoute | `frontend/ProtectedRoute.tsx` | Auth Guard | Redirects anonymous users to home |
+| DashboardRedirectCTA | `frontend/DashboardRedirectCTA.tsx` | Home CTA | "Go to Dashboard" button for logged-in users |
 
 ### Backend Workflows
 
@@ -125,27 +148,53 @@ Frontend (Framer/React) → Pipedream Workflows → Supabase (PostgreSQL) → Op
 
 ### Authentication + Claim Flow
 
-**Scenario A: User Logs In (Existing behavior)**
+**AuthGate Orchestration (Single Source of Truth)**
+
+AuthGate (`frontend/AuthGate.tsx`) manages all auth state and claim logic. This eliminates dual auth listeners and race conditions.
+
+**Flow: User Signs Up from Home Page**
+```
 1. User clicks "Sign Up" button
    ↓
-2. User authenticates (Supabase Auth)
+2. AuthGate opens SignUpModal (via openSignUpModal())
    ↓
-3. Frontend: onAuthStateChange listener fires (event="SIGNED_IN")
+3. User authenticates via Supabase Auth
    ↓
-4. Frontend: Retrieve anonymous_session_id from localStorage
+4. AuthGate's onAuthStateChange listener fires (SIGNED_IN)
    ↓
-5. Frontend: CALL `claimGenerations(session)` -> fetch(CLAIM_WEBHOOK_URL)
+5. AuthGate checks localStorage for "river_session_id"
+   ↓
+6. If found: AuthGate calls claim webhook, awaits completion
+   - Sets claimComplete = false during claim
+   - POST to CLAIM_WEBHOOK_URL with { anonymous_session_id, user_id }
+   ↓
+7. AuthGate increments refreshKey, sets authReady = true
+   ↓
+8. localStorage cleared ("river_session_id" removed)
+   ↓
+9. Components remount with fresh data (keyed by refreshKey)
+```
 
-**Scenario B: User Generates While Logged In (New behavior)**
-1. User (already authenticated) clicks "Generate"
-   ↓
-2. Backend generates content, returns success
-   ↓
-3. Frontend: `useEffect` detects `state.status === "success"` AND `isAuthenticated`
-   ↓
-4. Frontend: CALL `claimGenerations(session)` -> fetch(CLAIM_WEBHOOK_URL)
+**Key State Flags:**
+- `authReady`: True when auth has been checked AND claim is complete
+- `refreshKey`: Increments after sign-in/claim to force clean remounts
+- `isAuthenticated`: True when session exists
 
-**Common Claim Logic (Backend):**
+**Flow: User Visits /dashboard Directly**
+```
+1. DashboardPageRoot wraps UserDashboardShell in AuthGateProvider
+   ↓
+2. UserDashboardShell waits for authReady = true
+   - Shows loading spinner while auth/claim in progress
+   ↓
+3. If not authenticated: ProtectedRoute redirects to /
+   ↓
+4. If authenticated: Shows UserDashboardShell
+   - Header has "Create New" button -> links to /form
+   - Main area shows UserDashboard (history list)
+```
+
+**Common Claim Logic (Backend - unchanged):**
 1. Backend Auth Step 2 (validate_request): Parse and validate UUIDs
    ↓
 2. Backend Auth Step 3 (claim_anonymous_generations):
@@ -155,10 +204,6 @@ Frontend (Framer/React) → Pipedream Workflows → Supabase (PostgreSQL) → Op
       WHERE anonymous_session_id = ? AND user_id IS NULL
    ↓
 3. Backend Auth Step 4: Return { success: true, claimed: { videos, generations } }
-   ↓
-4. Frontend: localStorage.removeItem("river_session_id")
-   ↓
-5. Frontend: fetchUserGenerations(userId) -> Update Dashboard
 
 ### Tweak/Regenerate Flow
 
@@ -408,64 +453,107 @@ const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY"
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 ```
 
-**Auth Listener:** `frontend/RiverResultsRoot.tsx:300-350`
+**AuthGate Provider:** `frontend/AuthGate.tsx`
+
+AuthGate provides a centralized auth context with claim orchestration:
 
 ```typescript
-useEffect(() => {
-  const { data: authListener } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        setIsAuthenticated(true)
-        setUser(session.user)
+type AuthGateContextType = {
+    session: any
+    user: any
+    isAuthenticated: boolean
+    authReady: boolean           // true when auth checked AND claim complete
+    refreshKey: number           // increments after sign-in/claim
+    defaultTab: "create" | "dashboard"
+    showSignUpModal: boolean
+    openSignUpModal: () => void
+    closeSignUpModal: () => void
+}
+```
 
-        // Claim anonymous generations
-        const anonymousSessionId = localStorage.getItem("river_session_id")
+**Hook Usage:** `useAuthGate()`
 
-        if (anonymousSessionId) {
-          try {
-            const response = await fetch(
-              "https://YOUR_CLAIM_WEBHOOK.m.pipedream.net",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  anonymous_session_id: anonymousSessionId,
-                  user_id: session.user.id
-                })
-              }
-            )
+```typescript
+// In any component wrapped by AuthGateProvider
+const {
+    isAuthenticated,
+    authReady,
+    refreshKey,
+    openSignUpModal,
+    closeSignUpModal,
+} = useAuthGate()
 
-            if (response.ok) {
-              localStorage.removeItem("river_session_id")
-              await fetchUserGenerations(session.user.id)
-              setShowDashboard(true)
+// Example: Wait for auth before rendering
+if (!authReady) {
+    return <LoadingSpinner />
+}
+
+// Example: Trigger sign-up modal
+<button onClick={openSignUpModal}>Sign Up</button>
+
+// Example: Force remount after claim
+<UserDashboard key={refreshKey} />
+```
+
+**Key State Distinctions:**
+
+| State | Meaning |
+|-------|---------|
+| `isAuthenticated` | Session exists (user is logged in) |
+| `authReady` | Auth has been checked AND any claim is complete |
+| `refreshKey` | Counter that increments after sign-in/claim |
+
+**Why `authReady` matters:**
+- Prevents UserDashboard from mounting before claim completes
+- Eliminates the need for artificial delays (no more 300ms setTimeout)
+- Ensures data fetching happens with correct user context
+
+**Why `refreshKey` matters:**
+- Forces clean remount of UserDashboard after claim
+- Ensures fresh data fetch without stale state
+- Used as React `key` prop: `<UserDashboard key={refreshKey} />`
+
+**Auth Listener (Single Instance):** `frontend/AuthGate.tsx:89-122`
+
+```typescript
+const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, newSession) => {
+        const wasAuthenticated = !!session
+        const nowAuthenticated = !!newSession
+
+        setSession(newSession)
+
+        // Handle sign-in event
+        if (!wasAuthenticated && nowAuthenticated && newSession?.user) {
+            const anonymousSessionId = localStorage.getItem("river_session_id")
+
+            if (anonymousSessionId) {
+                setClaimComplete(false)
+                await claimGenerations(newSession)
+                setClaimComplete(true)
+                setDefaultTab("dashboard")
+            } else {
+                setDefaultTab("dashboard")
             }
-          } catch (error) {
-            console.error("Claim failed:", error)
-          }
+
+            setRefreshKey((prev) => prev + 1)
+            // Modal stays open to show success view (handled by AuthComponents)
         }
-      }
 
-      if (event === "SIGNED_OUT") {
-        setIsAuthenticated(false)
-        setUser(null)
-        setUserGenerations([])
-      }
+        // Handle sign-out event
+        if (wasAuthenticated && !nowAuthenticated) {
+            setDefaultTab("create")
+            setClaimComplete(true)
+        }
     }
-  )
-
-  return () => {
-    authListener.subscription.unsubscribe()
-  }
-}, [])
+)
 ```
 
 **Key Points:**
-- Listens for auth state changes
-- Automatically claims on sign-in
-- Fetches user generations
-- Opens dashboard on successful claim
-- Cleans up on sign-out
+- Single auth listener in AuthGate (not in RiverResultsRoot)
+- Claim runs before authReady becomes true
+- refreshKey increments after claim to force clean remounts
+- Modal closes automatically on successful auth
 
 ### Claim Workflow Implementation
 
@@ -790,10 +878,12 @@ const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY"
 const WEBHOOK_URL = "https://YOUR_MAIN_WEBHOOK.m.pipedream.net"
 ```
 
-**File:** `frontend/RiverResultsRoot.tsx:320`
+**File:** `frontend/AuthGate.tsx:51`
 ```typescript
-const CLAIM_WEBHOOK_URL = "https://YOUR_CLAIM_WEBHOOK.m.pipedream.net"
+const CLAIM_WEBHOOK_URL = "YOUR_CLAIM_WEBHOOK_URL_HERE"
 ```
+
+Note: The claim webhook is now called from AuthGate (not RiverResultsRoot) as part of the centralized auth orchestration.
 
 ### MCP Configuration
 
@@ -1360,5 +1450,5 @@ const supabase = createClient(url, key)
 
 ---
 
-**Last Updated:** January 2026
-**Document Version:** 1.0
+**Last Updated:** February 2026
+**Document Version:** 1.1

@@ -27,7 +27,7 @@ const toFriendlyError = (err: unknown) => {
     return cleaned || "Oh no! There seems to be a problem. Try again."
 }
 
-export function RiverCTA() {
+export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) {
     const { state, generate, resetError } = UseRiverGeneration()
 
     // ✅ Gate global state by action so main CTA only reacts to "generate"
@@ -97,10 +97,20 @@ export function RiverCTA() {
         return () => window.clearTimeout(id)
     }, [status, resetError])
 
+    // Check if we have results (for /form page lock behavior)
+    // Must be defined before label calculation
+    const hasResults = state.result !== null
+    const resultsLock = !allowResubmit && hasResults && status !== "loading"
+
     // -----------------------------
     // Label priority (IMPORTANT)
     // -----------------------------
     const label = (() => {
+        // ✅ Results lock message (when form is disabled due to results)
+        if (resultsLock) {
+            return "Results generated"
+        }
+
         // ✅ Calm message during tweak loading
         if (isTweakLoading) {
             return "Take a deep breath and sit back"
@@ -135,8 +145,11 @@ export function RiverCTA() {
         success: "#117e8a",
         loading: "#3C82F6",
 
-        // ✅ NEW: calm tweak state color
+        // ✅ calm tweak state color
         tweakCalm: "#ADDADE",
+
+        // ✅ muted gray for results lock
+        resultsLock: "#9CA3AF",
     }
 
     const [isHover, setHover] = React.useState(false)
@@ -147,13 +160,15 @@ export function RiverCTA() {
     const isSuccess = status === "success"
     const isFormError = Boolean(formError)
 
-    // ✅ disable if either generate is loading OR tweak is loading
-    const isDisabled = isLoading || isTweakLoading
+    // ✅ disable if either generate is loading OR tweak is loading OR results lock active
+    const isDisabled = isLoading || isTweakLoading || resultsLock
 
     let backgroundColor = COLORS.idle
 
+    // ✅ Results lock takes precedence when active
+    if (resultsLock) backgroundColor = COLORS.resultsLock
     // ✅ Tweak calm overrides everything visual-wise
-    if (isTweakLoading) backgroundColor = COLORS.tweakCalm
+    else if (isTweakLoading) backgroundColor = COLORS.tweakCalm
     else if (isLoading) backgroundColor = COLORS.loading
     else if (isFormError) backgroundColor = COLORS.formError
     else if (isPipelineError) backgroundColor = COLORS.error
