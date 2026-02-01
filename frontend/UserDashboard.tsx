@@ -103,13 +103,14 @@ function StatusBar({
                     alignItems: "center",
                     justifyContent: "center",
                     border: "none",
-                    backgroundColor: "transparent",
+                    borderRadius: 10,
+                    backgroundColor: homeHover ? "rgba(70, 136, 247, 0.12)" : "transparent",
                     cursor: "pointer",
-                    opacity: homeHover ? 0.7 : 1,
-                    transition: "opacity 200ms ease",
+                    transform: homeHover ? "scale(1.08)" : "scale(1)",
+                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
             >
-                <Home size={24} color="#2F2F2F" />
+                <Home size={24} color={homeHover ? "#4688F7" : "#2F2F2F"} />
             </button>
 
             {/* Right side: New button and Logout */}
@@ -128,9 +129,13 @@ function StatusBar({
                             padding: "8px 12px",
                             borderRadius: 24,
                             border: "none",
-                            backgroundColor: newHover ? "#3570D4" : "#4688F7",
+                            backgroundColor: newHover ? "#2563EB" : "#4688F7",
                             cursor: "pointer",
-                            transition: "background-color 200ms ease",
+                            transform: newHover ? "scale(1.05) translateY(-1px)" : "scale(1)",
+                            boxShadow: newHover
+                                ? "0 6px 20px rgba(70, 136, 247, 0.4), 0 2px 8px rgba(70, 136, 247, 0.3)"
+                                : "0 2px 8px rgba(70, 136, 247, 0.2)",
+                            transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                         }}
                     >
                         <span
@@ -157,13 +162,14 @@ function StatusBar({
                         alignItems: "center",
                         justifyContent: "center",
                         border: "none",
-                        backgroundColor: "transparent",
+                        borderRadius: 10,
+                        backgroundColor: logoutHover ? "rgba(239, 68, 68, 0.12)" : "transparent",
                         cursor: "pointer",
-                        opacity: logoutHover ? 0.7 : 1,
-                        transition: "opacity 200ms ease",
+                        transform: logoutHover ? "scale(1.08)" : "scale(1)",
+                        transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                     }}
                 >
-                    <LogOut size={24} color="#2F2F2F" />
+                    <LogOut size={24} color={logoutHover ? "#EF4444" : "#2F2F2F"} />
                 </button>
             </div>
         </div>
@@ -553,16 +559,6 @@ function DashboardListView({
                 />
             </div>
 
-            {/* Horizontal Divider */}
-            <div
-                style={{
-                    width: "100%",
-                    height: 1,
-                    backgroundColor: "#E2D0A2",
-                    marginBottom: 16,
-                }}
-            />
-
             {/* Generations Grid - Grouped by Date */}
             {generations.length === 0 ? (
                 <div
@@ -611,11 +607,12 @@ function DashboardListView({
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                     {groupedGenerations.map(([date, gens]) => (
                         <div key={date}>
-                            {/* Date Header - right aligned */}
+                            {/* Date Header with divider line */}
                             <div
                                 style={{
                                     display: "flex",
-                                    justifyContent: "flex-end",
+                                    alignItems: "center",
+                                    gap: 16,
                                     marginBottom: 16,
                                 }}
                             >
@@ -625,10 +622,18 @@ function DashboardListView({
                                         fontSize: 14,
                                         fontWeight: 500,
                                         color: "#7A7A7A",
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
                                     {date}
                                 </span>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor: "#E2D0A2",
+                                    }}
+                                />
                             </div>
 
                             {/* Cards Grid for this date */}
