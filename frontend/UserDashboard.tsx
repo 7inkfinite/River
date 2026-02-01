@@ -86,11 +86,22 @@ function StatusBar({
                 backgroundColor: "#FAF8F0",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 60px",
+                justifyContent: "center",
                 zIndex: 100,
             }}
         >
+            {/* Inner container aligned with dashboard content */}
+            <div
+                style={{
+                    width: "100%",
+                    maxWidth: 1360,
+                    padding: "0 60px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    boxSizing: "border-box",
+                }}
+            >
             {/* Home icon on left */}
             <button
                 onClick={() => window.location.href = "/"}
@@ -171,6 +182,7 @@ function StatusBar({
                 >
                     <LogOut size={24} color={logoutHover ? "#EF4444" : "#2F2F2F"} />
                 </button>
+            </div>
             </div>
         </div>
     )
@@ -517,7 +529,7 @@ function DashboardListView({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    marginBottom: 16,
+                    marginBottom: 40,
                 }}
             >
                 {/* Greeting */}
