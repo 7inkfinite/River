@@ -607,7 +607,7 @@ function DashboardListView({
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                     {groupedGenerations.map(([date, gens]) => (
                         <div key={date}>
-                            {/* Date Header with divider line */}
+                            {/* Date Header - right aligned with divider line */}
                             <div
                                 style={{
                                     display: "flex",
@@ -616,6 +616,13 @@ function DashboardListView({
                                     marginBottom: 16,
                                 }}
                             >
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        height: 1,
+                                        backgroundColor: "#E2D0A2",
+                                    }}
+                                />
                                 <span
                                     style={{
                                         fontFamily: '"Inter", sans-serif',
@@ -627,13 +634,6 @@ function DashboardListView({
                                 >
                                     {date}
                                 </span>
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        height: 1,
-                                        backgroundColor: "#E2D0A2",
-                                    }}
-                                />
                             </div>
 
                             {/* Cards Grid for this date */}
