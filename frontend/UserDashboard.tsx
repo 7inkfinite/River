@@ -1,5 +1,6 @@
 import * as React from "react"
-import { ArrowLeft, Linkedin, Instagram, Play, LogOut, Home, Plus } from "lucide-react"
+import { ArrowLeft, Linkedin, Instagram, Trash2 } from "lucide-react"
+import { StatusBar } from "./StatusBar.tsx"
 import { supabase } from "./AuthComponents.tsx"
 import { HorizontalCardCarousel } from "./HorizontalCardCarousel.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
@@ -28,21 +29,6 @@ function XLogo({ size = 24, color = "#2F2F2F" }: { size?: number; color?: string
  * - Fetches outputs from database
  */
 
-// Helper function to fetch video title from YouTube oEmbed API
-async function fetchVideoTitle(youtubeId: string): Promise<string | null> {
-    try {
-        const response = await fetch(
-            `https://www.youtube.com/oembed?url=https://youtube.com/watch?v=${youtubeId}&format=json`
-        )
-        if (!response.ok) return null
-        const data = await response.json()
-        return data.title || null
-    } catch (error) {
-        console.warn("Failed to fetch video title:", error)
-        return null
-    }
-}
-
 // Helper function to get YouTube thumbnail URL
 function getYouTubeThumbnail(youtubeId: string): string {
     return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
@@ -63,130 +49,6 @@ function PlatformIcon({ platform, active = true }: { platform: string; active?: 
     return null
 }
 
-// Status bar component - Updated to match Figma design
-function StatusBar({
-    onNavigateToCreate,
-    onLogout,
-}: {
-    onNavigateToCreate?: () => void
-    onLogout: () => void
-}) {
-    const [homeHover, setHomeHover] = React.useState(false)
-    const [newHover, setNewHover] = React.useState(false)
-    const [logoutHover, setLogoutHover] = React.useState(false)
-
-    return (
-        <div
-            style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 64,
-                backgroundColor: "#FAF8F0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 100,
-            }}
-        >
-            {/* Inner container aligned with dashboard content */}
-            <div
-                style={{
-                    width: "100%",
-                    maxWidth: 1360,
-                    padding: "0 60px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    boxSizing: "border-box",
-                }}
-            >
-            {/* Home icon on left */}
-            <button
-                onClick={() => window.location.href = "/"}
-                onMouseEnter={() => setHomeHover(true)}
-                onMouseLeave={() => setHomeHover(false)}
-                style={{
-                    width: 40,
-                    height: 40,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "none",
-                    borderRadius: 10,
-                    backgroundColor: homeHover ? "rgba(70, 136, 247, 0.12)" : "transparent",
-                    cursor: "pointer",
-                    transform: homeHover ? "scale(1.08)" : "scale(1)",
-                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-                }}
-            >
-                <Home size={24} color={homeHover ? "#4688F7" : "#2F2F2F"} />
-            </button>
-
-            {/* Right side: New button and Logout */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                {onNavigateToCreate && (
-                    <button
-                        onClick={onNavigateToCreate}
-                        onMouseEnter={() => setNewHover(true)}
-                        onMouseLeave={() => setNewHover(false)}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 14,
-                            width: 111,
-                            padding: "8px 12px",
-                            borderRadius: 24,
-                            border: "none",
-                            backgroundColor: newHover ? "#2563EB" : "#4688F7",
-                            cursor: "pointer",
-                            transform: newHover ? "scale(1.05) translateY(-1px)" : "scale(1)",
-                            boxShadow: newHover
-                                ? "0 6px 20px rgba(70, 136, 247, 0.4), 0 2px 8px rgba(70, 136, 247, 0.3)"
-                                : "0 2px 8px rgba(70, 136, 247, 0.2)",
-                            transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-                        }}
-                    >
-                        <span
-                            style={{
-                                color: "#FAF8F0",
-                                fontSize: 20,
-                                fontWeight: 400,
-                                fontFamily: '"Inter", sans-serif',
-                            }}
-                        >
-                            New
-                        </span>
-                        <Plus size={14} color="#FAF8F0" strokeWidth={2.5} />
-                    </button>
-                )}
-                <button
-                    onClick={onLogout}
-                    onMouseEnter={() => setLogoutHover(true)}
-                    onMouseLeave={() => setLogoutHover(false)}
-                    style={{
-                        width: 40,
-                        height: 40,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "none",
-                        borderRadius: 10,
-                        backgroundColor: logoutHover ? "rgba(239, 68, 68, 0.12)" : "transparent",
-                        cursor: "pointer",
-                        transform: logoutHover ? "scale(1.08)" : "scale(1)",
-                        transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    }}
-                >
-                    <LogOut size={24} color={logoutHover ? "#EF4444" : "#2F2F2F"} />
-                </button>
-            </div>
-            </div>
-        </div>
-    )
-}
 
 // Generations progress bar component (matching Figma design)
 function GenerationsProgressBar({
@@ -207,7 +69,8 @@ function GenerationsProgressBar({
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 16,
-                width: 403,
+                width: "100%",
+                maxWidth: 403,
             }}
         >
             {/* Progress bar */}
@@ -322,11 +185,7 @@ function groupGenerationsByDate(generations: any[]): [string, any[]][] {
     return Object.entries(groups) // Returns [date, generations[]]
 }
 
-export function UserDashboard({
-    onNavigateToCreate,
-}: {
-    onNavigateToCreate?: () => void
-}) {
+export function UserDashboard() {
     const [user, setUser] = React.useState<any>(null)
     const [generations, setGenerations] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(true)
@@ -364,6 +223,7 @@ export function UserDashboard({
                         video:videos(
                             id,
                             youtube_video_id,
+                            title,
                             original_url
                         ),
                         outputs(
@@ -430,37 +290,23 @@ export function UserDashboard({
 
     const userName = user?.user_metadata?.full_name || "there"
 
-    const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut()
-            window.location.href = "/"
-        } catch (error) {
-            console.error("Error signing out:", error)
-        }
-    }
-
     return (
         <div
             style={{
                 width: "100%",
                 minHeight: "100vh",
                 backgroundColor: "#FAF8F0",
-                overflowY: "auto",
                 position: "relative",
             }}
         >
             {/* Status Bar */}
-            <StatusBar
-                onNavigateToCreate={onNavigateToCreate}
-                onLogout={handleLogout}
-            />
+            <StatusBar activePage="dashboard" />
 
             {view === "list" ? (
                 <DashboardListView
                     userName={userName}
                     generations={generations}
                     onViewGeneration={handleViewGeneration}
-                    onNavigateToCreate={onNavigateToCreate}
                 />
             ) : (
                 <DashboardDetailView
@@ -483,12 +329,10 @@ function DashboardListView({
     userName,
     generations,
     onViewGeneration,
-    onNavigateToCreate,
 }: {
     userName: string
     generations: any[]
     onViewGeneration: (gen: any) => void
-    onNavigateToCreate?: () => void
 }) {
     // Infinite scroll state
     const [visibleCount, setVisibleCount] = React.useState(12)
@@ -518,7 +362,7 @@ function DashboardListView({
             style={{
                 maxWidth: 1360,
                 margin: "0 auto",
-                padding: "120px 60px 40px 60px",
+                padding: "120px clamp(20px, 4vw, 60px) 40px",
                 minHeight: "100vh",
                 position: "relative",
             }}
@@ -530,6 +374,8 @@ function DashboardListView({
                     alignItems: "center",
                     justifyContent: "space-between",
                     marginBottom: 40,
+                    flexWrap: "wrap",
+                    gap: 24,
                 }}
             >
                 {/* Greeting */}
@@ -589,9 +435,9 @@ function DashboardListView({
                     >
                         No generations yet.
                     </p>
-                    {onNavigateToCreate && (
+                    {(
                         <button
-                            onClick={onNavigateToCreate}
+                            onClick={() => window.location.href = "/form"}
                             style={{
                                 padding: "12px 24px",
                                 borderRadius: 8,
@@ -652,7 +498,7 @@ function DashboardListView({
                             <div
                                 style={{
                                     display: "grid",
-                                    gridTemplateColumns: "repeat(3, 1fr)",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                                     gap: 16,
                                 }}
                             >
@@ -709,23 +555,11 @@ function GenerationCard({
     onClick: () => void
 }) {
     const [hover, setHover] = React.useState(false)
-    const [fetchedTitle, setFetchedTitle] = React.useState<string | null>(null)
+    const [imgError, setImgError] = React.useState(false)
 
     const youtubeId = generation.video?.youtube_video_id
-    const dbTitle = generation.video?.title
     const platforms = generation.inputs?.platforms || generation.platforms || []
-
-    // Fetch title from oEmbed if not in database
-    React.useEffect(() => {
-        if (!dbTitle && youtubeId) {
-            fetchVideoTitle(youtubeId).then((title) => {
-                if (title) setFetchedTitle(title)
-            })
-        }
-    }, [dbTitle, youtubeId])
-
-    // Determine final title to display
-    const displayTitle = dbTitle || fetchedTitle || (youtubeId ? `Video (${youtubeId})` : "Video Title")
+    const displayTitle = generation.video?.title || "Untitled Video"
 
     return (
         <button
@@ -735,7 +569,9 @@ function GenerationCard({
             style={{
                 width: "100%",
                 padding: 0,
-                border: "none",
+                border: hover
+                    ? "2px solid rgba(136, 153, 92, 0.24)"
+                    : "2px solid transparent",
                 backgroundColor: "#FAF8F0",
                 cursor: "pointer",
                 display: "flex",
@@ -743,22 +579,34 @@ function GenerationCard({
                 textAlign: "left",
                 borderRadius: 12,
                 overflow: "hidden",
-                transition: "box-shadow 200ms ease",
-                boxShadow: hover
-                    ? "0px 4px 8px 0px #C6C6C6"
-                    : "none",
+                transition: "border-color 200ms ease",
             }}
         >
-            {/* Thumbnail area - tan/beige color */}
+            {/* Thumbnail area */}
             <div
                 style={{
                     width: "100%",
                     height: 180,
                     backgroundColor: "#E2D0A2",
-                    borderTopLeftRadius: 12,
-                    borderTopRightRadius: 12,
+                    borderTopLeftRadius: 10,
+                    borderTopRightRadius: 10,
+                    overflow: "hidden",
                 }}
-            />
+            >
+                {youtubeId && !imgError && (
+                    <img
+                        src={getYouTubeThumbnail(youtubeId)}
+                        alt={displayTitle}
+                        onError={() => setImgError(true)}
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                        }}
+                    />
+                )}
+            </div>
 
             {/* Bottom content area */}
             <div
@@ -782,7 +630,8 @@ function GenerationCard({
                         fontWeight: 400,
                         color: "#2F2F2F",
                         margin: 0,
-                        width: 260,
+                        flex: 1,
+                        minWidth: 0,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -825,6 +674,7 @@ function GenerationCard({
 
 /**
  * DashboardDetailView - Shows generation outputs in carousel
+ * Layout matches Figma: side nav (back + trash) + teal results container
  */
 function DashboardDetailView({
     generation,
@@ -835,9 +685,34 @@ function DashboardDetailView({
     outputs: any[]
     onBack: () => void
 }) {
+    const [backHover, setBackHover] = React.useState(false)
+    const [trashHover, setTrashHover] = React.useState(false)
+    const [imgError, setImgError] = React.useState(false)
+
     const videoTitle = generation?.video?.title || "Untitled Video"
+    const channelName = generation?.video?.channel_name || generation?.video?.channel_title || null
     const youtubeId = generation?.video?.youtube_video_id || null
-    const createdAt = new Date(generation?.created_at).toLocaleDateString()
+    const createdAt = new Date(generation?.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    })
+
+    const handleDelete = async () => {
+        if (!window.confirm("Delete this generation? This cannot be undone.")) return
+
+        try {
+            const { error } = await supabase
+                .from("generations")
+                .delete()
+                .eq("id", generation.id)
+
+            if (error) throw error
+            onBack()
+        } catch (err) {
+            console.error("Failed to delete generation:", err)
+        }
+    }
 
     // Parse outputs by platform
     const twitterOutput = outputs.find((o) => o.platform === "twitter")
@@ -851,195 +726,258 @@ function DashboardDetailView({
         const tweets = twitterOutput.metadata?.tweets || []
         const threadText = twitterOutput.content || tweets.join("\n\n") || ""
         cards.push(
-            <TwitterThreadCard
-                key="twitter"
-                threadText={threadText}
-                tweakOpen={false}
-                onToggleTweak={() => { }}
-                tweakToggleDisabled={true}
-                tweakText=""
-                onChangeTweakText={() => { }}
-                onRegenerate={() => { }}
-                regenMode="idle"
-                onCopy={async () => {
-                    try {
-                        await navigator.clipboard.writeText(threadText)
-                    } catch (e) {
-                        console.warn("Clipboard not available", e)
-                    }
-                }}
-                copyLabel="copy"
-                copyDisabled={false}
-            />
+            <React.Fragment key="twitter">
+                <TwitterThreadCard
+                    threadText={threadText}
+                    tweakOpen={false}
+                    onToggleTweak={() => { }}
+                    tweakToggleDisabled={true}
+                    tweakText=""
+                    onChangeTweakText={() => { }}
+                    onRegenerate={() => { }}
+                    regenMode="idle"
+                    onCopy={async () => {
+                        try {
+                            await navigator.clipboard.writeText(threadText)
+                        } catch (e) {
+                            console.warn("Clipboard not available", e)
+                        }
+                    }}
+                    copyLabel="copy"
+                    copyDisabled={false}
+                />
+            </React.Fragment>
         )
     }
 
     if (linkedInOutput) {
         const postText = linkedInOutput.content || ""
         cards.push(
-            <LinkedInPostCard
-                key="linkedin"
-                postText={postText}
-                tweakOpen={false}
-                onToggleTweak={() => { }}
-                tweakToggleDisabled={true}
-                tweakText=""
-                onChangeTweakText={() => { }}
-                onRegenerate={() => { }}
-                regenMode="idle"
-                onCopy={async () => {
-                    try {
-                        await navigator.clipboard.writeText(postText)
-                    } catch (e) {
-                        console.warn("Clipboard not available", e)
-                    }
-                }}
-                copyLabel="copy"
-                copyDisabled={false}
-            />
+            <React.Fragment key="linkedin">
+                <LinkedInPostCard
+                    postText={postText}
+                    tweakOpen={false}
+                    onToggleTweak={() => { }}
+                    tweakToggleDisabled={true}
+                    tweakText=""
+                    onChangeTweakText={() => { }}
+                    onRegenerate={() => { }}
+                    regenMode="idle"
+                    onCopy={async () => {
+                        try {
+                            await navigator.clipboard.writeText(postText)
+                        } catch (e) {
+                            console.warn("Clipboard not available", e)
+                        }
+                    }}
+                    copyLabel="copy"
+                    copyDisabled={false}
+                />
+            </React.Fragment>
         )
     }
 
     if (carouselOutput) {
         const slides = carouselOutput.metadata?.slides || []
         cards.push(
-            <InstagramCarouselCardStatic key="instagram" slides={slides} />
+            <React.Fragment key="instagram">
+                <InstagramCarouselCardStatic slides={slides} />
+            </React.Fragment>
         )
     }
 
     return (
         <div
             style={{
-                maxWidth: 1200,
+                maxWidth: 1280,
                 margin: "0 auto",
-                padding: "80px 20px 40px 20px",
+                padding: "104px clamp(20px, 4vw, 60px) 40px clamp(52px, 5vw, 60px)",
                 minHeight: "100vh",
             }}
         >
-            {/* Back Button */}
-            <button
-                onClick={onBack}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 16px",
-                    borderRadius: 8,
-                    border: "1px solid #E2D0A2",
-                    backgroundColor: "transparent",
-                    color: "#2F2F2F",
-                    fontSize: 15,
-                    fontWeight: 500,
-                    fontFamily: '"Inter", sans-serif',
-                    cursor: "pointer",
-                    marginBottom: 32,
-                    transition: "background-color 200ms ease",
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#F5F0E3"
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent"
-                }}
-            >
-                <ArrowLeft size={18} />
-                Back to List
-            </button>
-
-            {/* Video Header with Thumbnail */}
+            {/* Content wrapper — centered, nav absolutely positioned outside */}
             <div
                 style={{
-                    marginBottom: 40,
+                    position: "relative",
+                    width: "100%",
+                    maxWidth: 600,
+                    margin: "0 auto",
                 }}
             >
-                {/* Thumbnail Banner */}
-                {youtubeId && (
-                    <div
-                        style={{
-                            width: "100%",
-                            maxWidth: 800,
-                            margin: "0 auto 24px auto",
-                            borderRadius: 16,
-                            overflow: "hidden",
-                            backgroundColor: "#E2D0A2",
-                            position: "relative",
-                        }}
-                    >
-                        <img
-                            src={getYouTubeThumbnail(youtubeId)}
-                            alt={videoTitle}
-                            style={{
-                                width: "100%",
-                                height: "auto",
-                                display: "block",
-                            }}
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none"
-                            }}
-                        />
-                        {/* Play icon overlay */}
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: "translate(-50%, -50%)",
-                                width: 64,
-                                height: 64,
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(0, 0, 0, 0.7)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Play size={32} color="#FFFFFF" fill="#FFFFFF" />
-                        </div>
-                    </div>
-                )}
-
-                {/* Title and Meta */}
-                <div style={{ textAlign: "center" }}>
-                    <div
-                        style={{
-                            fontFamily: '"Inter", sans-serif',
-                            fontSize: 28,
-                            fontWeight: 600,
-                            color: "#2F2F2F",
-                            marginBottom: 8,
-                        }}
-                    >
-                        {videoTitle}
-                    </div>
-                    <div
-                        style={{
-                            fontFamily: '"Inter", sans-serif',
-                            fontSize: 15,
-                            color: "#7A7A7A",
-                        }}
-                    >
-                        {youtubeId ? `YouTube Video • ${youtubeId}` : "YouTube Video"} •{" "}
-                        {createdAt}
-                    </div>
-                </div>
-            </div>
-
-            {/* Carousel */}
-            {cards.length > 0 ? (
-                <HorizontalCardCarousel cards={cards} />
-            ) : (
+                {/* Side navigation: absolutely positioned to the left */}
                 <div
                     style={{
-                        padding: 80,
-                        textAlign: "center",
-                        color: "#7A7A7A",
-                        fontSize: 16,
-                        fontFamily: '"Inter", sans-serif',
+                        position: "absolute",
+                        right: "100%",
+                        top: 20,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
                     }}
                 >
-                    No outputs available for this generation.
+                    <button
+                        onClick={onBack}
+                        onMouseEnter={() => setBackHover(true)}
+                        onMouseLeave={() => setBackHover(false)}
+                        style={{
+                            width: 40,
+                            height: 40,
+                            padding: 0,
+                            border: "1px solid #E2D0A2",
+                            backgroundColor: backHover ? "#EFE8CF" : "transparent",
+                            borderRadius: 24,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+                        }}
+                    >
+                        <ArrowLeft size={18} color="#2D2E0F" />
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        onMouseEnter={() => setTrashHover(true)}
+                        onMouseLeave={() => setTrashHover(false)}
+                        style={{
+                            width: 40,
+                            height: 40,
+                            padding: 0,
+                            border: trashHover ? "1px solid #E8BCBC" : "1px solid #E2D0A2",
+                            backgroundColor: trashHover ? "rgba(200,50,50,0.06)" : "transparent",
+                            borderRadius: 24,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1), border-color 250ms cubic-bezier(0.4, 0, 0.2, 1), color 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+                        }}
+                    >
+                        <Trash2 size={18} color={trashHover ? "#B83232" : "#8B4513"} />
+                    </button>
                 </div>
-            )}
+
+                {/* Video info header */}
+                <div
+                    style={{
+                        borderRadius: 12,
+                        padding: "20px 0",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 24,
+                    }}
+                >
+                        {/* Thumbnail */}
+                        <div
+                            style={{
+                                width: "60%",
+                                maxWidth: 345,
+                                aspectRatio: "2 / 1",
+                                borderRadius: 12,
+                                border: "1px solid #E2D0A2",
+                                overflow: "hidden",
+                                backgroundColor: "#E2D0A2",
+                            }}
+                        >
+                            {youtubeId && !imgError && (
+                                <img
+                                    src={getYouTubeThumbnail(youtubeId)}
+                                    alt={videoTitle}
+                                    onError={() => setImgError(true)}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        display: "block",
+                                        borderRadius: 12,
+                                    }}
+                                />
+                            )}
+                        </div>
+
+                        {/* Content info: title, channel, date */}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 8,
+                                width: "100%",
+                                color: "#2F2F2F",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 4,
+                                    width: "100%",
+                                    textAlign: "center",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        fontFamily: '"Inter", sans-serif',
+                                        fontSize: 24,
+                                        fontWeight: 500,
+                                        color: "#2F2F2F",
+                                        margin: 0,
+                                        padding: "0 20px",
+                                        lineHeight: 1.3,
+                                    }}
+                                >
+                                    {videoTitle}
+                                </p>
+                                {channelName && (
+                                    <p
+                                        style={{
+                                            fontFamily: '"Inter", sans-serif',
+                                            fontSize: 20,
+                                            fontWeight: 400,
+                                            color: "#2F2F2F",
+                                            margin: 0,
+                                            padding: "0 20px",
+                                            lineHeight: 1.3,
+                                        }}
+                                    >
+                                        {channelName}
+                                    </p>
+                                )}
+                            </div>
+                            <p
+                                style={{
+                                    fontFamily: '"Inter", sans-serif',
+                                    fontSize: 12,
+                                    fontWeight: 400,
+                                    color: "#2F2F2F",
+                                    margin: 0,
+                                }}
+                            >
+                                {createdAt}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Output cards carousel */}
+                    <div style={{ marginTop: 40 }}>
+                        {cards.length > 0 ? (
+                            <HorizontalCardCarousel cards={cards} />
+                        ) : (
+                            <div
+                                style={{
+                                    padding: 80,
+                                    textAlign: "center",
+                                    color: "#7A7A7A",
+                                    fontSize: 16,
+                                    fontFamily: '"Inter", sans-serif',
+                                }}
+                            >
+                                No outputs available for this generation.
+                            </div>
+                        )}
+                    </div>
+            </div>
         </div>
     )
 }
