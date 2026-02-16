@@ -1,17 +1,19 @@
 import * as React from "react"
+import { CheckCircle } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 
 /**
  * PostGenerationActions - Shows after a successful generation on /form page
  *
  * Displays:
- * - "Saved to dashboard" confirmation
+ * - "Saved to your dashboard" confirmation (matches Figma node 192:170)
  * - "Start New Generation" reset button
  */
 export function PostGenerationActions() {
     const { state, reset } = UseRiverGeneration()
     const [buttonHover, setButtonHover] = React.useState(false)
     const [buttonPressed, setButtonPressed] = React.useState(false)
+    const [pillHover, setPillHover] = React.useState(false)
 
     // Only show when we have results
     if (!state.result) return null
@@ -34,31 +36,57 @@ export function PostGenerationActions() {
                 padding: "24px 20px",
             }}
         >
-            {/* Saved indicator */}
+            {/* Saved to dashboard banner */}
             <div
                 style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
-                    color: "#15803D",
-                    fontSize: 14,
-                    fontWeight: 500,
-                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                    padding: "16px 20px",
+                    borderRadius: 12,
+                    backgroundColor: "rgba(17, 126, 138, 0.21)",
+                    boxShadow: "0px 0px 4px rgba(36, 42, 25, 0.25)",
+                    fontFamily: '"Inter", sans-serif',
                 }}
             >
-                <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                    }}
                 >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Saved to dashboard
+                    <CheckCircle size={24} color="#117E8A" />
+                    <span
+                        style={{
+                            color: "#3A3A3A",
+                            fontSize: 20,
+                            fontWeight: 400,
+                        }}
+                    >
+                        Saved to your
+                    </span>
+                </div>
+                <a
+                    href="/dashboard"
+                    onMouseEnter={() => setPillHover(true)}
+                    onMouseLeave={() => setPillHover(false)}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "6px 10px",
+                        borderRadius: 29,
+                        backgroundColor: pillHover ? "#2A2A2A" : "#3A3A3A",
+                        color: "#FFFFFF",
+                        fontSize: 16,
+                        fontWeight: 300,
+                        textDecoration: "none",
+                        transition: "background-color 200ms ease",
+                    }}
+                >
+                    dashboard
+                </a>
             </div>
 
             {/* Reset button */}

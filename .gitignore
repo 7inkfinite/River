@@ -47,3 +47,13 @@ development-notes.md
 # Work-in-progress drafts
 *.wip.md
 draft-*.md
+
+# Screenshots and large assets
+Screens/
+frontend/assets/
+
+# Implementation planning docs
+implementations/
+
+# Session fix notes
+docs/dashboard fixes Jan 21.md

@@ -37,10 +37,11 @@ Two separate serverless workflows that run the logic:
 
 **Main Workflow (Video Processing):**
 - Receives your YouTube URL
+- Fetches the video title and thumbnail from YouTube (via YT-API)
 - Fetches the transcript from YouTube
 - Checks if we've already generated content for this video (cache)
 - Calls OpenAI to generate social content
-- Saves everything to the database
+- Saves everything to the database (including video title and thumbnail)
 - Returns results to the website
 
 **Auth Workflow (User Migration):**
@@ -51,8 +52,8 @@ Two separate serverless workflows that run the logic:
 
 PostgreSQL database that stores:
 
-- **Videos:** YouTube video IDs and metadata
-- **Generations:** Each time you generate content, tracked with tone and platforms
+- **Videos:** YouTube video IDs, titles, thumbnails, and metadata
+- **Generations:** Each time you generate content, tracked with tone, platforms, and user attribution
 - **Outputs:** The actual Twitter threads, LinkedIn posts, and carousel slides
 - **Users:** Your account information (handled by Supabase Auth)
 
@@ -118,11 +119,13 @@ River regenerates just that platform while keeping the rest intact.
 2. Land on Home page, see "Go to Dashboard" button
 3. Go to Dashboard, click "Create New"
 4. Navigate to dedicated form page (`/form`)
-5. Generate content
-6. Click "Back to Dashboard" to view history
-7. Click any generation to view/edit
-8. Edit, regenerate, and copy
-9. Come back next week, all history preserved
+5. Generate content (automatically attributed to your account via `user_id`)
+6. See "Saved to dashboard" confirmation with navigation options
+7. Click "Back to Dashboard" to view history with video thumbnails and titles
+8. Scroll through date-grouped generations with infinite scroll
+9. Click any generation to view/edit
+10. Edit, regenerate, and copy
+11. Come back next week, all history preserved
 
 ## Technical Highlights (Non-Technical Explanation)
 

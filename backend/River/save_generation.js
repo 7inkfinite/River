@@ -94,6 +94,8 @@ export default defineComponent({
           id: video.id,
           youtube_video_id: video.youtube_video_id,
           original_url: video.original_url,
+          title: video.title || null,
+          thumbnail_url: video.thumbnail_url || null,
         },
         generation: cache.generation,
         inputs: {
@@ -123,6 +125,7 @@ export default defineComponent({
       cache_key: cache.cacheKey || null,
       extra_options: v.extra_options || null,
       anonymous_session_id: v.session_id || null, // ✅ Track anonymous users
+      user_id: v.user_id || null, // ✅ Track authenticated users
     };
 
     const genRes = await fetch(
@@ -314,6 +317,8 @@ export default defineComponent({
         id: video.id,
         youtube_video_id: video.youtube_video_id,
         original_url: video.original_url,
+        title: video.title || null,
+        thumbnail_url: video.thumbnail_url || null,
       },
       generation,
       inputs: {

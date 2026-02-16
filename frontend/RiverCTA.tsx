@@ -137,13 +137,13 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
     // Colors
     // -----------------------------
     const COLORS = {
-        idle: "#3C82F6",
-        hover: "#163D7A",
-        pressed: "#38A8C9",
+        idle: "#4688f7",
+        hover: "#1f59bb",
+        pressed: "#1f59bb",
         error: "#8A112D",
         formError: "#C2410C",
         success: "#117e8a",
-        loading: "#3C82F6",
+        loading: "#4688f7",
 
         // ✅ calm tweak state color
         tweakCalm: "#ADDADE",
@@ -160,8 +160,8 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
     const isSuccess = status === "success"
     const isFormError = Boolean(formError)
 
-    // ✅ disable if either generate is loading OR tweak is loading OR results lock active
-    const isDisabled = isLoading || isTweakLoading || resultsLock
+    // ✅ disable if generate is loading, tweak is loading, results lock active, or success state
+    const isDisabled = isLoading || isTweakLoading || resultsLock || isSuccess
 
     let backgroundColor = COLORS.idle
 
@@ -246,12 +246,13 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                 disabled={isDisabled}
                 style={{
                     boxSizing: "border-box",
+                    position: "relative",
                     width: "fit-content",
-                    height: 40,
                     display: "flex",
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
+                    height: 40,
                     padding: "16px 24px",
                     gap: "8px",
                     borderRadius: "24px",
@@ -260,9 +261,9 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                     backgroundColor,
                     boxShadow:
                         !isDisabled && isPressed
-                            ? "0px 2px 2px rgba(48, 28, 10, 0.35)"
-                            : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
-                    color: "#EFE9DA",
+                            ? "0px 1px 3px 0px rgba(35,12,5,0.34)"
+                            : "0px 1px 3px 0px rgba(35,12,5,0.34), 0px 4px 8px 0px rgba(35,12,5,0.3)",
+                    color: !isDisabled && isPressed ? "#def49c" : "#faf8f0",
                     fontSize: 14,
                     fontWeight: 500,
                     lineHeight: 1.1,
@@ -273,12 +274,23 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                     userSelect: "none",
                     opacity: isDisabled ? 0.95 : 1,
                     transition:
-                        "background-color 850ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 850ms cubic-bezier(0.25,0.1,0.25,1), transform 380ms ease-in-out",
+                        "background-color 200ms ease, box-shadow 200ms ease, color 150ms ease",
                     animation: shouldShake
                         ? "river-shake 380ms ease-in-out"
                         : "none",
                 }}
             >
+                {/* inset shadow overlay */}
+                <span
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "inherit",
+                        pointerEvents: "none",
+                        boxShadow: "inset -1px -2px 1.1px 0px rgba(25,50,152,0.46)",
+                    }}
+                />
+
                 {/* ✅ NO spinner during tweak loading (mini CTA handles motion) */}
                 {isLoading && !isTweakLoading && (
                     <span
@@ -286,7 +298,7 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                             width: 14,
                             height: 14,
                             borderRadius: "999px",
-                            border: "2px solid #EFE9DA",
+                            border: "2px solid #faf8f0",
                             borderTopColor: "transparent",
                             display: "inline-block",
                             animation: "river-spin 1.2s linear infinite",
@@ -294,7 +306,7 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                     />
                 )}
 
-                <span>{label}</span>
+                <span style={{ position: "relative" }}>{label}</span>
 
                 <style>
                     {`

@@ -1,5 +1,6 @@
 // code/UseRiverGeneration.tsx
 import * as React from "react"
+import { supabase } from "./AuthComponents.tsx"
 
 // TODO: Replace with your Pipedream webhook URL before using in Framer
 // See secrets.md for actual URL
@@ -15,6 +16,14 @@ const getOrCreateSessionId = (): string => {
         localStorage.setItem("river_session_id", sessionId)
     }
     return sessionId
+}
+
+// Get current authenticated user's ID (null if anonymous)
+const getUserId = async (): Promise<string | null> => {
+    if (typeof window === "undefined") return null
+
+    const { data: { user } } = await supabase.auth.getUser()
+    return user?.id ?? null
 }
 
 // Basic YouTube URL validator (handles youtube.com / youtu.be / shorts)
@@ -145,15 +154,16 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
             }))
 
             try {
-                // Include session_id for anonymous user tracking
+                // Include session_id for anonymous tracking AND user_id for auth users
                 const payload = {
                     ...inputs,
                     session_id: getOrCreateSessionId(),
+                    user_id: await getUserId(),
                 }
 
                 const res = await fetch(WEBHOOK_URL, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify(payload),
                 })
 

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid, ExternalLink } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid, ExternalLink, CheckCircle } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
@@ -1336,6 +1336,7 @@ function LoadingSkeletonCard() {
 
 /**
  * PostAuthCTA - Shows "Saved to Dashboard" message with link for authenticated users
+ * Matches Figma node 192:170
  */
 function PostAuthCTA() {
     const [hover, setHover] = React.useState(false)
@@ -1346,27 +1347,37 @@ function PostAuthCTA() {
                 width: "100%",
                 maxWidth: 840,
                 margin: "0 auto",
-                padding: "20px 24px",
-                borderRadius: 16,
-                backgroundColor: "rgba(60, 130, 246, 0.08)",
-                border: "1px solid rgba(60, 130, 246, 0.2)",
+                padding: "16px 20px",
+                borderRadius: 12,
+                backgroundColor: "rgba(17, 126, 138, 0.21)",
+                boxShadow: "0px 0px 4px rgba(36, 42, 25, 0.25)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                gap: 16,
-                fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                gap: 8,
+                fontFamily: '"Inter", sans-serif',
             }}
         >
+            {/* Check icon + "Saved to your" */}
             <div
                 style={{
-                    color: "#2F2F2F",
-                    fontSize: 15,
-                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
                 }}
             >
-                Saved to your dashboard
+                <CheckCircle size={24} color="#117E8A" />
+                <span
+                    style={{
+                        color: "#3A3A3A",
+                        fontSize: 20,
+                        fontWeight: 400,
+                    }}
+                >
+                    Saved to your
+                </span>
             </div>
 
+            {/* "dashboard" pill link */}
             <a
                 href="/dashboard"
                 onMouseEnter={() => setHover(true)}
@@ -1374,19 +1385,18 @@ function PostAuthCTA() {
                 style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
-                    padding: "10px 16px",
-                    borderRadius: 24,
-                    backgroundColor: hover ? "#3C82F6" : "rgba(60, 130, 246, 0.12)",
-                    color: hover ? "#FFFFFF" : "#3C82F6",
-                    fontSize: 14,
-                    fontWeight: 500,
+                    justifyContent: "center",
+                    padding: "6px 10px",
+                    borderRadius: 29,
+                    backgroundColor: hover ? "#2A2A2A" : "#3A3A3A",
+                    color: "#FFFFFF",
+                    fontSize: 16,
+                    fontWeight: 300,
                     textDecoration: "none",
-                    transition: "all 200ms ease",
+                    transition: "background-color 200ms ease",
                 }}
             >
-                <span>View Dashboard</span>
-                <ExternalLink size={14} />
+                dashboard
             </a>
         </div>
     )

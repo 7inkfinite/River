@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Home } from "lucide-react"
 import { useAuthGate } from "./AuthGate.tsx"
 import { UserDashboard } from "./UserDashboard.tsx"
 import { RiverProvider } from "./UseRiverGeneration.tsx"
@@ -148,88 +147,15 @@ export function UserDashboardShell() {
         <div
             style={{
                 width: "100%",
-                minHeight: "100vh",
+                height: "100vh",
                 backgroundColor: "#FAF7ED",
+                overflowY: "auto",
             }}
         >
-            {/* Header */}
-            <div
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 64,
-                    backgroundColor: "#FAF7ED",
-                    borderBottom: "1px solid #E0CD9D",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "0 24px",
-                    zIndex: 100,
-                }}
-            >
-                {/* Home Link */}
-                <a
-                    href="/"
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        color: "#2F2F2F",
-                        textDecoration: "none",
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        padding: "8px 12px",
-                        borderRadius: 12,
-                        backgroundColor: "transparent",
-                        transition: "background-color 200ms ease",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(124, 138, 17, 0.1)"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent"
-                    }}
-                >
-                    <Home size={18} />
-                    <span>Home</span>
-                </a>
-
-                {/* Create New Button */}
-                <a
-                    href="/form"
-                    style={{
-                        padding: "10px 20px",
-                        borderRadius: 24,
-                        border: "none",
-                        backgroundColor: "#3C82F6",
-                        color: "#EFE9DA",
-                        fontSize: 14,
-                        fontWeight: 500,
-                        textDecoration: "none",
-                        fontFamily: '"General Sans", sans-serif',
-                        transition: "all 200ms ease",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}
-                >
-                    Create New
-                </a>
-
-                {/* Spacer to balance header */}
-                <div style={{ width: 80 }} />
-            </div>
-
             {/* Content */}
-            <div style={{ paddingTop: 64 }}>
-                <UserDashboard
-                    key={refreshKey}
-                    onNavigateToCreate={() => window.location.href = "/form"}
-                />
-            </div>
+            <UserDashboard
+                key={refreshKey}
+            />
         </div>
     )
 }
