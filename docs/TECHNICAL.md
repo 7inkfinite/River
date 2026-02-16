@@ -18,7 +18,7 @@ Frontend (Framer/React) → Pipedream Workflows → Supabase (PostgreSQL) → Op
 - Backend: Pipedream (Node.js serverless workflows)
 - Database: Supabase (PostgreSQL + Auth)
 - AI: OpenAI gpt-4o-mini (JSON mode)
-- External: RapidAPI (YouTube subtitles)
+- External: RapidAPI (YouTube subtitles + video info)
 
 Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/form)
 ┌─────────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
@@ -69,15 +69,16 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
 | Step | File | Function | Input | Output |
 |------|------|----------|-------|--------|
 | 1 | `backend/River/trigger.json` | HTTP trigger | POST request | `steps.trigger.event` |
-| 2 | `backend/River/validate_input.js` | Parse/validate | URL, tone, platforms | Normalized params |
-| 3 | `backend/River/upsert_video.js` | Video persistence | Video ID, URL | Video object with UUID |
-| 4 | `backend/River/sub_endpoint.json` | Fetch subtitles | Video ID | Subtitle tracks array |
-| 5 | `backend/River/sub_pick.js` | Select track | Tracks array | Selected track |
-| 6 | `backend/River/fetch_timedtext.json` | Download XML | Track URL | Raw XML |
-| 7 | `backend/River/parse_sub.js` | Parse XML | XML string | Transcript text |
-| 8 | `backend/River/transcript_final.js` | Normalize | Parsed text | Normalized transcript |
-| 9 | `backend/River/extract_transcript.js` | Extract segments | Transcript | Segments + metadata |
-| 10 | `backend/River/check_cache.js` | Cache lookup | Cache key | Hit/miss + outputs |
+| 2 | `backend/River/validate_input.js` | Parse/validate | URL, tone, platforms, user_id | Normalized params |
+| 3 | `backend/River/fetch_video_info.js` | Fetch video metadata | Video ID | Title, thumbnail URL, metadata |
+| 4 | `backend/River/upsert_video.js` | Video persistence | Video ID, URL, title, thumbnail | Video object with UUID |
+| 5 | `backend/River/sub_endpoint.json` | Fetch subtitles | Video ID | Subtitle tracks array |
+| 6 | `backend/River/sub_pick.js` | Select track | Tracks array | Selected track |
+| 7 | `backend/River/fetch_timedtext.json` | Download XML | Track URL | Raw XML |
+| 8 | `backend/River/parse_sub.js` | Parse XML | XML string | Transcript text |
+| 9 | `backend/River/transcript_final.js` | Normalize | Parsed text | Normalized transcript |
+| 10 | `backend/River/extract_transcript.js` | Extract segments | Transcript | Segments + metadata |
+| 11 | `backend/River/check_cache.js` | Cache lookup | Cache key | Hit/miss + outputs |
 | 12 | `backend/River/Call_openAI_API.js` | Generate content | Transcript, params | Platform outputs |
 | 13 | `backend/River/save_generation.js` | Persist results | Generation data | Complete result |
 | 14 | `backend/River/return_http_response` | Return to frontend | Result object | HTTP 200 JSON |
@@ -105,7 +106,7 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
    - Generate crypto.randomUUID() if missing
    - Store in localStorage
    ↓
-3. Frontend: fetch(WEBHOOK_URL, { body: { ...inputs, session_id } })
+3. Frontend: fetch(WEBHOOK_URL, { body: { ...inputs, session_id, user_id } })
    ↓
 4. Backend Step 1 (trigger): Receive HTTP POST
    ↓
@@ -113,15 +114,21 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
    - Extract videoId from URL
    - Normalize platforms array
    - Validate tone
+   - Extract user_id (if authenticated)
    ↓
-6. Backend Step 3 (upsert_video): Database operation
-   - INSERT INTO videos (youtube_video_id, original_url, anonymous_session_id)
-   - ON CONFLICT UPDATE last_used_at
-   - RETURN video.id
+6. Backend Step 3 (fetch_video_info): Fetch video metadata
+   - Call YT-API for title and thumbnail
+   - Select highest quality thumbnail
+   - Fallback to YouTube default thumbnail URL
    ↓
-7. Backend Steps 4-9 (transcript pipeline): Extract transcript
+7. Backend Step 4 (upsert_video): Database operation
+   - INSERT INTO videos (youtube_video_id, original_url, title, thumbnail_url, user_id, anonymous_session_id)
+   - ON CONFLICT UPDATE last_used_at, title, thumbnail_url
+   - RETURN video row (includes all columns)
    ↓
-8. Backend Step 10 (check_cache): Query cache
+8. Backend Steps 5-10 (transcript pipeline): Extract transcript
+   ↓
+9. Backend Step 11 (check_cache): Query cache
    - Build cache_key = [video.id, tone, platforms.sort(), "v1"].join("|")
    - Query generations WHERE cache_key = ? AND status = 'success'
    - If hit: RETURN cached outputs
@@ -133,11 +140,11 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
    - Parse response
    ↓
 10. Backend Step 13 (save_generation): Persist to DB
-    - INSERT INTO generations (video_id, tone, platforms, cache_key, anonymous_session_id)
+    - INSERT INTO generations (video_id, tone, platforms, cache_key, user_id, anonymous_session_id)
     - INSERT INTO outputs (generation_id, platform, format, content, metadata) × N
     ↓
 11. Backend Step 14 (return_response): Format and return
-    - Build result object with video + generation + outputs
+    - Build result object with video (including title, thumbnail_url) + generation + outputs
     - Return HTTP 200 with JSON
     ↓
 12. Frontend: Receive response
@@ -269,7 +276,8 @@ const getOrCreateSessionId = (): string => {
 ```typescript
 const body = {
   ...inputs,
-  session_id: getOrCreateSessionId()
+  session_id: getOrCreateSessionId(),
+  user_id: await getUserId()  // from Supabase auth session
 }
 ```
 
@@ -278,6 +286,7 @@ const body = {
 - Generated once per browser (not per session)
 - Cleared only after successful claim
 - Used to track anonymous generations
+- Authenticated users send `user_id` directly for immediate attribution
 
 ### Cache Key Generation
 
@@ -624,6 +633,8 @@ CREATE TABLE videos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   youtube_video_id TEXT UNIQUE NOT NULL,
   original_url TEXT,
+  title TEXT,
+  thumbnail_url TEXT,
   user_id UUID REFERENCES auth.users(id),
   anonymous_session_id UUID,
   last_used_at TIMESTAMP WITH TIME ZONE,
@@ -635,12 +646,17 @@ CREATE INDEX idx_videos_anonymous_session_id ON videos(anonymous_session_id);
 ```
 
 **Common Query (Upsert):** `backend/River/upsert_video.js`
+
+The upsert includes `title` and `thumbnail_url` from `steps.fetch_video_info.$return_value` (conditionally, only if present):
 ```sql
-INSERT INTO videos (youtube_video_id, original_url, anonymous_session_id)
-VALUES ($1, $2, $3)
+INSERT INTO videos (youtube_video_id, original_url, title, thumbnail_url, user_id, anonymous_session_id)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (youtube_video_id)
 DO UPDATE SET
   last_used_at = NOW(),
+  title = COALESCE(EXCLUDED.title, videos.title),
+  thumbnail_url = COALESCE(EXCLUDED.thumbnail_url, videos.thumbnail_url),
+  user_id = COALESCE(videos.user_id, EXCLUDED.user_id),
   anonymous_session_id = COALESCE(videos.anonymous_session_id, EXCLUDED.anonymous_session_id)
 RETURNING *;
 ```
@@ -859,6 +875,7 @@ function truncateTranscript(fullText, maxChars = 8000) {
 - `SUPABASE_URL` - Database API endpoint
 - `SUPABASE_SERVICE_ROLE_KEY` - Service role key (RLS bypass)
 - `OPEN_API_KEY` - OpenAI API key
+- `RAPIDAPI_KEY` - RapidAPI key for YT-API (video info + subtitles)
 - `PUBLIC_INGEST_KEY` - Optional webhook authentication
 
 **Auth Workflow:**
@@ -915,7 +932,8 @@ interface GenerateRequest {
   extra_options?: {
     target_platform?: "twitter" | "linkedin" | "carousel"
   }
-  session_id?: string                    // Added by frontend
+  session_id?: string                    // Added by frontend (anonymous users)
+  user_id?: string                       // Added by frontend (authenticated users)
 }
 ```
 
@@ -927,7 +945,8 @@ interface GenerateResponse {
     id: string                           // UUID
     youtube_video_id: string
     original_url: string
-    title?: string
+    title?: string                       // From YT-API via fetch_video_info
+    thumbnail_url?: string               // From YT-API via fetch_video_info
   }
   generation: {
     id: string                           // UUID
@@ -1451,4 +1470,4 @@ const supabase = createClient(url, key)
 ---
 
 **Last Updated:** February 2026
-**Document Version:** 1.1
+**Document Version:** 1.2

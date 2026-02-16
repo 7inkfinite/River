@@ -1,6 +1,5 @@
 import * as React from "react"
 import { createClient } from "@supabase/supabase-js"
-import { X } from "lucide-react"
 
 // TODO: Replace with your Supabase credentials before using in Framer
 // See secrets.md for actual values
@@ -266,13 +265,16 @@ function SuccessView({
 /**
  * SignUpModal - Modal overlay with sign up/sign in form
  * Shows when user clicks Sign Up button
+ *
+ * Design: Warm, organic aesthetic with creamy beige background
+ * and decorative topographic pattern
  */
 export function SignUpModal({
     onClose,
     isAuthenticated,
     claimedCount,
     isClaiming,
-    userName
+    userName,
 }: {
     onClose: () => void
     isAuthenticated?: boolean
@@ -281,13 +283,13 @@ export function SignUpModal({
     userName?: string | null
 }) {
     const [mode, setMode] = React.useState<"signup" | "signin">("signup")
+    const hasInteracted = React.useRef(false)
     const [email, setEmail] = React.useState("")
     const [password, setPassword] = React.useState("")
     const [name, setName] = React.useState("")
     const [loading, setLoading] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
     const [success, setSuccess] = React.useState<string | null>(null)
-
     // Form validation state
     const [emailError, setEmailError] = React.useState<string | null>(null)
     const [passwordError, setPasswordError] = React.useState<string | null>(
@@ -425,18 +427,44 @@ export function SignUpModal({
         return () => window.removeEventListener("keydown", handleEscape)
     }, [onClose])
 
-    // Lock body scroll when modal is open
+    // Lock scroll on background page elements when modal is open
+    // Preserves scroll position and excludes the modal itself
+    const modalRef = React.useRef<HTMLDivElement>(null)
     React.useEffect(() => {
-        const originalOverflow = document.body.style.overflow
+        const locked: { el: HTMLElement; prev: string; scrollTop: number }[] = []
+        const modalEl = modalRef.current
+        const allElements = document.querySelectorAll("*")
+        allElements.forEach((el) => {
+            if (!(el instanceof HTMLElement)) return
+            // Skip the modal and anything inside it — modal needs to scroll
+            if (modalEl && (el === modalEl || modalEl.contains(el))) return
+            const style = window.getComputedStyle(el)
+            const ov = style.overflowY
+            if (ov === "auto" || ov === "scroll") {
+                locked.push({ el, prev: el.style.overflowY, scrollTop: el.scrollTop })
+                el.style.overflowY = "hidden"
+            }
+        })
+        const bodyPrev = document.body.style.overflow
+        const htmlPrev = document.documentElement.style.overflow
+        const bodyScrollTop = document.documentElement.scrollTop || document.body.scrollTop
         document.body.style.overflow = "hidden"
+        document.documentElement.style.overflow = "hidden"
         return () => {
-            document.body.style.overflow = originalOverflow
+            locked.forEach(({ el, prev, scrollTop }) => {
+                el.style.overflowY = prev
+                el.scrollTop = scrollTop
+            })
+            document.body.style.overflow = bodyPrev
+            document.documentElement.style.overflow = htmlPrev
+            document.documentElement.scrollTop = bodyScrollTop
+            document.body.scrollTop = bodyScrollTop
         }
     }, [])
 
-    // Close on background click
+    // Close on background click — use data attribute for reliable detection
     const handleBackgroundClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) onClose()
+        if ((e.target as HTMLElement).hasAttribute?.("data-modal-overlay")) onClose()
     }
 
     // Reset errors when switching modes
@@ -448,8 +476,22 @@ export function SignUpModal({
         setNameError(null)
     }, [mode])
 
+    // Design tokens matching Figma
+    const colors = {
+        background: "#FAF8F0",      // Creamy beige
+        toggleBg: "#F5F0DE",        // Warmer beige for toggle container
+        title: "#4A240D",           // Warm brown
+        labelText: "#6E6E6E",       // Gray for labels
+        inactiveTab: "#BAAB6B",     // Muted gold
+        activeTab: "#000000",       // Black for active tab text
+        buttonBg: "#3A3A3A",        // Dark gray
+        inputBorder: "#C7C7C7",     // Light gray border
+        white: "#FFFFFF",
+    }
+
     return (
         <div
+            data-modal-overlay=""
             onClick={handleBackgroundClick}
             style={{
                 position: "fixed",
@@ -462,59 +504,131 @@ export function SignUpModal({
                 backdropFilter: "blur(4px)",
                 WebkitBackdropFilter: "blur(4px)",
                 padding: "20px",
-                overflowY: "auto",
+                animation: "river-backdrop-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both",
             }}
         >
             {/* Modal Container */}
             <div
+                className="river-modal"
+                ref={modalRef}
                 style={{
                     boxSizing: "border-box",
                     width: "100%",
-                    maxWidth: 480,
-                    maxHeight: "calc(100vh - 40px)",
+                    maxWidth: 520,
+                    height: "80vh",
                     overflowY: "auto",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "flex-start",
                     alignItems: "center",
-                    padding: "48px 32px 40px",
-                    backgroundColor: "#FFFFFF",
-                    gap: 24,
+                    padding: "48px 40px 40px",
+                    backgroundColor: colors.background,
+                    gap: 32,
                     borderRadius: 24,
                     position: "relative",
-                    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.2)",
-                    margin: "auto",
+                    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.25)",
+                    animation: "river-surface 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
                 }}
             >
+
+                <style>{`
+                    /* Backdrop: ripple-fade in */
+                    @keyframes river-backdrop-in {
+                        0% {
+                            opacity: 0;
+                            backdrop-filter: blur(0px);
+                            -webkit-backdrop-filter: blur(0px);
+                        }
+                        100% {
+                            opacity: 1;
+                            backdrop-filter: blur(4px);
+                            -webkit-backdrop-filter: blur(4px);
+                        }
+                    }
+
+                    /* Modal: rise from beneath the surface */
+                    @keyframes river-surface {
+                        0% {
+                            opacity: 0;
+                            transform: translateY(60px) scale(0.96);
+                        }
+                        100% {
+                            opacity: 1;
+                            transform: translateY(0) scale(1);
+                        }
+                    }
+
+                    /* Cascade: content elements ripple in from below */
+                    @keyframes river-cascade {
+                        0% {
+                            opacity: 0;
+                            transform: translateY(20px);
+                        }
+                        100% {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    .river-modal {
+                        padding: 48px 40px 40px !important;
+                    }
+                    @media (max-width: 480px) {
+                        .river-modal {
+                            padding: 32px 20px 28px !important;
+                            gap: 24px !important;
+                            border-radius: 20px !important;
+                            height: 80vh !important;
+                        }
+                    }
+                `}</style>
+
                 {/* Close Button */}
                 <button
-                    onClick={onClose}
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                    }}
                     style={{
                         position: "absolute",
-                        top: 16,
-                        right: 16,
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
+                        top: 6,
+                        right: 6,
+                        background: "none",
                         border: "none",
-                        backgroundColor: "rgba(47, 47, 47, 0.06)",
+                        padding: 8,
+                        cursor: "pointer",
+                        zIndex: 10,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        cursor: "pointer",
-                        zIndex: 10,
-                        transition: "background-color 200ms ease",
+                        opacity: 0.6,
+                        transition: "opacity 150ms ease, transform 150ms ease",
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                            "rgba(47, 47, 47, 0.1)"
+                    onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.currentTarget.style.opacity = "1"
+                        e.currentTarget.style.transform = "scale(1.05)"
                     }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                            "rgba(47, 47, 47, 0.06)"
+                    onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.currentTarget.style.opacity = "0.6"
+                        e.currentTarget.style.transform = "scale(1)"
                     }}
                 >
-                    <X size={20} color="#2F2F2F" />
+                    <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke={colors.title}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ pointerEvents: "none" }}
+                    >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
                 </button>
 
                 {/* SUCCESS VIEW - shown when authenticated and done claiming */}
@@ -531,20 +645,22 @@ export function SignUpModal({
                         flexDirection: "column",
                         alignItems: "center",
                         gap: 24,
-                        padding: "40px 0"
+                        padding: "40px 0",
+                        position: "relative",
+                        zIndex: 1,
                     }}>
                         <div style={{
                             width: 40,
                             height: 40,
                             borderRadius: "50%",
-                            border: "3px solid #E5E7EB",
-                            borderTopColor: "#3C82F6",
+                            border: `3px solid ${colors.toggleBg}`,
+                            borderTopColor: colors.title,
                             animation: "spin 1s linear infinite"
                         }} />
                         <div style={{
                             fontFamily: '"Inter", sans-serif',
                             fontSize: 16,
-                            color: "#4F4F4F",
+                            color: colors.labelText,
                             fontWeight: 500
                         }}>
                             Setting up your dashboard...
@@ -560,70 +676,111 @@ export function SignUpModal({
                     </div>
                 ) : (
                     <>
-                        {/* Welcome Text */}
+                        {/* Title - "Join River" */}
                         <div
                             style={{
                                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                                fontSize: "clamp(24px, 5vw, 28px)",
-                                fontWeight: 600,
-                                color: "#2F2F2F",
+                                fontSize: "clamp(28px, 6vw, 36px)",
+                                fontWeight: 400,
+                                color: colors.title,
                                 textAlign: "center",
+                                position: "relative",
+                                zIndex: 1,
+                                animation: "river-cascade 500ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both",
                             }}
                         >
-                            {mode === "signup" ? "Create Account" : "Welcome Back"}
+                            Join River
                         </div>
 
-                        {/* Sign In / Sign Up Toggle - Pill style */}
+                        {/* Sign In / Sign Up Toggle - Liquid flow animation */}
                         <div
                             style={{
-                                display: "flex",
-                                gap: 4,
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
                                 alignItems: "center",
-                                backgroundColor: "rgba(47, 47, 47, 0.06)",
+                                backgroundColor: colors.toggleBg,
                                 borderRadius: 12,
                                 padding: 4,
+                                position: "relative",
+                                zIndex: 1,
+                                width: "fit-content",
+                                animation: "river-cascade 500ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both",
                             }}
                         >
+                            {/* Liquid sliding indicator */}
+                            <div
+                                className="river-liquid-pill"
+                                style={{
+                                    position: "absolute",
+                                    top: 4,
+                                    bottom: 4,
+                                    left: 4,
+                                    width: "calc(50% - 4px)",
+                                    borderRadius: 10,
+                                    backgroundColor: colors.background,
+                                    boxShadow: "0px 2px 12px 0px rgba(84, 60, 31, 0.22), 0px 0px 1px 0px rgba(84, 60, 31, 0.15)",
+                                    transform: mode === "signup"
+                                        ? "translateX(100%) scaleX(1) scaleY(1)"
+                                        : "translateX(0%) scaleX(1) scaleY(1)",
+                                    transition: hasInteracted.current
+                                        ? "transform 550ms cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 550ms cubic-bezier(0.34, 1.2, 0.64, 1)"
+                                        : "none",
+                                    willChange: "transform",
+                                    zIndex: 0,
+                                }}
+                            />
                             <button
                                 type="button"
-                                onClick={() => setMode("signin")}
+                                onPointerDown={(e) => {
+                                    e.preventDefault()
+                                    hasInteracted.current = true
+                                    setMode("signin")
+                                }}
                                 style={{
-                                    background: mode === "signin" ? "#FFFFFF" : "transparent",
+                                    position: "relative",
+                                    zIndex: 1,
+                                    background: "transparent",
                                     border: "none",
-                                    padding: "10px 20px",
+                                    padding: "8px 22px",
                                     cursor: "pointer",
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     fontSize: 14,
-                                    fontWeight: 500,
-                                    color: mode === "signin" ? "#2F2F2F" : "#7A7A7A",
-                                    borderRadius: 8,
-                                    transition: "all 200ms ease",
-                                    boxShadow: mode === "signin" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
+                                    fontWeight: mode === "signin" ? 500 : 400,
+                                    color: mode === "signin" ? colors.activeTab : colors.inactiveTab,
+                                    borderRadius: 10,
+                                    transition: "color 350ms cubic-bezier(0.16, 1, 0.36, 1), font-weight 350ms cubic-bezier(0.16, 1, 0.36, 1)",
+                                    userSelect: "none",
                                 }}
                             >
                                 Sign In
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setMode("signup")}
+                                onPointerDown={(e) => {
+                                    e.preventDefault()
+                                    hasInteracted.current = true
+                                    setMode("signup")
+                                }}
                                 style={{
-                                    background: mode === "signup" ? "#FFFFFF" : "transparent",
+                                    position: "relative",
+                                    zIndex: 1,
+                                    background: "transparent",
                                     border: "none",
-                                    padding: "10px 20px",
+                                    padding: "8px 22px",
                                     cursor: "pointer",
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     fontSize: 14,
-                                    fontWeight: 500,
-                                    color: mode === "signup" ? "#2F2F2F" : "#7A7A7A",
-                                    borderRadius: 8,
-                                    transition: "all 200ms ease",
-                                    boxShadow: mode === "signup" ? "0 2px 8px rgba(0, 0, 0, 0.08)" : "none",
+                                    fontWeight: mode === "signup" ? 500 : 400,
+                                    color: mode === "signup" ? colors.activeTab : colors.inactiveTab,
+                                    borderRadius: 10,
+                                    transition: "color 350ms cubic-bezier(0.16, 1, 0.36, 1), font-weight 350ms cubic-bezier(0.16, 1, 0.36, 1)",
+                                    userSelect: "none",
                                 }}
                             >
                                 Sign Up
                             </button>
+
+                            {/* Animation handled via CSS transition on the indicator */}
                         </div>
 
                         {/* Error Message */}
@@ -636,9 +793,10 @@ export function SignUpModal({
                                     borderRadius: 12,
                                     color: "#B91C1C",
                                     fontSize: 14,
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     textAlign: "center",
+                                    position: "relative",
+                                    zIndex: 1,
                                 }}
                             >
                                 {error}
@@ -655,9 +813,10 @@ export function SignUpModal({
                                     borderRadius: 12,
                                     color: "#15803D",
                                     fontSize: 14,
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     textAlign: "center",
+                                    position: "relative",
+                                    zIndex: 1,
                                 }}
                             >
                                 {success}
@@ -671,25 +830,31 @@ export function SignUpModal({
                                 width: "100%",
                                 display: "flex",
                                 flexDirection: "column",
-                                gap: 16,
+                                gap: 20,
+                                position: "relative",
+                                zIndex: 1,
+                                animation: "river-cascade 500ms cubic-bezier(0.16, 1, 0.3, 1) 440ms both",
                             }}
                         >
-                            {/* Name Field (Sign Up only) */}
-                            {mode === "signup" && (
+                            {/* Name Field - always rendered, collapses in sign-in mode */}
                                 <div
                                     style={{
                                         display: "flex",
                                         flexDirection: "column",
-                                        gap: 6,
+                                        gap: 8,
+                                        overflow: "hidden",
+                                        maxHeight: mode === "signup" ? 90 : 0,
+                                        opacity: mode === "signup" ? 1 : 0,
+                                        marginBottom: mode === "signup" ? 0 : -20,
+                                        transition: "max-height 450ms cubic-bezier(0.16, 1, 0.36, 1), opacity 300ms cubic-bezier(0.16, 1, 0.36, 1), margin-bottom 450ms cubic-bezier(0.16, 1, 0.36, 1)",
                                     }}
                                 >
                                     <label
                                         style={{
-                                            fontFamily:
-                                                '"Inter", "Inter Placeholder", sans-serif',
-                                            fontSize: 14,
-                                            fontWeight: 500,
-                                            color: "#4F4F4F",
+                                            fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                            fontSize: 16,
+                                            fontWeight: 400,
+                                            color: colors.labelText,
                                         }}
                                     >
                                         Name
@@ -697,29 +862,40 @@ export function SignUpModal({
                                     <input
                                         type="text"
                                         value={name}
-                                        onChange={(e) => {
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                             setName(e.target.value)
                                             if (nameError) validateName(e.target.value)
                                         }}
-                                        onBlur={(e) => validateName(e.target.value)}
-                                        placeholder="Jane Smith"
+                                        onBlur={(e: React.FocusEvent<HTMLInputElement>) => validateName(e.target.value)}
+                                        placeholder=""
                                         disabled={loading}
                                         style={{
                                             width: "100%",
-                                            padding: "14px 16px",
+                                            padding: "16px 18px",
                                             borderRadius: 12,
                                             border: nameError
                                                 ? "1px solid #EF4444"
-                                                : "1px solid #E5E7EB",
-                                            backgroundColor: "#FFFFFF",
-                                            fontSize: 15,
-                                            fontFamily:
-                                                '"Inter", "Inter Placeholder", sans-serif',
-                                            color: "#2F2F2F",
+                                                : `1px solid ${colors.inputBorder}`,
+                                            backgroundColor: colors.white,
+                                            fontSize: 16,
+                                            fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                            color: colors.activeTab,
                                             outline: "none",
                                             boxSizing: "border-box",
                                             opacity: loading ? 0.6 : 1,
-                                            transition: "border-color 200ms ease",
+                                            transition: "border-color 200ms ease, box-shadow 200ms ease",
+                                        }}
+                                        onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                                            if (!nameError) {
+                                                e.currentTarget.style.borderColor = colors.title
+                                                e.currentTarget.style.boxShadow = `0 0 0 3px rgba(74, 36, 13, 0.1)`
+                                            }
+                                        }}
+                                        onBlurCapture={(e: React.FocusEvent<HTMLInputElement>) => {
+                                            if (!nameError) {
+                                                e.currentTarget.style.borderColor = colors.inputBorder
+                                                e.currentTarget.style.boxShadow = 'none'
+                                            }
                                         }}
                                     />
                                     {nameError && (
@@ -727,31 +903,28 @@ export function SignUpModal({
                                             style={{
                                                 fontSize: 12,
                                                 color: "#EF4444",
-                                                fontFamily:
-                                                    '"Inter", "Inter Placeholder", sans-serif',
+                                                fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                             }}
                                         >
                                             {nameError}
                                         </div>
                                     )}
                                 </div>
-                            )}
 
                             {/* Email Field */}
                             <div
                                 style={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 6,
+                                    gap: 8,
                                 }}
                             >
                                 <label
                                     style={{
-                                        fontFamily:
-                                            '"Inter", "Inter Placeholder", sans-serif',
-                                        fontSize: 14,
-                                        fontWeight: 500,
-                                        color: "#4F4F4F",
+                                        fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                        fontSize: 16,
+                                        fontWeight: 400,
+                                        color: colors.labelText,
                                     }}
                                 >
                                     Email
@@ -759,29 +932,40 @@ export function SignUpModal({
                                 <input
                                     type="email"
                                     value={email}
-                                    onChange={(e) => {
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                         setEmail(e.target.value)
                                         if (emailError) validateEmail(e.target.value)
                                     }}
-                                    onBlur={(e) => validateEmail(e.target.value)}
-                                    placeholder="jane@example.com"
+                                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => validateEmail(e.target.value)}
+                                    placeholder=""
                                     disabled={loading}
                                     style={{
                                         width: "100%",
-                                        padding: "14px 16px",
+                                        padding: "16px 18px",
                                         borderRadius: 12,
                                         border: emailError
                                             ? "1px solid #EF4444"
-                                            : "1px solid #E5E7EB",
-                                        backgroundColor: "#FFFFFF",
-                                        fontSize: 15,
-                                        fontFamily:
-                                            '"Inter", "Inter Placeholder", sans-serif',
-                                        color: "#2F2F2F",
+                                            : `1px solid ${colors.inputBorder}`,
+                                        backgroundColor: colors.white,
+                                        fontSize: 16,
+                                        fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                        color: colors.activeTab,
                                         outline: "none",
                                         boxSizing: "border-box",
                                         opacity: loading ? 0.6 : 1,
-                                        transition: "border-color 200ms ease",
+                                        transition: "border-color 200ms ease, box-shadow 200ms ease",
+                                    }}
+                                    onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                                        if (!emailError) {
+                                            e.currentTarget.style.borderColor = colors.title
+                                            e.currentTarget.style.boxShadow = `0 0 0 3px rgba(74, 36, 13, 0.1)`
+                                        }
+                                    }}
+                                    onBlurCapture={(e: React.FocusEvent<HTMLInputElement>) => {
+                                        if (!emailError) {
+                                            e.currentTarget.style.borderColor = colors.inputBorder
+                                            e.currentTarget.style.boxShadow = 'none'
+                                        }
                                     }}
                                 />
                                 {emailError && (
@@ -789,8 +973,7 @@ export function SignUpModal({
                                         style={{
                                             fontSize: 12,
                                             color: "#EF4444",
-                                            fontFamily:
-                                                '"Inter", "Inter Placeholder", sans-serif',
+                                            fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                         }}
                                     >
                                         {emailError}
@@ -803,16 +986,15 @@ export function SignUpModal({
                                 style={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 6,
+                                    gap: 8,
                                 }}
                             >
                                 <label
                                     style={{
-                                        fontFamily:
-                                            '"Inter", "Inter Placeholder", sans-serif',
-                                        fontSize: 14,
-                                        fontWeight: 500,
-                                        color: "#4F4F4F",
+                                        fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                        fontSize: 16,
+                                        fontWeight: 400,
+                                        color: colors.labelText,
                                     }}
                                 >
                                     Password
@@ -820,30 +1002,41 @@ export function SignUpModal({
                                 <input
                                     type="password"
                                     value={password}
-                                    onChange={(e) => {
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                         setPassword(e.target.value)
                                         if (passwordError)
                                             validatePassword(e.target.value)
                                     }}
-                                    onBlur={(e) => validatePassword(e.target.value)}
-                                    placeholder="Min 6 characters"
+                                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => validatePassword(e.target.value)}
+                                    placeholder=""
                                     disabled={loading}
                                     style={{
                                         width: "100%",
-                                        padding: "14px 16px",
+                                        padding: "16px 18px",
                                         borderRadius: 12,
                                         border: passwordError
                                             ? "1px solid #EF4444"
-                                            : "1px solid #E5E7EB",
-                                        backgroundColor: "#FFFFFF",
-                                        fontSize: 15,
-                                        fontFamily:
-                                            '"Inter", "Inter Placeholder", sans-serif',
-                                        color: "#2F2F2F",
+                                            : `1px solid ${colors.inputBorder}`,
+                                        backgroundColor: colors.white,
+                                        fontSize: 16,
+                                        fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                        color: colors.activeTab,
                                         outline: "none",
                                         boxSizing: "border-box",
                                         opacity: loading ? 0.6 : 1,
-                                        transition: "border-color 200ms ease",
+                                        transition: "border-color 200ms ease, box-shadow 200ms ease",
+                                    }}
+                                    onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                                        if (!passwordError) {
+                                            e.currentTarget.style.borderColor = colors.title
+                                            e.currentTarget.style.boxShadow = `0 0 0 3px rgba(74, 36, 13, 0.1)`
+                                        }
+                                    }}
+                                    onBlurCapture={(e: React.FocusEvent<HTMLInputElement>) => {
+                                        if (!passwordError) {
+                                            e.currentTarget.style.borderColor = colors.inputBorder
+                                            e.currentTarget.style.boxShadow = 'none'
+                                        }
                                     }}
                                 />
                                 {passwordError && (
@@ -851,8 +1044,7 @@ export function SignUpModal({
                                         style={{
                                             fontSize: 12,
                                             color: "#EF4444",
-                                            fontFamily:
-                                                '"Inter", "Inter Placeholder", sans-serif',
+                                            fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                         }}
                                     >
                                         {passwordError}
@@ -860,77 +1052,78 @@ export function SignUpModal({
                                 )}
                             </div>
 
-                            {/* Submit Button */}
-                            <ConfirmButton
-                                loading={loading}
-                                label={
-                                    mode === "signup"
-                                        ? loading
-                                            ? "Creating Account..."
-                                            : "Confirm"
-                                        : loading
-                                            ? "Signing In..."
-                                            : "Sign In"
-                                }
-                            />
-
-                            {/* Terms & Conditions (Sign Up only) */}
-                            {mode === "signup" && (
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        color: "#7A7A7A",
-                                        fontFamily:
-                                            '"Inter", "Inter Placeholder", sans-serif',
-                                        textAlign: "center",
-                                        lineHeight: 1.5,
-                                    }}
-                                >
-                                    By signing up, you agree to our{" "}
-                                    <a
-                                        href="/terms"
-                                        target="_blank"
-                                        style={{
-                                            color: "#2F2F2F",
-                                            textDecoration: "underline",
-                                        }}
-                                    >
-                                        Terms of Service
-                                    </a>{" "}
-                                    and{" "}
-                                    <a
-                                        href="/privacy"
-                                        target="_blank"
-                                        style={{
-                                            color: "#2F2F2F",
-                                            textDecoration: "underline",
-                                        }}
-                                    >
-                                        Privacy Policy
-                                    </a>
-                                </div>
-                            )}
+                            {/* Submit Button - Pill shaped */}
+                            <div style={{ marginTop: 16 }}>
+                                <ConfirmButton
+                                    loading={loading}
+                                    label={
+                                        mode === "signup"
+                                            ? loading
+                                                ? "Creating Account..."
+                                                : "Confirm"
+                                            : loading
+                                                ? "Signing In..."
+                                                : "Sign In"
+                                    }
+                                />
+                            </div>
 
                             {/* Divider */}
                             <div
                                 style={{
                                     width: "100%",
                                     textAlign: "center",
-                                    color: "#7A7A7A",
+                                    color: colors.activeTab,
                                     fontSize: 14,
-                                    fontFamily:
-                                        '"Inter", "Inter Placeholder", sans-serif',
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     margin: "8px 0",
                                 }}
                             >
-                                or just use your google account
+                                or just use your Google account
                             </div>
 
-                            {/* Google Sign In Button */}
+                            {/* Google Sign In Button - Pill shaped */}
                             <GoogleSignInButton
                                 onClick={handleGoogleSignIn}
                                 disabled={loading}
                             />
+
+                            {/* Terms & Conditions - at bottom */}
+                            <div
+                                style={{
+                                    fontSize: 13,
+                                    color: colors.activeTab,
+                                    fontFamily: '"Inter", "Inter Placeholder", sans-serif',
+                                    textAlign: "center",
+                                    lineHeight: 1.5,
+                                    marginTop: 16,
+                                }}
+                            >
+                                By signing up, you agree to our{" "}
+                                <a
+                                    href="/terms"
+                                    target="_blank"
+                                    style={{
+                                        color: colors.activeTab,
+                                        textDecoration: "underline",
+                                        textUnderlineOffset: "2px",
+                                    }}
+                                >
+                                    Terms of Service
+                                </a>{" "}
+                                and{" "}
+                                <a
+                                    href="/privacy"
+                                    target="_blank"
+                                    style={{
+                                        color: colors.activeTab,
+                                        textDecoration: "underline",
+                                        textUnderlineOffset: "2px",
+                                    }}
+                                >
+                                    Privacy Policy
+                                </a>
+                            </div>
                         </form>
                     </>
                 )}
@@ -940,7 +1133,8 @@ export function SignUpModal({
 }
 
 /**
- * ConfirmButton - Submit button for the sign up/sign in form
+ * ConfirmButton - Pill-shaped submit button for the sign up/sign in form
+ * Design: Dark gray (#3A3A3A), fully rounded, with shadow
  */
 function ConfirmButton({
     loading,
@@ -952,7 +1146,7 @@ function ConfirmButton({
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#1F1F1F" : hover ? "#252525" : "#2F2F2F"
+    const backgroundColor = pressed ? "#2A2A2A" : hover ? "#303030" : "#3A3A3A"
 
     return (
         <button
@@ -968,35 +1162,34 @@ function ConfirmButton({
             style={{
                 boxSizing: "border-box",
                 width: "100%",
-                height: 48,
+                height: 56,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: "16px 24px",
+                padding: "18px 32px",
                 backgroundColor,
-                borderRadius: 12,
+                borderRadius: 9999, // Pill shape
                 border: "none",
                 cursor: loading ? "not-allowed" : "pointer",
                 color: "#FFFFFF",
                 fontSize: 16,
-                fontWeight: 600,
+                fontWeight: 500,
                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                transition:
-                    "background-color 300ms cubic-bezier(0.25,0.1,0.25,1)",
-                boxShadow:
-                    "0px 1px 6px 0px rgba(48, 28, 10, 0.4), 0px 2px 2px 0px rgba(48, 28, 10, 0.35)",
-                opacity: loading ? 0.6 : 1,
-                gap: 8,
+                transition: "all 200ms cubic-bezier(0.25,0.1,0.25,1)",
+                boxShadow: "0px 3px 4px 0px rgba(0, 0, 0, 0.4), 0px 7px 10.7px 0px rgba(0, 0, 0, 0.25)",
+                opacity: loading ? 0.7 : 1,
+                gap: 10,
+                transform: pressed ? "scale(0.98)" : "scale(1)",
             }}
         >
             {loading && (
                 <span
                     style={{
-                        width: 16,
-                        height: 16,
+                        width: 18,
+                        height: 18,
                         borderRadius: "50%",
-                        border: "2px solid #FFFFFF",
-                        borderTopColor: "transparent",
+                        border: "2px solid rgba(255, 255, 255, 0.3)",
+                        borderTopColor: "#FFFFFF",
                         display: "inline-block",
                         animation: "spin 0.8s linear infinite",
                     }}
@@ -1016,7 +1209,8 @@ function ConfirmButton({
 }
 
 /**
- * GoogleSignInButton - Google OAuth sign in button
+ * GoogleSignInButton - Pill-shaped Google OAuth sign in button
+ * Design: White background, fully rounded, no border
  */
 function GoogleSignInButton({
     onClick,
@@ -1029,10 +1223,10 @@ function GoogleSignInButton({
     const [pressed, setPressed] = React.useState(false)
 
     const backgroundColor = pressed
-        ? "rgba(255, 255, 255, 0.95)"
+        ? "#F5F5F5"
         : hover
-            ? "rgba(255, 255, 255, 1)"
-            : "rgba(255, 255, 255, 0.9)"
+            ? "#FAFAFA"
+            : "#FFFFFF"
 
     return (
         <button
@@ -1049,29 +1243,29 @@ function GoogleSignInButton({
             style={{
                 boxSizing: "border-box",
                 width: "100%",
-                height: 48,
+                height: 56,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: "16px 24px",
+                padding: "18px 32px",
                 backgroundColor,
-                borderRadius: 12,
-                border: "1px solid rgba(111, 115, 95, 0.25)",
+                borderRadius: 9999, // Pill shape
+                border: "1px solid #a6a6a6",
                 cursor: disabled ? "not-allowed" : "pointer",
-                color: "#2F2F2F",
-                fontSize: 15,
-                fontWeight: 600,
+                color: "#3A3A3A",
+                fontSize: 16,
+                fontWeight: 500,
                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                transition:
-                    "background-color 300ms cubic-bezier(0.25,0.1,0.25,1), border-color 300ms cubic-bezier(0.25,0.1,0.25,1)",
+                transition: "all 200ms cubic-bezier(0.25,0.1,0.25,1)",
                 opacity: disabled ? 0.6 : 1,
-                gap: 10,
+                gap: 12,
+                transform: pressed ? "scale(0.98)" : "scale(1)",
             }}
         >
             {/* Google Logo */}
             <svg
-                width="18"
-                height="18"
+                width="20"
+                height="20"
                 viewBox="0 0 18 18"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"

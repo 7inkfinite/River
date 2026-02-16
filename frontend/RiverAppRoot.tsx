@@ -7,14 +7,16 @@ import { SignUpModal } from "./AuthComponents.tsx"
 
 function RiverAppContent() {
     const { isAuthenticated, authReady, showSignUpModal, closeSignUpModal, isClaiming, lastClaimCount, userName } = useAuthGate()
+    const isFormPage = typeof window !== "undefined" && window.location.pathname === "/form"
 
     // Auto-redirect authenticated users to dashboard
     // BUT only if modal is not showing (let them see success view first)
+    // AND not on /form page (user intentionally navigated there via "New" button)
     React.useEffect(() => {
-        if (authReady && isAuthenticated && !showSignUpModal) {
+        if (authReady && isAuthenticated && !showSignUpModal && !isFormPage) {
             window.location.href = '/dashboard'
         }
-    }, [authReady, isAuthenticated, showSignUpModal])
+    }, [authReady, isAuthenticated, showSignUpModal, isFormPage])
 
     // Show nothing while checking auth (prevents flash)
     // BUT always render modal if it should be shown
@@ -23,16 +25,15 @@ function RiverAppContent() {
     }
 
     // If authenticated and modal is NOT showing, redirect is happening - show nothing
-    // If modal IS showing, we need to render it so user sees success view
-    if (isAuthenticated && !showSignUpModal) {
+    // Skip on /form page — authenticated users can create new generations
+    if (isAuthenticated && !showSignUpModal && !isFormPage) {
         return null
     }
 
-    // Render form for anonymous users, OR just modal for authenticated users viewing success
+    // Render form for anonymous users, or authenticated users on /form
     return (
         <>
-            {/* Only show form components for anonymous users */}
-            {!isAuthenticated && (
+            {(!isAuthenticated || isFormPage) && (
                 <RiverProvider>
                     <RiverCTA />
                     <RiverResultsRoot />

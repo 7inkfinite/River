@@ -151,7 +151,7 @@ export function HorizontalCardCarousel({
                         display: "flex",
                         alignItems: "flex-start",
                         justifyContent: "center",
-                        overflow: "hidden",
+                        overflow: "clip" as any,
                     }}
                 >
                     {/* Render all cards but only show the current one */}
@@ -267,16 +267,16 @@ function NavigationButton({
     const Icon = direction === "prev" ? ChevronLeft : ChevronRight
     const label = direction === "prev" ? "Previous card" : "Next card"
 
-    // When disabled, show greyed out state
+    // Figma: warm beige palette with teal icon
     const backgroundColor = disabled
-        ? "rgba(124, 138, 17, 0.15)"
+        ? "rgba(226, 208, 162, 0.3)"
         : pressed
-            ? "#0F6B75"
+            ? "#D4C48E"
             : hover
-                ? "#148A97"
-                : "rgba(17, 126, 138, 0.9)"
+                ? "#E3D49E"
+                : "#F3F1EA"
 
-    const iconColor = disabled ? "rgba(47, 47, 47, 0.3)" : "#EFE9DA"
+    const iconColor = disabled ? "rgba(47, 47, 47, 0.3)" : "#117E8A"
 
     return (
         <button
@@ -297,7 +297,7 @@ function NavigationButton({
                 borderRadius: "50%",
                 border: "none",
                 backgroundColor,
-                boxShadow: disabled ? "none" : "0px 4px 12px rgba(17, 126, 138, 0.3)",
+                boxShadow: disabled ? "none" : "0px 0px 4px rgba(84, 60, 31, 0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -308,7 +308,7 @@ function NavigationButton({
                 opacity: disabled ? 0.5 : 1,
             }}
         >
-            <Icon size={28} color={iconColor} strokeWidth={2.5} />
+            <Icon size={24} color={iconColor} strokeWidth={2.5} />
         </button>
     )
 }

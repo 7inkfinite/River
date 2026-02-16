@@ -30,6 +30,7 @@ The `backend/` directory contains Pipedream workflow steps. To deploy:
    - `SUPABASE_URL` - Your Supabase project URL
    - `SUPABASE_SERVICE_ROLE_KEY` - From Supabase settings
    - `OPEN_API_KEY` - Your OpenAI API key
+   - `RAPIDAPI_KEY` - Your RapidAPI key (for YT-API video info + subtitles)
 
 ## Frontend Setup
 
@@ -58,7 +59,7 @@ To use:
 - Pipedream (serverless workflows)
 - Supabase (PostgreSQL + Auth)
 - OpenAI (gpt-4o-mini)
-- RapidAPI (YouTube subtitles)
+- RapidAPI (YouTube subtitles + video info)
 
 ## License
 

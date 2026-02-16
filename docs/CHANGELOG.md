@@ -5,6 +5,32 @@ All notable changes to River will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-09
+
+### Added
+- **Video Titles & Thumbnails**: Backend now fetches video title and thumbnail from YT-API (`fetch_video_info.js`) and persists them to the `videos` table via upsert.
+- **user_id Pipeline**: Authenticated users' `user_id` is now passed from frontend through the full backend pipeline (`UseRiverGeneration` → `validate_input` → `upsert_video` → `save_generation`), so generations are immediately attributed without needing the claim webhook.
+- **PostGenerationActions**: Navigation CTAs ("Generate New", "Back to Dashboard") shown after successful generation.
+- **Infinite Scroll & Date Grouping**: Dashboard now uses infinite scroll with date-grouped dividers instead of loading all generations at once.
+
+### Changed
+- **Dashboard Shell**: Redesigned `UserDashboardShell.tsx` with updated status bar and header spacing.
+- **Results Page**: Video object returned to frontend now includes `title` and `thumbnail_url` fields, enabling the `VideoHeader` component to show the actual video title instead of "YouTube video (ID)".
+- **CTA Disabled on Success**: "There you go" button is now disabled after successful generation to prevent duplicate submissions.
+
+### Fixed
+- **Scroll Lock**: Fixed page becoming unscrollable when results display inline (`HorizontalCardCarousel.tsx`, `RiverAppRoot.tsx`).
+- **Missing Video Metadata**: `fetch_video_info` output was not consumed by downstream steps — title and thumbnail were never written to DB or returned to frontend. Now wired into `upsert_video.js` and `save_generation.js`.
+
+### Technical
+- `upsert_video.js`: Pulls `title` and `thumbnailUrl` from `steps.fetch_video_info.$return_value` and includes them in the Supabase upsert payload.
+- `save_generation.js`: Both cache-hit and cache-miss return paths now include `video.title` and `video.thumbnail_url`.
+- `validate_input.js`: Extracts and forwards `user_id` from request body.
+- `UseRiverGeneration.tsx`: Sends `user_id` from Supabase auth session in generation payload.
+- `AuthComponents.tsx`: Updated to support user_id retrieval.
+
+---
+
 ## [1.2.0] - 2026-02-01
 
 ### Added

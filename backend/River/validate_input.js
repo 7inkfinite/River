@@ -99,6 +99,11 @@ export default defineComponent({
       ? body.session_id.trim()
       : null;
 
+    // --- Authenticated user ID ---
+    const user_id = body.user_id && typeof body.user_id === "string"
+      ? body.user_id.trim()
+      : null;
+
     // Expose to later steps as steps.validate_input.*
     const result = {
       videoId: idMatch[1],
@@ -109,6 +114,7 @@ export default defineComponent({
       tweak_instructions,
       extra_options, // ✅ NEW: needed for cache key + later steps
       session_id, // ✅ Anonymous session tracking
+      user_id, // ✅ Authenticated user tracking
       source: {
         hasBody: !!evt.body,
         hasQuery: !!evt.query,
