@@ -16,7 +16,7 @@ import { SignUpModal } from "./AuthComponents.tsx"
  * - Shows sign-in prompt if not authenticated
  * - Shows loading while auth/claim is in progress
  */
-export function UserDashboardShell() {
+export function UserDashboardShell({ backgroundImage }: { backgroundImage?: string }) {
     const {
         isAuthenticated,
         authReady,
@@ -137,6 +137,7 @@ export function UserDashboardShell() {
                     isClaiming={isClaiming}
                     claimedCount={lastClaimCount}
                     userName={user?.user_metadata?.full_name}
+                    backgroundImage={backgroundImage}
                 />}
             </div>
         )

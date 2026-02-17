@@ -5,7 +5,7 @@ import { SignUpModal } from "./AuthComponents.tsx"
  * SignUpModalPreview - Preview component for the SignUpModal
  * Shows the signup/signin form for design iteration
  */
-export function SignUpModalPreview() {
+export function SignUpModalPreview({ backgroundImage }: { backgroundImage?: string }) {
     const [showModal, setShowModal] = React.useState(true)
 
     return (
@@ -55,6 +55,7 @@ export function SignUpModalPreview() {
                     isAuthenticated={false}
                     isClaiming={false}
                     claimedCount={0}
+                    backgroundImage={backgroundImage}
                 />
             )}
         </div>

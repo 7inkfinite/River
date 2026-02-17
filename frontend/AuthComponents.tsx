@@ -275,12 +275,14 @@ export function SignUpModal({
     claimedCount,
     isClaiming,
     userName,
+    backgroundImage,
 }: {
     onClose: () => void
     isAuthenticated?: boolean
     claimedCount?: number | null
     isClaiming?: boolean
     userName?: string | null
+    backgroundImage?: string
 }) {
     const [mode, setMode] = React.useState<"signup" | "signin">("signup")
     const hasInteracted = React.useRef(false)
@@ -487,7 +489,8 @@ export function SignUpModal({
         buttonBg: "#3A3A3A",        // Dark gray
         inputBorder: "#C7C7C7",     // Light gray border
         white: "#FFFFFF",
-    }
+        river: "3C82F6",
+        }
 
     return (
         <div
@@ -582,6 +585,35 @@ export function SignUpModal({
                         }
                     }
                 `}</style>
+
+                {/* Decorative Background Image — clipping wrapper prevents scroll expansion */}
+                {backgroundImage && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            overflow: "hidden",
+                            pointerEvents: "none",
+                            zIndex: 0,
+                            borderRadius: "inherit",
+                        }}
+                    >
+                        <img
+                            src={backgroundImage}
+                            alt=""
+                            style={{
+                                position: "absolute",
+                                bottom: "-30%",
+                                right: "-70%",
+                                width: "220%",
+                                height: "auto",
+                                transform: "rotate(37deg)",
+                                transformOrigin: "center center",
+                                opacity: 0.25,
+                            }}
+                        />
+                    </div>
+                )}
 
                 {/* Close Button */}
                 <button
@@ -682,7 +714,7 @@ export function SignUpModal({
                                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                 fontSize: "clamp(28px, 6vw, 36px)",
                                 fontWeight: 400,
-                                color: colors.title,
+                                color: colors.river,
                                 textAlign: "center",
                                 position: "relative",
                                 zIndex: 1,
