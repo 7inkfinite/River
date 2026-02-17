@@ -1,4 +1,5 @@
 import * as React from "react"
+import { addPropertyControls, ControlType } from "framer"
 import { SignUpModal } from "./AuthComponents.tsx"
 import { useAuthGate, AuthGateProvider } from "./AuthGate.tsx"
 
@@ -13,7 +14,7 @@ import { useAuthGate, AuthGateProvider } from "./AuthGate.tsx"
  * Note: When used inside RiverAppRoot, the modal is centralized there.
  *       When used standalone in Framer, modal renders locally.
  */
-function SignUpCTAInner() {
+function SignUpCTAInner({ backgroundImage }: { backgroundImage?: string }) {
     const { isAuthenticated, showSignUpModal, openSignUpModal, closeSignUpModal, isClaiming, lastClaimCount, userName } = useAuthGate()
     const [isHover, setHover] = React.useState(false)
     const [isPressed, setPressed] = React.useState(false)
@@ -118,6 +119,7 @@ function SignUpCTAInner() {
                     isClaiming={isClaiming}
                     claimedCount={lastClaimCount}
                     userName={userName ?? undefined}
+                    backgroundImage={backgroundImage}
                 />
             )}
         </>
@@ -128,10 +130,17 @@ function SignUpCTAInner() {
  * SignUpCTA - Exported component wrapped with AuthGateProvider
  * This makes it self-contained for Framer where components are rendered in isolation
  */
-export function SignUpCTA() {
+export function SignUpCTA({ backgroundImage }: { backgroundImage?: string }) {
     return (
         <AuthGateProvider>
-            <SignUpCTAInner />
+            <SignUpCTAInner backgroundImage={backgroundImage} />
         </AuthGateProvider>
     )
 }
+
+addPropertyControls(SignUpCTA, {
+    backgroundImage: {
+        type: ControlType.Image,
+        title: "Modal BG Image",
+    },
+})

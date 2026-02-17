@@ -5,7 +5,7 @@ import { RiverCTA } from "./RiverCTA.tsx"
 import { RiverResultsRoot } from "./RiverResultsRoot.tsx"
 import { SignUpModal } from "./AuthComponents.tsx"
 
-function RiverAppContent() {
+function RiverAppContent({ backgroundImage }: { backgroundImage?: string }) {
     const { isAuthenticated, authReady, showSignUpModal, closeSignUpModal, isClaiming, lastClaimCount, userName } = useAuthGate()
     const isFormPage = typeof window !== "undefined" && window.location.pathname === "/form"
 
@@ -48,16 +48,17 @@ function RiverAppContent() {
                     isClaiming={isClaiming}
                     claimedCount={lastClaimCount}
                     userName={userName}
+                    backgroundImage={backgroundImage}
                 />
             )}
         </>
     )
 }
 
-export function RiverAppRoot() {
+export function RiverAppRoot({ backgroundImage }: { backgroundImage?: string }) {
     return (
         <AuthGateProvider>
-            <RiverAppContent />
+            <RiverAppContent backgroundImage={backgroundImage} />
         </AuthGateProvider>
     )
 }
