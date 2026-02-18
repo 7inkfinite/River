@@ -1,4 +1,5 @@
 import * as React from "react"
+import * as ReactDOM from "react-dom"
 import { createClient } from "@supabase/supabase-js"
 
 // TODO: Replace with your Supabase credentials before using in Framer
@@ -492,7 +493,7 @@ export function SignUpModal({
         river: "3C82F6",
         }
 
-    return (
+    return ReactDOM.createPortal(
         <div
             data-modal-overlay=""
             onClick={handleBackgroundClick}
@@ -1160,7 +1161,8 @@ export function SignUpModal({
                     </>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }
 
