@@ -40,11 +40,11 @@ function PlatformIcon({ platform, active = true }: { platform: string; active?: 
     const inactiveColor = "#CCCCCC"
 
     if (platformLower.includes("twitter") || platformLower.includes("x")) {
-        return <XLogo size={24} color={active ? "#2F2F2F" : inactiveColor} />
+        return <XLogo size={16} color={active ? "#2F2F2F" : inactiveColor} />
     } else if (platformLower.includes("linkedin")) {
-        return <Linkedin size={24} color={active ? "#0A66C2" : inactiveColor} />
+        return <Linkedin size={16} color={active ? "#0A66C2" : inactiveColor} />
     } else if (platformLower.includes("instagram") || platformLower.includes("carousel")) {
-        return <Instagram size={24} color={active ? "#E4405F" : inactiveColor} />
+        return <Instagram size={16} color={active ? "#E4405F" : inactiveColor} />
     }
     return null
 }
@@ -569,9 +569,7 @@ function GenerationCard({
             style={{
                 width: "100%",
                 padding: 0,
-                border: hover
-                    ? "2px solid rgba(136, 153, 92, 0.24)"
-                    : "2px solid transparent",
+                border: "1px solid #E2D0A2",
                 backgroundColor: "#FAF8F0",
                 cursor: "pointer",
                 display: "flex",
@@ -579,59 +577,62 @@ function GenerationCard({
                 textAlign: "left",
                 borderRadius: 12,
                 overflow: "hidden",
-                transition: "border-color 200ms ease",
+                transition: "box-shadow 200ms ease, transform 200ms ease",
+                boxShadow: hover
+                    ? "0 0 0 10px rgba(136, 153, 92, 0.24), 0 8px 20px rgba(0,0,0,0.08)"
+                    : "none",
+                transform: hover ? "translateY(-4px)" : "translateY(0)",
             }}
         >
-            {/* Thumbnail area */}
+            {/* Card inner wrapper */}
             <div
                 style={{
                     width: "100%",
-                    height: 180,
-                    backgroundColor: "#E2D0A2",
-                    borderTopLeftRadius: 10,
-                    borderTopRightRadius: 10,
-                    overflow: "hidden",
-                }}
-            >
-                {youtubeId && !imgError && (
-                    <img
-                        src={getYouTubeThumbnail(youtubeId)}
-                        alt={displayTitle}
-                        onError={() => setImgError(true)}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                        }}
-                    />
-                )}
-            </div>
-
-            {/* Bottom content area */}
-            <div
-                style={{
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "8px 16px 16px 16px",
-                    borderLeft: "1px solid #E2D0A2",
-                    borderRight: "1px solid #E2D0A2",
-                    borderBottom: "1px solid #E2D0A2",
-                    borderBottomLeftRadius: 12,
-                    borderBottomRightRadius: 12,
+                    flexDirection: "column",
                 }}
             >
+                {/* Thumbnail area */}
+                <div
+                    style={{
+                        width: "100%",
+                        height: 180,
+                        backgroundColor: "#E2D0A2",
+                    }}
+                >
+                    {youtubeId && !imgError && (
+                        <img
+                            src={getYouTubeThumbnail(youtubeId)}
+                            alt={displayTitle}
+                            onError={() => setImgError(true)}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                            }}
+                        />
+                    )}
+                </div>
+
+                {/* Bottom content area */}
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                        padding: "8px 12px 12px 12px",
+                        backgroundColor: "#FAF8F0",
+                    }}
+                >
                 {/* Video Title */}
                 <p
                     style={{
                         fontFamily: '"Inter", sans-serif',
-                        fontSize: 20,
+                        fontSize: 14,
                         fontWeight: 400,
                         color: "#2F2F2F",
                         margin: 0,
-                        flex: 1,
-                        minWidth: 0,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -644,7 +645,7 @@ function GenerationCard({
                 <div
                     style={{
                         display: "flex",
-                        gap: 8,
+                        gap: 6,
                         alignItems: "center",
                     }}
                 >
@@ -667,6 +668,7 @@ function GenerationCard({
                         )}
                     />
                 </div>
+            </div>
             </div>
         </button>
     )
