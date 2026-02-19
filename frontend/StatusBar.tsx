@@ -47,7 +47,7 @@ export function StatusBar({
                 left: 0,
                 right: 0,
                 height: 64,
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -58,8 +58,8 @@ export function StatusBar({
             <div
                 style={{
                     width: "100%",
-                    maxWidth: activePage === "dashboard" ? 1360 : undefined,
-                    padding: activePage === "dashboard" ? "0 60px" : "0 20px",
+                    maxWidth: 1360,
+                    padding: "0 clamp(20px, 4vw, 60px)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -82,14 +82,14 @@ export function StatusBar({
                         padding: homeHover ? "0 12px" : 0,
                         borderRadius: 24,
                         border: "none",
-                        backgroundColor: homeHover ? "#EFE8CF" : "#FAF7ED",
+                        backgroundColor: homeHover ? "#EFE8CF" : "#FAF8F0",
                         cursor: "pointer",
                         overflow: "hidden",
                         whiteSpace: "nowrap" as const,
                         transition: expandTransition,
                     }}
                 >
-                    <Home size={18} color="#2D2E0F" style={{ flexShrink: 0 }} />
+                    <Home size={18} color="#2D2E0F" strokeWidth={2} style={{ flexShrink: 0 }} />
                     <span
                         style={{
                             color: "#2D2E0F",
@@ -139,7 +139,7 @@ export function StatusBar({
                         <ActionIcon
                             size={18}
                             color="#FAF8F0"
-                            strokeWidth={2.5}
+                            strokeWidth={2}
                             style={{ flexShrink: 0 }}
                         />
                         <span
@@ -178,7 +178,7 @@ export function StatusBar({
                             border: "none",
                             backgroundColor: logoutHover
                                 ? "#EFE8CF"
-                                : "#FAF7ED",
+                                : "#FAF8F0",
                             cursor: "pointer",
                             overflow: "hidden",
                             whiteSpace: "nowrap" as const,
@@ -188,6 +188,7 @@ export function StatusBar({
                         <LogOut
                             size={18}
                             color="#2D2E0F"
+                            strokeWidth={2}
                             style={{ flexShrink: 0 }}
                         />
                         <span
