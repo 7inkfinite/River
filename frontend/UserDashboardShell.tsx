@@ -5,6 +5,7 @@ import { RiverProvider } from "./UseRiverGeneration.tsx"
 import { RiverCTA } from "./RiverCTA.tsx"
 import { RiverResultsRoot } from "./RiverResultsRoot.tsx"
 import { SignUpModal } from "./AuthComponents.tsx"
+import { RiverLoader } from "./RiverLoader.tsx"
 
 /**
  * UserDashboardShell - Container for the /dashboard page
@@ -33,28 +34,7 @@ export function UserDashboardShell({ backgroundImage }: { backgroundImage?: stri
 
     // Show loading state while auth is being checked or claim is in progress
     if (!authReady) {
-        return (
-            <div
-                style={{
-                    width: "100%",
-                    minHeight: "100vh",
-                    backgroundColor: "#FAF7ED",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <div
-                    style={{
-                        color: "#7A7A7A",
-                        fontSize: 18,
-                        fontFamily: '"Inter", sans-serif',
-                    }}
-                >
-                    Loading...
-                </div>
-            </div>
-        )
+        return <RiverLoader size="page" />
     }
 
     // Show sign-in prompt if not authenticated
@@ -64,7 +44,7 @@ export function UserDashboardShell({ backgroundImage }: { backgroundImage?: stri
                 style={{
                     width: "100%",
                     minHeight: "100vh",
-                    backgroundColor: "#FAF7ED",
+                    backgroundColor: "#FAF8F0",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
@@ -101,8 +81,8 @@ export function UserDashboardShell({ backgroundImage }: { backgroundImage?: stri
                         padding: "12px 24px",
                         borderRadius: 24,
                         border: "none",
-                        backgroundColor: "#3C82F6",
-                        color: "#EFE9DA",
+                        backgroundColor: "#4688F7",
+                        color: "#FAF8F0",
                         fontSize: 14,
                         fontWeight: 500,
                         cursor: "pointer",
@@ -113,7 +93,7 @@ export function UserDashboardShell({ backgroundImage }: { backgroundImage?: stri
                         e.currentTarget.style.backgroundColor = "#163D7A"
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#3C82F6"
+                        e.currentTarget.style.backgroundColor = "#4688F7"
                     }}
                 >
                     Sign In / Sign Up
@@ -149,7 +129,7 @@ export function UserDashboardShell({ backgroundImage }: { backgroundImage?: stri
             style={{
                 width: "100%",
                 height: "100vh",
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 overflowY: "auto",
             }}
         >

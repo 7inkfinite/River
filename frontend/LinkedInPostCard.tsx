@@ -67,7 +67,7 @@ export function LinkedInPostCard({
                     justifyContent: "flex-start",
                     alignItems: "flex-end",
                     padding: "40px 20px 20px 20px",
-                    backgroundColor: "#FAF7ED",
+                    backgroundColor: "#FAF8F0",
                     overflow: "clip",
                     gap: 24,
                     borderRadius: 24,
@@ -104,7 +104,7 @@ export function LinkedInPostCard({
                             style={{
                                 fontFamily:
                                     "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                fontSize: 13,
+                                fontSize: 14,
                                 color: "#7A7A7A",
                                 whiteSpace: "nowrap",
                             }}
@@ -143,7 +143,7 @@ export function LinkedInPostCard({
                                 fontFamily:
                                     "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                                 fontSize: 16,
-                                lineHeight: 1.5,
+                                lineHeight: 1.4,
                                 color: "#2F2F2F",
                                 whiteSpace: "pre-wrap",
                             }}
@@ -207,7 +207,7 @@ export function LinkedInPostCard({
                             fontFamily:
                                 "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                             fontSize: 16,
-                            lineHeight: "1.3em",
+                            lineHeight: "1.4",
                             color: "#7A7A7A",
                         }}
                     >
@@ -232,7 +232,7 @@ export function LinkedInPostCard({
                             fontFamily:
                                 "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                             fontSize: 14,
-                            lineHeight: "1.3em",
+                            lineHeight: "1.4",
                             color: "#2F2F2F",
                             boxShadow:
                                 "inset 0px 0px 5px 0px rgba(0, 0, 0, 0.13)",
@@ -276,7 +276,7 @@ function IconOnlyActionButton({
 }) {
     const [hover, setHover] = React.useState(false)
 
-    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const bg = hover ? "rgba(124, 138, 17, 0.16)" : "rgba(124, 138, 17, 0.10)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
@@ -335,7 +335,7 @@ function RiverMiniCTA({
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#0F6B75" : hover ? "#148A97" : "#117E8A"
+    const backgroundColor = pressed ? "#ADDADE" : hover ? "#0F6B75" : "#117E8A"
 
     return (
         <button
@@ -366,7 +366,7 @@ function RiverMiniCTA({
                     !disabled && pressed
                         ? "0px 2px 2px rgba(48, 28, 10, 0.35)"
                         : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
-                color: "#EFE9DA",
+                color: "#FAF8F0",
                 fontSize: 14,
                 fontWeight: 500,
                 lineHeight: 1.1,
@@ -386,7 +386,7 @@ function RiverMiniCTA({
                         width: 14,
                         height: 14,
                         borderRadius: "999px",
-                        border: "2px solid #EFE9DA",
+                        border: "2px solid #FAF8F0",
                         borderTopColor: "transparent",
                         display: "inline-block",
                         animation: "river-mini-spin 1.1s linear infinite",

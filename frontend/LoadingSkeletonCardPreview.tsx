@@ -42,7 +42,7 @@ function LoadingSkeletonCard() {
                 boxSizing: "border-box",
                 borderRadius: 24,
                 border: "1px solid #E0CD9D",
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 padding: 20,
                 minHeight: 320,
                 position: "relative",
@@ -68,7 +68,7 @@ function LoadingSkeletonCard() {
                         height: 120,
                         borderRadius: "50%",
                         background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.15) 0%, rgba(124, 138, 17, 0.08) 40%, transparent 70%)",
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.16) 0%, rgba(124, 138, 17, 0.10) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite",
                     }}
                 />
@@ -82,7 +82,7 @@ function LoadingSkeletonCard() {
                         height: 100,
                         borderRadius: "50%",
                         background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.12) 0%, rgba(124, 138, 17, 0.06) 40%, transparent 70%)",
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.10) 0%, rgba(124, 138, 17, 0.10) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 0.8s",
                     }}
                 />
@@ -96,7 +96,7 @@ function LoadingSkeletonCard() {
                         height: 90,
                         borderRadius: "50%",
                         background:
-                            "radial-gradient(circle, rgba(124, 138, 17, 0.1) 0%, rgba(124, 138, 17, 0.05) 40%, transparent 70%)",
+                            "radial-gradient(circle, rgba(124, 138, 17, 0.10) 0%, rgba(124, 138, 17, 0.10) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 1.6s",
                     }}
                 />
@@ -117,7 +117,7 @@ function LoadingSkeletonCard() {
                     style={{
                         width: "40%",
                         height: 18,
-                        backgroundColor: "rgba(124, 138, 17, 0.08)",
+                        backgroundColor: "rgba(124, 138, 17, 0.10)",
                         borderRadius: 12,
                     }}
                 />
@@ -127,7 +127,7 @@ function LoadingSkeletonCard() {
                     style={{
                         width: "100%",
                         height: 240,
-                        backgroundColor: "rgba(124, 138, 17, 0.06)",
+                        backgroundColor: "rgba(124, 138, 17, 0.10)",
                         borderRadius: 24,
                         boxShadow: "inset 0px 0px 5px rgba(0, 0, 0, 0.08)",
                     }}
@@ -145,7 +145,7 @@ function LoadingSkeletonCard() {
                         style={{
                             width: 40,
                             height: 40,
-                            backgroundColor: "rgba(124, 138, 17, 0.08)",
+                            backgroundColor: "rgba(124, 138, 17, 0.10)",
                             borderRadius: 24,
                         }}
                     />
@@ -153,7 +153,7 @@ function LoadingSkeletonCard() {
                         style={{
                             width: 40,
                             height: 40,
-                            backgroundColor: "rgba(124, 138, 17, 0.08)",
+                            backgroundColor: "rgba(124, 138, 17, 0.10)",
                             borderRadius: 24,
                         }}
                     />

@@ -22,7 +22,7 @@ export function DashboardRedirectCTA() {
             }}>
                 <div style={{
                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: 600,
                     color: "#2F2F2F",
                 }}>
@@ -31,7 +31,7 @@ export function DashboardRedirectCTA() {
                 <div style={{
                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                     fontSize: 16,
-                    color: "#4F4F4F",
+                    color: "#7A7A7A",
                 }}>
                     You're signed in. Go to your dashboard to manage your content.
                 </div>
@@ -44,8 +44,8 @@ export function DashboardRedirectCTA() {
                     alignItems: "center",
                     gap: 8,
                     padding: "16px 32px",
-                    backgroundColor: "#3C82F6",
-                    color: "white",
+                    backgroundColor: "#4688F7",
+                    color: "#FAF8F0",
                     border: "none",
                     borderRadius: 32,
                     fontSize: 16,

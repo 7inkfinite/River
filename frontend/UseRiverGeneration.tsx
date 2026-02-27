@@ -260,7 +260,7 @@ export function RiverProvider({ children }: { children: React.ReactNode }) {
 
             return request(merged, "tweak")
         },
-        [state.lastInputs, request, setError]
+        [state.lastInputs, state.generationId, request, setError]
     )
 
     const api: RiverAPI = React.useMemo(

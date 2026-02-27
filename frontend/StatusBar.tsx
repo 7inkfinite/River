@@ -82,7 +82,7 @@ export function StatusBar({
                         padding: homeHover ? "0 12px" : 0,
                         borderRadius: 24,
                         border: "none",
-                        backgroundColor: homeHover ? "#EFE8CF" : "#FAF8F0",
+                        backgroundColor: homeHover ? "#F5F0DE" : "#FAF8F0",
                         cursor: "pointer",
                         overflow: "hidden",
                         whiteSpace: "nowrap" as const,
@@ -127,7 +127,7 @@ export function StatusBar({
                             borderRadius: 24,
                             border: "none",
                             backgroundColor: actionHover
-                                ? "#2563EB"
+                                ? "#163D7A"
                                 : "#4688F7",
                             cursor: "pointer",
                             overflow: "hidden",
@@ -177,7 +177,7 @@ export function StatusBar({
                             borderRadius: 24,
                             border: "none",
                             backgroundColor: logoutHover
-                                ? "#EFE8CF"
+                                ? "#F5F0DE"
                                 : "#FAF8F0",
                             cursor: "pointer",
                             overflow: "hidden",

@@ -34,10 +34,29 @@ function getYouTubeThumbnail(youtubeId: string): string {
     return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
 }
 
+// Helper function to get relative time string (e.g. "2 hours ago", "3 days ago")
+function getRelativeTime(dateString: string): string {
+    const now = Date.now()
+    const then = new Date(dateString).getTime()
+    const seconds = Math.floor((now - then) / 1000)
+
+    if (seconds < 60) return "just now"
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
+    const days = Math.floor(hours / 24)
+    if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`
+    const months = Math.floor(days / 30)
+    if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`
+    const years = Math.floor(months / 12)
+    return `${years} year${years === 1 ? "" : "s"} ago`
+}
+
 // Platform icon component with active/inactive states (matching Figma design)
 function PlatformIcon({ platform, active = true }: { platform: string; active?: boolean }) {
     const platformLower = platform.toLowerCase()
-    const inactiveColor = "#CCCCCC"
+    const inactiveColor = "#7A7A7A"
 
     if (platformLower.includes("twitter") || platformLower.includes("x")) {
         return <XLogo size={16} color={active ? "#2F2F2F" : inactiveColor} />
@@ -79,7 +98,7 @@ function GenerationsProgressBar({
                     width: "100%",
                     height: 21,
                     borderRadius: 12,
-                    backgroundColor: "#F0EBDA",
+                    backgroundColor: "#F5F0DE",
                     position: "relative",
                     display: "flex",
                     alignItems: "center",
@@ -111,7 +130,7 @@ function GenerationsProgressBar({
                         fontFamily: '"Inter", sans-serif',
                         fontSize: 12,
                         fontWeight: 400,
-                        color: "#5D6226",
+                        color: "#2D2E0F",
                     }}
                 >
                     {generationsLeft} generations left
@@ -278,7 +297,7 @@ export function UserDashboard() {
                 <div
                     style={{
                         color: "#7A7A7A",
-                        fontSize: 18,
+                        fontSize: 20,
                         fontFamily: '"Inter", sans-serif',
                     }}
                 >
@@ -429,7 +448,7 @@ function DashboardListView({
                     <p
                         style={{
                             color: "#7A7A7A",
-                            fontSize: 18,
+                            fontSize: 20,
                             marginBottom: 24,
                         }}
                     >
@@ -443,7 +462,7 @@ function DashboardListView({
                                 borderRadius: 8,
                                 border: "none",
                                 backgroundColor: "#4688F7",
-                                color: "#FFFFFF",
+                                color: "#FAF8F0",
                                 fontSize: 14,
                                 fontWeight: 500,
                                 cursor: "pointer",
@@ -451,7 +470,7 @@ function DashboardListView({
                                 transition: "background-color 200ms ease",
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#3570D4"
+                                e.currentTarget.style.backgroundColor = "#163D7A"
                             }}
                             onMouseLeave={(e) => {
                                 e.currentTarget.style.backgroundColor = "#4688F7"
@@ -478,7 +497,7 @@ function DashboardListView({
                                     style={{
                                         flex: 1,
                                         height: 1,
-                                        backgroundColor: "#E2D0A2",
+                                        backgroundColor: "#E0CD9D",
                                     }}
                                 />
                                 <span
@@ -569,7 +588,7 @@ function GenerationCard({
             style={{
                 width: "100%",
                 padding: 0,
-                border: "1px solid #E2D0A2",
+                border: "1px solid #E0CD9D",
                 backgroundColor: "#FAF8F0",
                 cursor: "pointer",
                 display: "flex",
@@ -597,7 +616,7 @@ function GenerationCard({
                     style={{
                         width: "100%",
                         height: 180,
-                        backgroundColor: "#E2D0A2",
+                        backgroundColor: "#E0CD9D",
                     }}
                 >
                     {youtubeId && !imgError && (
@@ -625,50 +644,50 @@ function GenerationCard({
                         backgroundColor: "#FAF8F0",
                     }}
                 >
-                {/* Video Title */}
-                <p
-                    style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 14,
-                        fontWeight: 400,
-                        color: "#2F2F2F",
-                        margin: 0,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                    }}
-                >
-                    {displayTitle}
-                </p>
+                    {/* Video Title */}
+                    <p
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 14,
+                            fontWeight: 400,
+                            color: "#2F2F2F",
+                            margin: 0,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
+                    >
+                        {displayTitle}
+                    </p>
 
-                {/* Platform Icons - Always show all 3, active/inactive based on selection */}
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 6,
-                        alignItems: "center",
-                    }}
-                >
-                    <PlatformIcon
-                        platform="twitter"
-                        active={platforms.some((p: string) =>
-                            p.toLowerCase().includes("twitter") || p.toLowerCase().includes("x")
-                        )}
-                    />
-                    <PlatformIcon
-                        platform="linkedin"
-                        active={platforms.some((p: string) =>
-                            p.toLowerCase().includes("linkedin")
-                        )}
-                    />
-                    <PlatformIcon
-                        platform="instagram"
-                        active={platforms.some((p: string) =>
-                            p.toLowerCase().includes("instagram") || p.toLowerCase().includes("carousel")
-                        )}
-                    />
+                    {/* Platform Icons - Always show all 3, active/inactive based on selection */}
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: 6,
+                            alignItems: "center",
+                        }}
+                    >
+                        <PlatformIcon
+                            platform="twitter"
+                            active={platforms.some((p: string) =>
+                                p.toLowerCase().includes("twitter") || p.toLowerCase().includes("x")
+                            )}
+                        />
+                        <PlatformIcon
+                            platform="linkedin"
+                            active={platforms.some((p: string) =>
+                                p.toLowerCase().includes("linkedin")
+                            )}
+                        />
+                        <PlatformIcon
+                            platform="instagram"
+                            active={platforms.some((p: string) =>
+                                p.toLowerCase().includes("instagram") || p.toLowerCase().includes("carousel")
+                            )}
+                        />
+                    </div>
                 </div>
-            </div>
             </div>
         </button>
     )
@@ -694,11 +713,10 @@ function DashboardDetailView({
     const videoTitle = generation?.video?.title || "Untitled Video"
     const channelName = generation?.video?.channel_name || generation?.video?.channel_title || null
     const youtubeId = generation?.video?.youtube_video_id || null
-    const createdAt = new Date(generation?.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    })
+    const createdAt = getRelativeTime(generation?.created_at)
+    const platforms = generation?.platforms || []
+    const tone = generation?.tone || null
+    const outputCount = outputs.length
 
     const handleDelete = async () => {
         if (!window.confirm("Delete this generation? This cannot be undone.")) return
@@ -717,9 +735,9 @@ function DashboardDetailView({
     }
 
     // Parse outputs by platform
-    const twitterOutput = outputs.find((o) => o.platform === "twitter")
-    const linkedInOutput = outputs.find((o) => o.platform === "linkedin")
-    const carouselOutput = outputs.find((o) => o.platform === "carousel")
+    const twitterOutput = outputs.find((o) => o?.platform?.toLowerCase() === "twitter" || o?.platform?.toLowerCase() === "x")
+    const linkedInOutput = outputs.find((o) => o?.platform?.toLowerCase() === "linkedin")
+    const carouselOutput = outputs.find((o) => o?.platform?.toLowerCase() === "carousel" || o?.platform?.toLowerCase() === "instagram")
 
     // Prepare cards for carousel
     const cards: React.ReactNode[] = []
@@ -779,11 +797,45 @@ function DashboardDetailView({
         )
     }
 
+    // IG card state
+    const [igAspect, setIgAspect] = React.useState<"1:1" | "4:5">("1:1")
+    const [igCopied, setIgCopied] = React.useState<null | "slide" | "all">(null)
+
     if (carouselOutput) {
         const slides = carouselOutput.metadata?.slides || []
         cards.push(
             <React.Fragment key="instagram">
-                <InstagramCarouselCardStatic slides={slides} />
+                <InstagramCarouselCard
+                    slides={slides}
+                    aspect={igAspect}
+                    onToggleAspect={() => setIgAspect((a) => (a === "1:1" ? "4:5" : "1:1"))}
+                    tweakOpen={false}
+                    onToggleTweak={() => { }}
+                    tweakDisabled={true}
+                    tweakText=""
+                    onChangeTweakText={() => { }}
+                    onRegenerate={() => { }}
+                    regenMode="idle"
+                    copied={igCopied}
+                    onCopySlide={async (index) => {
+                        try {
+                            await navigator.clipboard.writeText(slides[index] || "")
+                            setIgCopied("slide")
+                            setTimeout(() => setIgCopied(null), 1100)
+                        } catch (e) {
+                            console.warn("Clipboard not available", e)
+                        }
+                    }}
+                    onCopyAll={async () => {
+                        try {
+                            await navigator.clipboard.writeText(slides.join("\n\n---\n\n"))
+                            setIgCopied("all")
+                            setTimeout(() => setIgCopied(null), 1100)
+                        } catch (e) {
+                            console.warn("Clipboard not available", e)
+                        }
+                    }}
+                />
             </React.Fragment>
         )
     }
@@ -825,8 +877,8 @@ function DashboardDetailView({
                             width: 40,
                             height: 40,
                             padding: 0,
-                            border: "1px solid #E2D0A2",
-                            backgroundColor: backHover ? "#EFE8CF" : "transparent",
+                            border: "1px solid #E0CD9D",
+                            backgroundColor: backHover ? "#F5F0DE" : "transparent",
                             borderRadius: 24,
                             cursor: "pointer",
                             display: "flex",
@@ -845,7 +897,7 @@ function DashboardDetailView({
                             width: 40,
                             height: 40,
                             padding: 0,
-                            border: trashHover ? "1px solid #E8BCBC" : "1px solid #E2D0A2",
+                            border: trashHover ? "1px solid #E8BCBC" : "1px solid #E0CD9D",
                             backgroundColor: trashHover ? "rgba(200,50,50,0.06)" : "transparent",
                             borderRadius: 24,
                             cursor: "pointer",
@@ -870,115 +922,177 @@ function DashboardDetailView({
                         gap: 24,
                     }}
                 >
-                        {/* Thumbnail */}
-                        <div
-                            style={{
-                                width: "60%",
-                                maxWidth: 345,
-                                aspectRatio: "2 / 1",
-                                borderRadius: 12,
-                                border: "1px solid #E2D0A2",
-                                overflow: "hidden",
-                                backgroundColor: "#E2D0A2",
-                            }}
-                        >
-                            {youtubeId && !imgError && (
-                                <img
-                                    src={getYouTubeThumbnail(youtubeId)}
-                                    alt={videoTitle}
-                                    onError={() => setImgError(true)}
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                        display: "block",
-                                        borderRadius: 12,
-                                    }}
-                                />
-                            )}
-                        </div>
+                    {/* Thumbnail */}
+                    <div
+                        style={{
+                            width: "60%",
+                            maxWidth: 345,
+                            aspectRatio: "2 / 1",
+                            borderRadius: 12,
+                            border: "1px solid #E0CD9D",
+                            overflow: "hidden",
+                            backgroundColor: "#E0CD9D",
+                        }}
+                    >
+                        {youtubeId && !imgError && (
+                            <img
+                                src={getYouTubeThumbnail(youtubeId)}
+                                alt={videoTitle}
+                                onError={() => setImgError(true)}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    display: "block",
+                                    borderRadius: 12,
+                                }}
+                            />
+                        )}
+                    </div>
 
-                        {/* Content info: title, channel, date */}
+                    {/* Content info: title, channel, date */}
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 8,
+                            width: "100%",
+                            color: "#2F2F2F",
+                        }}
+                    >
                         <div
                             style={{
                                 display: "flex",
                                 flexDirection: "column",
-                                alignItems: "center",
-                                gap: 8,
+                                gap: 4,
                                 width: "100%",
-                                color: "#2F2F2F",
+                                textAlign: "center",
                             }}
                         >
-                            <div
+                            <p
                                 style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 4,
-                                    width: "100%",
-                                    textAlign: "center",
+                                    fontFamily: '"Inter", sans-serif',
+                                    fontSize: 24,
+                                    fontWeight: 500,
+                                    color: "#2F2F2F",
+                                    margin: 0,
+                                    padding: "0 20px",
+                                    lineHeight: 1.4,
                                 }}
                             >
+                                {videoTitle}
+                            </p>
+                            {channelName && (
                                 <p
                                     style={{
                                         fontFamily: '"Inter", sans-serif',
-                                        fontSize: 24,
-                                        fontWeight: 500,
+                                        fontSize: 20,
+                                        fontWeight: 400,
                                         color: "#2F2F2F",
                                         margin: 0,
                                         padding: "0 20px",
-                                        lineHeight: 1.3,
+                                        lineHeight: 1.4,
                                     }}
                                 >
-                                    {videoTitle}
+                                    {channelName}
                                 </p>
-                                {channelName && (
-                                    <p
+                            )}
+                        </div>
+
+                        {/* Metadata tags: tone + platforms */}
+                        {(tone || platforms.length > 0) && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    justifyContent: "center",
+                                    gap: 6,
+                                }}
+                            >
+                                {tone && (
+                                    <span
                                         style={{
                                             fontFamily: '"Inter", sans-serif',
-                                            fontSize: 20,
+                                            fontSize: 12,
                                             fontWeight: 400,
-                                            color: "#2F2F2F",
-                                            margin: 0,
-                                            padding: "0 20px",
-                                            lineHeight: 1.3,
+                                            color: "#7A7A7A",
+                                            backgroundColor: "#F5F0DE",
+                                            borderRadius: 20,
+                                            padding: "3px 10px",
+                                            lineHeight: 1.4,
                                         }}
                                     >
-                                        {channelName}
-                                    </p>
+                                        {tone}
+                                    </span>
                                 )}
+                                {platforms.map((p: string) => (
+                                    <span
+                                        key={p}
+                                        style={{
+                                            fontFamily: '"Inter", sans-serif',
+                                            fontSize: 12,
+                                            fontWeight: 400,
+                                            color: "#7A7A7A",
+                                            backgroundColor: "#F5F0DE",
+                                            borderRadius: 20,
+                                            padding: "3px 10px",
+                                            lineHeight: 1.4,
+                                        }}
+                                    >
+                                        {p}
+                                    </span>
+                                ))}
                             </div>
+                        )}
+
+                        {/* Output count */}
+                        {outputCount > 0 && (
                             <p
                                 style={{
                                     fontFamily: '"Inter", sans-serif',
                                     fontSize: 12,
                                     fontWeight: 400,
-                                    color: "#2F2F2F",
+                                    color: "#7A7A7A",
                                     margin: 0,
                                 }}
                             >
-                                {createdAt}
+                                {outputCount} post{outputCount === 1 ? "" : "s"} generated
                             </p>
-                        </div>
-                    </div>
-
-                    {/* Output cards carousel */}
-                    <div style={{ marginTop: 40 }}>
-                        {cards.length > 0 ? (
-                            <HorizontalCardCarousel cards={cards} />
-                        ) : (
-                            <div
-                                style={{
-                                    padding: 80,
-                                    textAlign: "center",
-                                    color: "#7A7A7A",
-                                    fontSize: 16,
-                                    fontFamily: '"Inter", sans-serif',
-                                }}
-                            >
-                                No outputs available for this generation.
-                            </div>
                         )}
+
+                        <p
+                            style={{
+                                fontFamily: '"Inter", sans-serif',
+                                fontSize: 12,
+                                fontWeight: 400,
+                                color: "#7A7A7A",
+                                margin: 0,
+                            }}
+                        >
+                            {createdAt}
+                        </p>
                     </div>
+                </div>
+
+                {/* Output cards carousel */}
+                <div style={{ marginTop: 40 }}>
+                    {cards.length > 0 ? (
+                        <HorizontalCardCarousel cards={cards} />
+                    ) : (
+                        <div
+                            style={{
+                                padding: 80,
+                                textAlign: "center",
+                                color: "#7A7A7A",
+                                fontSize: 16,
+                                fontFamily: '"Inter", sans-serif',
+                            }}
+                        >
+                            No outputs available for this generation.
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
@@ -1027,7 +1141,7 @@ function InstagramCarouselCardStatic({ slides }: { slides: string[] }) {
                 width: "100%",
                 boxSizing: "border-box",
                 borderRadius: 24,
-                border: "1px solid #E2D0A2",
+                border: "1px solid #E0CD9D",
                 backgroundColor: "#FAF8F0",
                 padding: 20,
             }}
@@ -1044,7 +1158,7 @@ function InstagramCarouselCardStatic({ slides }: { slides: string[] }) {
                 <div style={{ color: "#7A7A7A", fontSize: 16 }}>
                     Instagram Carousel
                 </div>
-                <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                <div style={{ color: "#7A7A7A", fontSize: 14 }}>
                     {index + 1} / {count}
                 </div>
             </div>
@@ -1093,7 +1207,7 @@ function InstagramCarouselCardStatic({ slides }: { slides: string[] }) {
                                 style={{
                                     color: "#2F2F2F",
                                     fontSize: 22,
-                                    lineHeight: 1.3,
+                                    lineHeight: 1.4,
                                     whiteSpace: "pre-wrap",
                                     textAlign: "center",
                                     maxWidth: 560,

@@ -21,7 +21,7 @@ export function PostGenerationActions() {
     const buttonBg = buttonPressed
         ? "#1F1F1F"
         : buttonHover
-            ? "#252525"
+            ? "#4B4B4B"
             : "#2F2F2F"
 
     return (
@@ -44,9 +44,10 @@ export function PostGenerationActions() {
                     gap: 8,
                     padding: "16px 20px",
                     borderRadius: 12,
-                    backgroundColor: "rgba(17, 126, 138, 0.21)",
+                    backgroundColor: "#CFDBBC",
                     boxShadow: "0px 0px 4px rgba(36, 42, 25, 0.25)",
                     fontFamily: '"Inter", sans-serif',
+                    width: "fit-content",
                 }}
             >
                 <div
@@ -56,11 +57,11 @@ export function PostGenerationActions() {
                         gap: 12,
                     }}
                 >
-                    <CheckCircle size={24} color="#117E8A" />
+                    <CheckCircle size={20} color="#117E8A" />
                     <span
                         style={{
-                            color: "#3A3A3A",
-                            fontSize: 20,
+                            color: "#2F2F2F",
+                            fontSize: 16,
                             fontWeight: 400,
                         }}
                     >
@@ -75,12 +76,12 @@ export function PostGenerationActions() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        padding: "6px 10px",
-                        borderRadius: 29,
-                        backgroundColor: pillHover ? "#2A2A2A" : "#3A3A3A",
-                        color: "#FFFFFF",
-                        fontSize: 16,
-                        fontWeight: 300,
+                        padding: "6px 12px",
+                        borderRadius: 24,
+                        backgroundColor: pillHover ? "#4B4B4B" : "#2F2F2F",
+                        color: "#FAF8F0",
+                        fontSize: 14,
+                        fontWeight: 400,
                         textDecoration: "none",
                         transition: "background-color 200ms ease",
                     }}
@@ -102,7 +103,7 @@ export function PostGenerationActions() {
                 style={{
                     padding: "12px 24px",
                     backgroundColor: buttonBg,
-                    color: "#EFE9DA",
+                    color: "#FAF8F0",
                     border: "none",
                     borderRadius: 12,
                     fontSize: 14,

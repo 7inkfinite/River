@@ -56,6 +56,7 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
 | SignUpCTA | `frontend/SignUpCTA.tsx` | Sign-up button | Hidden on protected pages & when authenticated |
 | UserDashboard | `frontend/UserDashboard.tsx` | History view | Fetches and displays user generations with status bar, progress bar, and generation cards |
 | UserDashboardShell | `frontend/UserDashboardShell.tsx` | Dashboard UI | Shell for dashboard, handles "Create New" navigation |
+| RiverLoader | `frontend/RiverLoader.tsx` | Loading animation | Reusable river-themed SVG wave loader (brand blue #4688f7) |
 | PostGenerationActions | `frontend/PostGenerationActions.tsx` | Post-generation UI | Shows "Saved to dashboard" confirmation and "Start New Generation" button |
 | DashboardPageRoot | `frontend/DashboardPageRoot.tsx` | Dashboard root | Framer component for /dashboard, uses ProtectedRoute |
 | FormPageRoot | `frontend/FormPageRoot.tsx` | Form page root | Framer component for /form, uses ProtectedRoute |
@@ -73,10 +74,10 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
 | 3 | `backend/River/fetch_video_info.js` | Fetch video metadata | Video ID | Title, thumbnail URL, metadata |
 | 4 | `backend/River/upsert_video.js` | Video persistence | Video ID, URL, title, thumbnail | Video object with UUID |
 | 5 | `backend/River/sub_endpoint.json` | Fetch subtitles | Video ID | Subtitle tracks array |
-| 6 | `backend/River/sub_pick.js` | Select track | Tracks array | Selected track |
-| 7 | `backend/River/fetch_timedtext.json` | Download XML | Track URL | Raw XML |
-| 8 | `backend/River/parse_sub.js` | Parse XML | XML string | Transcript text |
-| 9 | `backend/River/transcript_final.js` | Normalize | Parsed text | Normalized transcript |
+| 6 | `backend/River/sub_pick.js` | Select track / check cache | Tracks array, video row | Selected track OR cached transcript (skip flag) |
+| 7 | `backend/River/fetch_timedtext.js` | Conditionally fetch XML | Track URL (or skip flag) | Raw XML or `{ skipped: true }` |
+| 8 | `backend/River/parse_sub.js` | Parse XML / pass through | XML string (or skip flag) | Transcript text |
+| 9 | `backend/River/transcript_final.js` | Normalize | Parsed text (or cached transcript) | Normalized transcript |
 | 10 | `backend/River/extract_transcript.js` | Extract segments | Transcript | Segments + metadata |
 | 11 | `backend/River/check_cache.js` | Cache lookup | Cache key | Hit/miss + outputs |
 | 12 | `backend/River/Call_openAI_API.js` | Generate content | Transcript, params | Platform outputs |
@@ -127,11 +128,14 @@ Home Page (/)                     Dashboard Page (/dashboard)      Form Page (/f
    - RETURN video row (includes all columns)
    ↓
 8. Backend Steps 5-10 (transcript pipeline): Extract transcript
+   - sub_pick checks if video already has a stored transcript (from a previous run)
+   - If cached: sets skipSubtitleFetch flag, skips RapidAPI entirely
+   - If not cached: fetches subtitles via RapidAPI, parses XML, normalizes
    ↓
 9. Backend Step 11 (check_cache): Query cache
    - Build cache_key = [video.id, tone, platforms.sort(), "v1"].join("|")
    - Query generations WHERE cache_key = ? AND status = 'success'
-   - If hit: RETURN cached outputs
+   - If hit: PATCH ownership (user_id or anonymous_session_id) onto cached generation, then RETURN
    - If miss: CONTINUE to Step 12
    ↓
 9. Backend Step 12 (call_openai): Generate content
@@ -167,17 +171,21 @@ AuthGate (`frontend/AuthGate.tsx`) manages all auth state and claim logic. This 
    ↓
 3. User authenticates via Supabase Auth
    ↓
-4. AuthGate's onAuthStateChange listener fires (SIGNED_IN)
+4. AuthGate's onAuthStateChange listener fires (SIGNED_IN, INITIAL_SESSION, or TOKEN_REFRESHED)
+   - All three events are handled; returning OAuth users may fire INITIAL_SESSION instead of SIGNED_IN
+   - hasProcessedSignIn ref prevents duplicate claims across events
    ↓
 5. AuthGate checks localStorage for "river_session_id"
    ↓
 6. If found: AuthGate calls claim webhook, awaits completion
    - Sets claimComplete = false during claim
    - POST to CLAIM_WEBHOOK_URL with { anonymous_session_id, user_id }
+   - ALL generations/videos sharing that anonymous_session_id are claimed (no limit)
    ↓
 7. AuthGate increments refreshKey, sets authReady = true
    ↓
-8. localStorage cleared ("river_session_id" removed)
+8. localStorage cleared ONLY if claim returned > 0 items
+   - If claim fails or returns 0, river_session_id is preserved for retry
    ↓
 9. Components remount with fresh data (keyed by refreshKey)
 ```
@@ -236,6 +244,8 @@ AuthGate (`frontend/AuthGate.tsx`) manages all auth state and claim logic. This 
    - extra_options.target_platform
    ↓
 7. Backend: Follows same flow but:
+   - sub_pick detects stored transcript on the video row → skips RapidAPI subtitle fetch
+   - fetch_timedtext, parse_sub, and transcript_final all pass through with skip flag
    - Skips cache (force_regen = true)
    - Calls OpenAI with tweak_instructions appended to prompt
    - Only generates for target_platform
@@ -560,18 +570,29 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange(
 
 **Key Points:**
 - Single auth listener in AuthGate (not in RiverResultsRoot)
+- Handles SIGNED_IN, INITIAL_SESSION, and TOKEN_REFRESHED events (covers all OAuth/email flows)
 - Claim runs before authReady becomes true
 - refreshKey increments after claim to force clean remounts
+- localStorage only cleared on successful claim (>0 items), preserved on failure for retry
 - Modal closes automatically on successful auth
 
 ### Claim Workflow Implementation
 
-**File:** `backend/River Auth/claim_anonymous_generations.js:20-60`
+**File:** `backend/River Auth/claim_anonymous_generations.js`
 
 ```javascript
 export default defineComponent({
   async run({ steps, $ }) {
-    const { anonymousSessionId, userId } = steps.validate_request.$return_value
+    // Defensive body unwrapping (handles Pipedream double-nesting + string bodies)
+    let body = steps.trigger.event.body;
+    if (body && typeof body === "string") {
+      try { body = JSON.parse(body); } catch (e) { /* leave as-is */ }
+    }
+    if (body && body.body && typeof body.body === "object") {
+      body = body.body;
+    }
+
+    const { anonymous_session_id, user_id } = body;
 
     // Use service role key to bypass RLS
     const supabase = createClient(
@@ -579,48 +600,53 @@ export default defineComponent({
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // Update videos
+    // Update videos — claims ALL matching rows (no limit)
     const { data: claimedVideos, error: videosError } = await supabase
       .from("videos")
       .update({
-        user_id: userId,
+        user_id: user_id,
         anonymous_session_id: null
       })
-      .eq("anonymous_session_id", anonymousSessionId)
+      .eq("anonymous_session_id", anonymous_session_id)
       .is("user_id", null)
       .select()
 
     if (videosError) throw videosError
 
-    // Update generations
+    // Update generations — claims ALL matching rows (no limit)
     const { data: claimedGenerations, error: generationsError } = await supabase
       .from("generations")
       .update({
-        user_id: userId,
+        user_id: user_id,
         anonymous_session_id: null
       })
-      .eq("anonymous_session_id", anonymousSessionId)
+      .eq("anonymous_session_id", anonymous_session_id)
       .is("user_id", null)
       .select()
 
     if (generationsError) throw generationsError
 
-    return {
-      claimed: {
-        videos: claimedVideos?.length || 0,
-        generations: claimedGenerations?.length || 0
+    $.respond({
+      status: 200,
+      body: {
+        success: true,
+        claimed: {
+          videos: claimedVideos?.length || 0,
+          generations: claimedGenerations?.length || 0
+        }
       }
-    }
+    })
   }
 })
 ```
 
 **Key Points:**
 - Uses service role key (bypasses RLS)
+- Defensively unwraps request body (handles Pipedream's double-nesting and string encoding)
+- Claims ALL records matching the anonymous_session_id — no per-user limit
 - Updates only unclaimed records (WHERE user_id IS NULL)
-- Atomic operations (both tables or neither)
 - Returns count of claimed records
-- Idempotent (safe to call multiple times)
+- Idempotent (safe to call multiple times — second call returns 0 since records are already claimed)
 
 ---
 
@@ -780,32 +806,39 @@ const { data, error } = await supabase
 
 ## Key Algorithms
 
-### Subtitle Selection Priority
+### Subtitle Selection Priority (with Transcript Caching)
 
-**File:** `backend/River/sub_pick.js:10-30`
+**File:** `backend/River/sub_pick.js`
 
 ```javascript
-function selectBestSubtitle(tracks) {
-  // Priority 1: Exact English
-  let selected = tracks.find(t => t.languageCode === "en")
-
-  // Priority 2: Any English variant (en-US, en-GB, etc.)
-  if (!selected) {
-    selected = tracks.find(t => t.languageCode?.startsWith("en"))
+// Priority 0: Use cached transcript from video row (avoids RapidAPI entirely)
+const video = steps.upsert_video?.$return_value?.video
+if (video?.transcript) {
+  return {
+    skipSubtitleFetch: true,
+    url: null,
+    cachedTranscript: video.transcript,
+    cachedLanguage: video.transcript_language || "en",
   }
-
-  // Priority 3: First available
-  if (!selected && tracks.length > 0) {
-    selected = tracks[0]
-  }
-
-  if (!selected) {
-    throw new Error("No subtitles available for this video")
-  }
-
-  return selected
 }
+
+// Priority 1: Exact English
+const subs = steps.sub_endpoint.$return_value?.subtitles || []
+let selected = subs.find(s => s.languageCode === "en")
+
+// Priority 2: Any English variant (en-US, en-GB, etc.)
+if (!selected) {
+  selected = subs.find(s => (s.languageCode || "").startsWith("en"))
+}
+
+// Priority 3: First available
+if (!selected) selected = subs[0]
+
+if (!selected?.url) throw new Error("No subtitle track URL found")
+return selected
 ```
+
+**Key change:** When a video already has a stored transcript (from a previous generation), sub_pick returns a `skipSubtitleFetch` flag. This propagates through `fetch_timedtext`, `parse_sub`, and `transcript_final` — all three steps detect the flag and pass through without calling external APIs. This is critical for **tweaks/regenerations**, which re-run the full pipeline but don't need to re-fetch subtitles.
 
 ### XML Parsing
 
@@ -1145,7 +1178,20 @@ cards.map((card, index) => (
 - Prefer sentence boundaries
 - Most videos need only first 10-15 minutes
 
-### 4. Selective Platform Regeneration
+### 4. Transcript Caching (Skip Subtitle Fetch)
+
+**Impact:** Eliminates RapidAPI calls on tweaks/regenerations
+
+**Implementation:**
+- `save_generation.js` stores the transcript on the `videos` table after first successful generation
+- On subsequent runs, `sub_pick.js` checks for a stored transcript on the video row
+- If found, sets `skipSubtitleFetch: true` and returns the cached transcript
+- `fetch_timedtext.js`, `parse_sub.js`, and `transcript_final.js` all detect the skip flag and pass through
+- Avoids RapidAPI 400 errors when subtitle endpoints become unavailable
+
+**Benefit:** Tweaks and regenerations never touch RapidAPI, making them faster and more reliable.
+
+### 5. Selective Platform Regeneration
 
 **Impact:** Reduces generation time and cost by 66%
 
@@ -1155,7 +1201,7 @@ cards.map((card, index) => (
 - Keep other platforms intact
 - Return full set of outputs
 
-### 5. Database Indexing
+### 6. Database Indexing
 
 **Impact:** Sub-10ms query times for user generations
 
@@ -1393,9 +1439,10 @@ const supabase = createClient(
 
 ### Common Issues
 
-**Issue:** "No subtitles available for this video"
-- **Cause:** Video has no captions (auto or manual)
-- **Solution:** User must enable captions or choose different video
+**Issue:** "No subtitle track URL found" or "No subtitles available"
+- **Cause:** Video has no captions, OR RapidAPI returned a 400/error
+- **Note:** On tweaks/regenerations, this should not occur because `sub_pick` checks for a cached transcript stored on the `videos` table. If the video was processed once successfully, the transcript is reused automatically.
+- **Solution:** For first-time videos, user must ensure captions exist. If RapidAPI is down, retry later.
 
 **Issue:** "Generation failed" with 500 error
 - **Cause:** OpenAI API timeout or quota exceeded

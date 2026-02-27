@@ -105,7 +105,7 @@ export function InstagramCarouselCard(props: {
                 boxSizing: "border-box",
                 borderRadius: 24,
                 border: "1px solid #E0CD9D",
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 padding: 20,
                 position: "relative",
                 overflow: "visible",
@@ -123,7 +123,7 @@ export function InstagramCarouselCard(props: {
                     marginBottom: 14,
                 }}
             >
-                <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                <div style={{ color: "#7A7A7A", fontSize: 14 }}>
                     {slides?.[safeIndex]?.length || 0} chars
                 </div>
 
@@ -133,7 +133,7 @@ export function InstagramCarouselCard(props: {
                         onToggle={onToggleAspect}
                     />
 
-                    <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                    <div style={{ color: "#7A7A7A", fontSize: 14 }}>
                         {safeIndex + 1} / {count}
                     </div>
                 </div>
@@ -196,7 +196,7 @@ export function InstagramCarouselCard(props: {
                                     style={{
                                         color: "#2F2F2F",
                                         fontSize: 22,
-                                        lineHeight: 1.3,
+                                        lineHeight: 1.4,
                                         whiteSpace: "pre-wrap",
                                         maxWidth: 560,
                                     }}
@@ -322,7 +322,7 @@ export function InstagramCarouselCard(props: {
                             fontFamily:
                                 "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                             fontSize: 14,
-                            lineHeight: "1.3em",
+                            lineHeight: "1.4",
                             color: "#2F2F2F",
                             boxShadow: "inset 0px 0px 5px rgba(0,0,0,0.13)",
                             opacity: isLoading ? 0.75 : 1,
@@ -365,7 +365,7 @@ function AspectRatioToggle({
                 alignItems: "center",
                 gap: 0,
                 padding: 4,
-                backgroundColor: "rgba(124, 138, 17, 0.12)",
+                backgroundColor: "rgba(124, 138, 17, 0.10)",
                 borderRadius: 999,
                 fontFamily:
                     "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -408,9 +408,9 @@ function AspectToggleButton({
                 border: "none",
                 borderRadius: 999,
                 backgroundColor: isActive
-                    ? "#FAF7ED"
+                    ? "#FAF8F0"
                     : hover
-                      ? "rgba(124, 138, 17, 0.08)"
+                      ? "rgba(124, 138, 17, 0.10)"
                       : "transparent",
                 color: isActive
                     ? "rgba(47,47,47,0.85)"
@@ -441,7 +441,7 @@ function IconOnlyActionButton({
 }) {
     const [hover, setHover] = React.useState(false)
 
-    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const bg = hover ? "rgba(124, 138, 17, 0.16)" : "rgba(124, 138, 17, 0.10)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
@@ -500,7 +500,7 @@ function CopyMenuButton({
     const [hover, setHover] = React.useState(false)
     const wrapRef = React.useRef<HTMLDivElement | null>(null)
 
-    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const bg = hover ? "rgba(124, 138, 17, 0.16)" : "rgba(124, 138, 17, 0.10)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     React.useEffect(() => {
@@ -586,7 +586,7 @@ function CopyMenuButton({
                         minWidth: 190,
                         borderRadius: 24,
                         border: "none",
-                        backgroundColor: "rgba(138, 107, 17, 0.14)",
+                        backgroundColor: "rgba(124, 138, 17, 0.16)",
                         backdropFilter: "blur(4px)",
                         WebkitBackdropFilter: "blur(4px)",
                         padding: 6,
@@ -618,11 +618,11 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
                 borderRadius: 24,
                 padding: "10px 12px",
                 backgroundColor: hover
-                    ? "rgba(124, 138, 17, 0.14)"
+                    ? "rgba(124, 138, 17, 0.16)"
                     : "transparent",
                 cursor: "pointer",
                 color: "rgba(47,47,47,0.72)",
-                fontSize: 13,
+                fontSize: 14,
                 textAlign: "left",
                 fontFamily:
                     "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -697,7 +697,7 @@ function RiverMiniCTA({
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#0F6B75" : hover ? "#148A97" : "#117E8A"
+    const backgroundColor = pressed ? "#ADDADE" : hover ? "#0F6B75" : "#117E8A"
 
     return (
         <button
@@ -728,7 +728,7 @@ function RiverMiniCTA({
                     !disabled && pressed
                         ? "0px 2px 2px rgba(48, 28, 10, 0.35)"
                         : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
-                color: "#EFE9DA",
+                color: "#FAF8F0",
                 fontSize: 14,
                 fontWeight: 500,
                 lineHeight: 1.1,
@@ -748,7 +748,7 @@ function RiverMiniCTA({
                         width: 14,
                         height: 14,
                         borderRadius: "999px",
-                        border: "2px solid #EFE9DA",
+                        border: "2px solid #FAF8F0",
                         borderTopColor: "transparent",
                         display: "inline-block",
                         animation: "river-mini-spin 1.1s linear infinite",

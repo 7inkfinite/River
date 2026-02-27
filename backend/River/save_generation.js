@@ -16,6 +16,7 @@ export default defineComponent({
     const call = steps.Call_OpenAI_API?.$return_value || {};
     const { video } = steps.upsert_video.$return_value || {};
     const v = steps.validate_input.$return_value || {};
+    const extractedTranscript = steps.extract_transcript?.$return_value || {};
 
     const tone = (v.tone || "creator-friendly, punchy").toString().trim();
     const platforms =
@@ -28,6 +29,33 @@ export default defineComponent({
 
     if (!video?.id) {
       throw new Error("Missing video.id from upsert_video");
+    }
+
+    // ------------------------------------------------------
+    // 0) Store transcript on videos table for future reuse
+    //    (so sub_pick can skip RapidAPI on tweaks/regens)
+    // ------------------------------------------------------
+    if (extractedTranscript.fullText && !video.transcript) {
+      const txPatch = await fetch(
+        `${SUPABASE_URL}/rest/v1/videos?id=eq.${video.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            transcript: extractedTranscript.fullText,
+            transcript_language: extractedTranscript.language || null,
+          }),
+        }
+      );
+      if (!txPatch.ok) {
+        console.error(
+          `Transcript storage failed (non-fatal): ${txPatch.status} ${await txPatch.text()}`
+        );
+      }
     }
 
     // ------------------------------------------------------
@@ -84,10 +112,45 @@ export default defineComponent({
     }
 
     // ------------------------------------------------------
-    // 3) PURE CACHE HIT → no DB writes, just return
+    // 3) PURE CACHE HIT → update ownership, then return
     // ------------------------------------------------------
     if (cacheHit) {
-      $.export("$summary", "Cache hit – skipping DB inserts");
+      // Even on cache hit, ensure the current user/session owns this generation
+      // so it appears on their dashboard (Bug 2 + Bug 3 fix)
+      if (cache.generation?.id && (v.user_id || v.session_id)) {
+        const ownershipUpdate = {};
+
+        if (v.user_id) {
+          // Authenticated user: set user_id on the generation
+          ownershipUpdate.user_id = v.user_id;
+        } else if (v.session_id) {
+          // Anonymous user: set anonymous_session_id for later claiming
+          ownershipUpdate.anonymous_session_id = v.session_id;
+        }
+
+        const patchRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/generations?id=eq.${cache.generation.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify(ownershipUpdate),
+          }
+        );
+
+        if (!patchRes.ok) {
+          const patchText = await patchRes.text();
+          console.error(
+            `Ownership update failed (non-fatal): ${patchRes.status} ${patchText}`
+          );
+        }
+      }
+
+      $.export("$summary", "Cache hit – updated ownership, skipped content inserts");
 
       return {
         video: {

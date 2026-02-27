@@ -8,7 +8,15 @@ import { createClient } from "@supabase/supabase-js"
 export default defineComponent({
   async run({ steps, $ }) {
     // 1. Get input from request body
-    const { anonymous_session_id, user_id } = steps.trigger.event.body
+    let body = steps.trigger.event.body;
+    if (body && typeof body === "string") {
+      try { body = JSON.parse(body); } catch (e) { /* leave as-is */ }
+    }
+    if (body && body.body && typeof body.body === "object") {
+      body = body.body;
+    }
+
+    const { anonymous_session_id, user_id } = body;
 
     // 2. Validate required fields
     if (!anonymous_session_id || !user_id) {

@@ -73,14 +73,20 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
             const claimResult = await response.json()
             console.log("Claimed successfully:", claimResult.claimed)
 
-            // Update claim count if provided
-            if (typeof claimResult.claimed === 'number') {
+            // Update claim count — webhook returns { claimed: { videos: N, generations: N } }
+            if (claimResult.claimed && typeof claimResult.claimed === 'object') {
+                setLastClaimCount(claimResult.claimed.generations || 0)
+            } else if (typeof claimResult.claimed === 'number') {
                 setLastClaimCount(claimResult.claimed)
-            } else if (claimResult.count) {
-                setLastClaimCount(claimResult.count)
             }
 
-            localStorage.removeItem("river_session_id")
+            const claimed = claimResult.claimed
+            const didClaim = (typeof claimed === 'object' && (claimed.generations > 0 || claimed.videos > 0))
+                || (typeof claimed === 'number' && claimed > 0)
+
+            if (didClaim) {
+                localStorage.removeItem("river_session_id")
+            }
             return true
         } catch (error) {
             console.error("Error claiming anonymous generations:", error)
@@ -146,7 +152,8 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
             setSession(newSession)
 
             // Handle sign-in event (only if not already processed)
-            if (event === 'SIGNED_IN' && newSession?.user && !hasProcessedSignIn.current) {
+            if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
+                && newSession?.user && !hasProcessedSignIn.current) {
                 hasProcessedSignIn.current = true
                 const anonymousSessionId = localStorage.getItem("river_session_id")
 

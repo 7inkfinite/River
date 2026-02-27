@@ -24,7 +24,7 @@ export function AuthPrompt({ onSignUpClick }: { onSignUpClick: () => void }) {
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#1F1F1F" : hover ? "#252525" : "#2F2F2F"
+    const backgroundColor = pressed ? "#1F1F1F" : hover ? "#4B4B4B" : "#2F2F2F"
 
     return (
         <div
@@ -47,8 +47,8 @@ export function AuthPrompt({ onSignUpClick }: { onSignUpClick: () => void }) {
                     fontWeight: 500,
                     fontStyle: "normal",
                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                    color: "#4f440d",
-                    fontSize: 26,
+                    color: "#2D2E0F",
+                    fontSize: 24,
                     letterSpacing: "0em",
                     textAlign: "center",
                     lineHeight: 1.2,
@@ -69,36 +69,46 @@ export function AuthPrompt({ onSignUpClick }: { onSignUpClick: () => void }) {
                 onMouseUp={() => setPressed(false)}
                 style={{
                     boxSizing: "border-box",
-                    width: "min-content",
+                    position: "relative",
+                    width: "fit-content",
                     height: 40,
                     display: "flex",
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
                     padding: "16px 24px",
-                    boxShadow:
-                        "0px 1px 6px 0px rgba(48, 28, 10, 0.4), 0px 2px 2px 0px rgba(48, 28, 10, 0.35)",
-                    backgroundColor,
-                    overflow: "visible",
-                    alignContent: "center",
-                    flexWrap: "nowrap",
                     gap: 8,
                     borderRadius: 24,
                     border: "none",
-                    cursor: "pointer",
-                    color: "#EFE9DA",
+                    outline: "none",
+                    backgroundColor,
+                    boxShadow: pressed
+                        ? "0px 1px 3px 0px rgba(35,12,5,0.34)"
+                        : "0px 1px 3px 0px rgba(35,12,5,0.34), 0px 4px 8px 0px rgba(35,12,5,0.3)",
+                    color: "#FAF8F0",
                     fontSize: 14,
                     fontWeight: 500,
                     lineHeight: 1.1,
                     fontFamily:
                         "General Sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                     whiteSpace: "nowrap",
+                    cursor: "pointer",
                     userSelect: "none",
                     transition:
-                        "background-color 300ms cubic-bezier(0.25,0.1,0.25,1)",
+                        "background-color 200ms ease, box-shadow 200ms ease, color 150ms ease",
                 }}
             >
-                Sign Up
+                {/* inset shadow overlay */}
+                <span
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "inherit",
+                        pointerEvents: "none",
+                        boxShadow: "inset -1px -2px 1.1px 0px rgba(25,50,152,0.46)",
+                    }}
+                />
+                <span style={{ position: "relative" }}>Sign Up</span>
             </button>
         </div>
     )
@@ -182,7 +192,7 @@ function SuccessView({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{
                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: 600,
                     color: "#2F2F2F",
                     animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.3s both" : "none"
@@ -193,8 +203,8 @@ function SuccessView({
                 <div style={{
                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                     fontSize: 16,
-                    color: "#4F4F4F",
-                    lineHeight: 1.5,
+                    color: "#7A7A7A",
+                    lineHeight: 1.4,
                     maxWidth: 300,
                     animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.4s both" : "none"
                 }}>
@@ -213,8 +223,8 @@ function SuccessView({
                 style={{
                     width: "100%",
                     padding: "16px 24px",
-                    backgroundColor: "#3C82F6",
-                    color: "white",
+                    backgroundColor: "#4688F7",
+                    color: "#FAF8F0",
                     border: "none",
                     borderRadius: 12,
                     fontSize: 16,
@@ -229,8 +239,8 @@ function SuccessView({
                     transition: "background-color 200ms ease",
                     animation: isAnimating ? "fadeSlideUp 0.4s ease-out 0.5s both" : "none"
                 }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = "#2563EB"}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = "#3C82F6"}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = "#163D7A"}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = "#4688F7"}
             >
                 <span>Open My Dashboard</span>
                 <span style={{
@@ -483,11 +493,11 @@ export function SignUpModal({
     const colors = {
         background: "#FAF8F0",      // Creamy beige
         toggleBg: "#F5F0DE",        // Warmer beige for toggle container
-        title: "#4A240D",           // Warm brown
-        labelText: "#6E6E6E",       // Gray for labels
-        inactiveTab: "#BAAB6B",     // Muted gold
-        activeTab: "#000000",       // Black for active tab text
-        buttonBg: "#3A3A3A",        // Dark gray
+        title: "#2F2F2F",           // text/primary
+        labelText: "#7A7A7A",       // text/secondary
+        inactiveTab: "#7A7A7A",     // text/secondary
+        activeTab: "#2F2F2F",       // text/primary
+        buttonBg: "#2F2F2F",        // dark/default
         inputBorder: "#C7C7C7",     // Light gray border
         white: "#FFFFFF",
         river: "3C82F6",
@@ -1124,11 +1134,11 @@ export function SignUpModal({
                             {/* Terms & Conditions - at bottom */}
                             <div
                                 style={{
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     color: colors.activeTab,
                                     fontFamily: '"Inter", "Inter Placeholder", sans-serif',
                                     textAlign: "center",
-                                    lineHeight: 1.5,
+                                    lineHeight: 1.4,
                                     marginTop: 16,
                                 }}
                             >
@@ -1168,7 +1178,7 @@ export function SignUpModal({
 
 /**
  * ConfirmButton - Pill-shaped submit button for the sign up/sign in form
- * Design: Dark gray (#3A3A3A), fully rounded, with shadow
+ * Design: Dark gray (#2F2F2F), fully rounded, with shadow
  */
 function ConfirmButton({
     loading,
@@ -1180,7 +1190,7 @@ function ConfirmButton({
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#2A2A2A" : hover ? "#303030" : "#3A3A3A"
+    const backgroundColor = pressed ? "#1F1F1F" : hover ? "#4B4B4B" : "#2F2F2F"
 
     return (
         <button
@@ -1205,7 +1215,7 @@ function ConfirmButton({
                 borderRadius: 9999, // Pill shape
                 border: "none",
                 cursor: loading ? "not-allowed" : "pointer",
-                color: "#FFFFFF",
+                color: "#FAF8F0",
                 fontSize: 16,
                 fontWeight: 500,
                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',
@@ -1284,9 +1294,9 @@ function GoogleSignInButton({
                 padding: "18px 32px",
                 backgroundColor,
                 borderRadius: 9999, // Pill shape
-                border: "1px solid #a6a6a6",
+                border: "1px solid #C7C7C7",
                 cursor: disabled ? "not-allowed" : "pointer",
-                color: "#3A3A3A",
+                color: "#2F2F2F",
                 fontSize: 16,
                 fontWeight: 500,
                 fontFamily: '"Inter", "Inter Placeholder", sans-serif',

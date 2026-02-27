@@ -286,10 +286,10 @@ function NavigationButton({
     const backgroundColor = disabled
         ? "rgba(226, 208, 162, 0.3)"
         : pressed
-            ? "#D4C48E"
+            ? "#E3D49E"
             : hover
                 ? "#E3D49E"
-                : "#F3F1EA"
+                : "#F5F0DE"
 
     const iconColor = disabled ? "rgba(47, 47, 47, 0.3)" : "#117E8A"
 

@@ -138,10 +138,10 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
     // -----------------------------
     const COLORS = {
         idle: "#4688f7",
-        hover: "#1f59bb",
-        pressed: "#1f59bb",
-        error: "#8A112D",
-        formError: "#C2410C",
+        hover: "#163D7A",
+        pressed: "#163D7A",
+        error: "#B91C1C",
+        formError: "#EF4444",
         success: "#117e8a",
         loading: "#4688f7",
 
@@ -149,7 +149,7 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
         tweakCalm: "#ADDADE",
 
         // ✅ muted gray for results lock
-        resultsLock: "#9CA3AF",
+        resultsLock: "#7A7A7A",
     }
 
     const [isHover, setHover] = React.useState(false)
@@ -263,7 +263,7 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
                         !isDisabled && isPressed
                             ? "0px 1px 3px 0px rgba(35,12,5,0.34)"
                             : "0px 1px 3px 0px rgba(35,12,5,0.34), 0px 4px 8px 0px rgba(35,12,5,0.3)",
-                    color: !isDisabled && isPressed ? "#def49c" : "#faf8f0",
+                    color: "#FAF8F0",
                     fontSize: 14,
                     fontWeight: 500,
                     lineHeight: 1.1,
