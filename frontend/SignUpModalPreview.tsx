@@ -39,7 +39,7 @@ export function SignUpModalPreview({ backgroundImage }: { backgroundImage?: stri
                     borderRadius: 12,
                     border: "1px solid #E0CD9D",
                     backgroundColor: "#117E8A",
-                    color: "#EFE9DA",
+                    color: "#FAF8F0",
                     fontSize: 14,
                     fontWeight: 600,
                     fontFamily: '"Inter", sans-serif',

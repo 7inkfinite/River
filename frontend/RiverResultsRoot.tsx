@@ -655,7 +655,7 @@ function InstagramCarouselCard(props: {
                 boxSizing: "border-box",
                 borderRadius: 24,
                 border: "1px solid #E0CD9D",
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 padding: 20,
                 position: "relative",
                 overflow: "visible",
@@ -676,7 +676,7 @@ function InstagramCarouselCard(props: {
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <AspectRatioToggle aspect={aspect} onToggle={onToggleAspect} />
-                    <div style={{ color: "#7A7A7A", fontSize: 13 }}>
+                    <div style={{ color: "#7A7A7A", fontSize: 14 }}>
                         {index + 1} / {count}
                     </div>
                 </div>
@@ -738,7 +738,7 @@ function InstagramCarouselCard(props: {
                                     style={{
                                         color: "#2F2F2F",
                                         fontSize: 22,
-                                        lineHeight: 1.3,
+                                        lineHeight: 1.4,
                                         whiteSpace: "pre-wrap",
                                         maxWidth: 560,
                                     }}
@@ -846,7 +846,7 @@ function InstagramCarouselCard(props: {
                             resize: "vertical",
                             fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                             fontSize: 14,
-                            lineHeight: "1.3em",
+                            lineHeight: "1.4",
                             color: "#2F2F2F",
                             boxShadow: "inset 0px 0px 5px rgba(0,0,0,0.13)",
                             opacity: isLoading ? 0.75 : 1,
@@ -890,7 +890,7 @@ function AspectRatioToggle({ aspect, onToggle }: { aspect: "1:1" | "4:5"; onTogg
                 alignItems: "center",
                 gap: 0,
                 padding: 4,
-                backgroundColor: "rgba(124, 138, 17, 0.12)",
+                backgroundColor: "rgba(70, 136, 247, 0.12)",
                 borderRadius: 999,
                 fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 fontSize: 12,
@@ -915,7 +915,7 @@ function AspectToggleButton({ label, isActive, onClick }: { label: string; isAct
                 padding: "6px 10px",
                 border: "none",
                 borderRadius: 999,
-                backgroundColor: isActive ? "#FAF7ED" : hover ? "rgba(124, 138, 17, 0.08)" : "transparent",
+                backgroundColor: isActive ? "#FAF8F0" : hover ? "rgba(70, 136, 247, 0.08)" : "transparent",
                 color: isActive ? "rgba(47,47,47,0.85)" : "rgba(47,47,47,0.55)",
                 cursor: isActive ? "default" : "pointer",
                 transition: "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
@@ -931,7 +931,7 @@ function AspectToggleButton({ label, isActive, onClick }: { label: string; isAct
 
 function IconOnlyActionButton({ icon, label, onClick, disabled }: { icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }) {
     const [hover, setHover] = React.useState(false)
-    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const bg = hover ? "rgba(70, 136, 247, 0.18)" : "rgba(70, 136, 247, 0.12)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
@@ -979,7 +979,7 @@ function CopyMenuButton({
     const [hover, setHover] = React.useState(false)
     const wrapRef = React.useRef<HTMLDivElement | null>(null)
 
-    const bg = hover ? "rgba(124, 138, 17, 0.18)" : "rgba(124, 138, 17, 0.12)"
+    const bg = hover ? "rgba(70, 136, 247, 0.18)" : "rgba(70, 136, 247, 0.12)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     React.useEffect(() => {
@@ -1052,7 +1052,7 @@ function CopyMenuButton({
                         minWidth: 190,
                         borderRadius: 24,
                         border: "none",
-                        backgroundColor: "rgba(138, 107, 17, 0.14)",
+                        backgroundColor: "rgba(124, 138, 17, 0.16)",
                         backdropFilter: "blur(4px)",
                         WebkitBackdropFilter: "blur(4px)",
                         padding: 6,
@@ -1083,10 +1083,10 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
                 border: "none",
                 borderRadius: 24,
                 padding: "10px 12px",
-                backgroundColor: hover ? "rgba(124, 138, 17, 0.14)" : "transparent",
+                backgroundColor: hover ? "rgba(70, 136, 247, 0.14)" : "transparent",
                 cursor: "pointer",
                 color: "rgba(47,47,47,0.72)",
-                fontSize: 13,
+                fontSize: 14,
                 textAlign: "left",
                 fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 transition: "background-color 180ms cubic-bezier(0.25,0.1,0.25,1)",
@@ -1141,7 +1141,7 @@ function RiverMiniCTA({ label, onClick, disabled, loading = false }: { label: st
     const [hover, setHover] = React.useState(false)
     const [pressed, setPressed] = React.useState(false)
 
-    const backgroundColor = pressed ? "#0F6B75" : hover ? "#148A97" : "#117E8A"
+    const backgroundColor = pressed ? "#ADDADE" : hover ? "#0F6B75" : "#117E8A"
 
     return (
         <button
@@ -1169,7 +1169,7 @@ function RiverMiniCTA({ label, onClick, disabled, loading = false }: { label: st
                 outline: "none",
                 backgroundColor,
                 boxShadow: !disabled && pressed ? "0px 2px 2px rgba(48, 28, 10, 0.35)" : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
-                color: "#EFE9DA",
+                color: "#FAF8F0",
                 fontSize: 14,
                 fontWeight: 500,
                 lineHeight: 1.1,
@@ -1187,7 +1187,7 @@ function RiverMiniCTA({ label, onClick, disabled, loading = false }: { label: st
                         width: 14,
                         height: 14,
                         borderRadius: "999px",
-                        border: "2px solid #EFE9DA",
+                        border: "2px solid #FAF8F0",
                         borderTopColor: "transparent",
                         display: "inline-block",
                         animation: "river-mini-spin 1.1s linear infinite",
@@ -1228,7 +1228,7 @@ function VideoHeader({ videoTitle, youtubeId }: { videoTitle: string; youtubeId:
                     fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                     fontSize: 24,
                     fontWeight: 600,
-                    lineHeight: 1.3,
+                    lineHeight: 1.4,
                     color: "#2F2F2F",
                 }}
             >
@@ -1258,7 +1258,7 @@ function LoadingSkeletonCard() {
                 boxSizing: "border-box",
                 borderRadius: 24,
                 border: "1px solid #E0CD9D",
-                backgroundColor: "#FAF7ED",
+                backgroundColor: "#FAF8F0",
                 padding: 20,
                 minHeight: 320,
                 position: "relative",
@@ -1274,7 +1274,7 @@ function LoadingSkeletonCard() {
                         width: 120,
                         height: 120,
                         borderRadius: "50%",
-                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.15) 0%, rgba(124, 138, 17, 0.08) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(70, 136, 247, 0.15) 0%, rgba(70, 136, 247, 0.08) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite",
                     }}
                 />
@@ -1286,7 +1286,7 @@ function LoadingSkeletonCard() {
                         width: 100,
                         height: 100,
                         borderRadius: "50%",
-                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.12) 0%, rgba(124, 138, 17, 0.06) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(70, 136, 247, 0.12) 0%, rgba(70, 136, 247, 0.06) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 0.8s",
                     }}
                 />
@@ -1298,18 +1298,18 @@ function LoadingSkeletonCard() {
                         width: 90,
                         height: 90,
                         borderRadius: "50%",
-                        background: "radial-gradient(circle, rgba(124, 138, 17, 0.1) 0%, rgba(124, 138, 17, 0.05) 40%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(70, 136, 247, 0.1) 0%, rgba(70, 136, 247, 0.05) 40%, transparent 70%)",
                         animation: "river-ripple 3s ease-out infinite 1.6s",
                     }}
                 />
             </div>
 
             <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ width: "40%", height: 18, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 12 }} />
-                <div style={{ width: "100%", height: 240, backgroundColor: "rgba(124, 138, 17, 0.06)", borderRadius: 24, boxShadow: "inset 0px 0px 5px rgba(0, 0, 0, 0.08)" }} />
+                <div style={{ width: "40%", height: 18, backgroundColor: "rgba(70, 136, 247, 0.08)", borderRadius: 12 }} />
+                <div style={{ width: "100%", height: 240, backgroundColor: "rgba(70, 136, 247, 0.06)", borderRadius: 24, boxShadow: "inset 0px 0px 5px rgba(0, 0, 0, 0.08)" }} />
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 24 }} />
-                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(124, 138, 17, 0.08)", borderRadius: 24 }} />
+                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(70, 136, 247, 0.08)", borderRadius: 24 }} />
+                    <div style={{ width: 40, height: 40, backgroundColor: "rgba(70, 136, 247, 0.08)", borderRadius: 24 }} />
                 </div>
             </div>
 
@@ -1344,12 +1344,11 @@ function PostAuthCTA() {
     return (
         <div
             style={{
-                width: "100%",
-                maxWidth: 840,
+                width: "fit-content",
                 margin: "0 auto",
                 padding: "16px 20px",
                 borderRadius: 12,
-                backgroundColor: "rgba(17, 126, 138, 0.21)",
+                backgroundColor: "#CFDBBC",
                 boxShadow: "0px 0px 4px rgba(36, 42, 25, 0.25)",
                 display: "flex",
                 alignItems: "center",
@@ -1365,11 +1364,11 @@ function PostAuthCTA() {
                     gap: 12,
                 }}
             >
-                <CheckCircle size={24} color="#117E8A" />
+                <CheckCircle size={20} color="#117E8A" />
                 <span
                     style={{
-                        color: "#3A3A3A",
-                        fontSize: 20,
+                        color: "#2F2F2F",
+                        fontSize: 16,
                         fontWeight: 400,
                     }}
                 >
@@ -1386,12 +1385,12 @@ function PostAuthCTA() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    padding: "6px 10px",
-                    borderRadius: 29,
-                    backgroundColor: hover ? "#2A2A2A" : "#3A3A3A",
-                    color: "#FFFFFF",
-                    fontSize: 16,
-                    fontWeight: 300,
+                    padding: "6px 12px",
+                    borderRadius: 24,
+                    backgroundColor: hover ? "#4B4B4B" : "#2F2F2F",
+                    color: "#FAF8F0",
+                    fontSize: 14,
+                    fontWeight: 400,
                     textDecoration: "none",
                     transition: "background-color 200ms ease",
                 }}

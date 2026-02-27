@@ -19,7 +19,7 @@ export function FormPageRoot() {
                     style={{
                         width: "100%",
                         height: "100vh",
-                        backgroundColor: "#FAF7ED",
+                        backgroundColor: "#FAF8F0",
                         display: "flex",
                         flexDirection: "column",
                         overflowY: "auto",

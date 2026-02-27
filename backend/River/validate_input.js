@@ -89,10 +89,10 @@ export default defineComponent({
       ? String(extra_options.target_platform).toLowerCase().trim()
       : null;
 
-    // ✅ If tweak specifies a target, ONLY generate that platform
-    if (target_platform && allowed.includes(target_platform)) {
-      platforms = [target_platform];
-    }
+    // NOTE: Do NOT narrow `platforms` here for targeted tweaks.
+    // Call_openAI_API handles targeting via extra_options.target_platform.
+    // save_generation needs the FULL platforms array so the upsert
+    // matches the original generation row (keyed on video_id + tone + platforms).
 
     // --- Anonymous session ID for tracking generations before login ---
     const session_id = body.session_id && typeof body.session_id === "string"

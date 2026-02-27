@@ -1,17 +1,6 @@
 //Step 8 of the pipedream workflow
 export default defineComponent({
   async run({ steps, $ }) {
-    // Prefer your timedtext pipeline output
-    // Adjust this if your step names differ
-    const parsed = steps.parse_sub?.$return_value || {}
-
-    // parsed can be:
-    // 1) { segments: [{start, duration, text}], languageName, languageCode }
-    // 2) { transcript: "full text", ... }
-    // 3) "full text"
-    // We'll normalize to the transcript_auto-like object:
-    // { transcript: [{startMs, endMs, text}], selectedTrackTitle }
-
     // -------- helpers --------
     const clean = (s) => String(s || "").replace(/\s+/g, " ").trim()
 
@@ -24,6 +13,34 @@ export default defineComponent({
         text: clean(text),
       }
     }
+
+    // -------- Check for cached transcript (subtitle fetch was skipped) --------
+    const subPick = steps.sub_pick?.$return_value || {}
+    if (subPick.skipSubtitleFetch && subPick.cachedTranscript) {
+      const cachedText = clean(subPick.cachedTranscript)
+      const lang = subPick.cachedLanguage || "en"
+
+      $.export("$summary", `Using cached transcript (${lang}), ${cachedText.length} chars`)
+
+      return {
+        ok: true,
+        source: "cache",
+        selectedTrackTitle: lang,
+        transcript: [mkItem(0, 0, cachedText)],
+      }
+    }
+
+    // -------- Normal path: parse from timedtext pipeline --------
+    // Prefer your timedtext pipeline output
+    // Adjust this if your step names differ
+    const parsed = steps.parse_sub?.$return_value || {}
+
+    // parsed can be:
+    // 1) { segments: [{start, duration, text}], languageName, languageCode }
+    // 2) { transcript: "full text", ... }
+    // 3) "full text"
+    // We'll normalize to the transcript_auto-like object:
+    // { transcript: [{startMs, endMs, text}], selectedTrackTitle }
 
     // -------- extract language --------
     const languageLabel =

@@ -25,7 +25,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
                 style={{
                     width: "100%",
                     minHeight: "100vh",
-                    backgroundColor: "#FAF7ED",
+                    backgroundColor: "#FAF8F0",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
@@ -34,7 +34,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
                 <div
                     style={{
                         color: "#7A7A7A",
-                        fontSize: 18,
+                        fontSize: 20,
                         fontFamily: '"Inter", sans-serif',
                     }}
                 >

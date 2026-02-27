@@ -85,7 +85,7 @@ Don't like the first result? Click "Edit" on any card and type instructions like
 - "Add more examples in slides 2-3"
 - "Keep it more casual"
 
-River regenerates just that platform while keeping the rest intact.
+River regenerates just that platform while keeping the rest intact. Tweaks reuse the stored transcript from the original generation, so they skip the subtitle fetch step entirely — making them faster and avoiding external API issues.
 
 ## The User Journey
 
@@ -147,8 +147,11 @@ River doesn't rely on YouTube's API for transcripts. Instead:
 3. Downloads raw XML format directly from YouTube
 4. Parses and normalizes into clean text
 5. Feeds to AI within seconds
+6. **Stores the transcript** on the video record for future use
 
-**Benefit:** Works with any YouTube video that has captions (most do).
+On tweaks and regenerations, River skips the RapidAPI call entirely and reuses the stored transcript. This makes subsequent runs faster and more reliable.
+
+**Benefit:** Works with any YouTube video that has captions (most do). Repeat runs are instant.
 
 ### Deterministic Caching
 

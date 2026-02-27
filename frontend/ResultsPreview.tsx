@@ -210,7 +210,7 @@ Try it out and let me know what you think! Would love your feedback.
                             "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                         fontSize: 24,
                         fontWeight: 600,
-                        lineHeight: 1.3,
+                        lineHeight: 1.4,
                         color: "#2F2F2F",
                     }}
                 >

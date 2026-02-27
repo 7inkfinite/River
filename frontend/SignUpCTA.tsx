@@ -21,8 +21,8 @@ function SignUpCTAInner({ backgroundImage }: { backgroundImage?: string }) {
 
     const COLORS = {
         idle: "#2F2F2F",
-        hover: "#1A1A1A",
-        pressed: "#404040",
+        hover: "#4B4B4B",
+        pressed: "#1F1F1F",
     }
 
     let backgroundColor = COLORS.idle
@@ -47,7 +47,7 @@ function SignUpCTAInner({ backgroundImage }: { backgroundImage?: string }) {
             isPressed
                 ? "0px 2px 2px rgba(48, 28, 10, 0.35)"
                 : "0px 1px 6px rgba(48, 28, 10, 0.4), 0px 2px 2px rgba(48, 28, 10, 0.35)",
-        color: "#EFE9DA",
+        color: "#FAF8F0",
         fontSize: 14,
         fontWeight: 500,
         lineHeight: 1.1,

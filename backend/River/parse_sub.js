@@ -1,6 +1,16 @@
 //Step 7 of the pipedream workflow
 export default defineComponent({
   async run({ steps }) {
+    // If subtitle fetch was skipped (video has cached transcript), pass through
+    const subPick = steps.sub_pick?.$return_value || {}
+    if (subPick.skipSubtitleFetch) {
+      return {
+        skipSubtitleFetch: true,
+        transcript: subPick.cachedTranscript,
+        languageName: subPick.cachedLanguage || "en",
+      }
+    }
+
     const xml = steps.fetch_timedtext.$return_value
 
     // Pipedream HTTP step might return object/string depending on config
