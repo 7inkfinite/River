@@ -27,6 +27,17 @@ export function HorizontalCardCarousel({
     const [currentIndex, setCurrentIndex] = React.useState(initialIndex)
     const [touchStart, setTouchStart] = React.useState<number | null>(null)
     const [touchEnd, setTouchEnd] = React.useState<number | null>(null)
+    const [windowWidth, setWindowWidth] = React.useState(
+        typeof window !== "undefined" ? window.innerWidth : 1200
+    )
+
+    React.useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth)
+        window.addEventListener("resize", handleResize)
+        return () => window.removeEventListener("resize", handleResize)
+    }, [])
+
+    const isMobile = windowWidth < 640
 
     const cardCount = cards.length
     const safeIndex = Math.max(0, Math.min(currentIndex, cardCount - 1))
@@ -120,24 +131,26 @@ export function HorizontalCardCarousel({
                     width: "100%",
                 }}
             >
-                {/* Left Nav Arrow - pushed to edge */}
-                <div
-                    style={{
-                        flexShrink: 0,
-                        width: 60,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
-                >
-                    {safeIndex > 0 && (
-                        <NavigationButton
-                            direction="prev"
-                            onClick={goToPrev}
-                            disabled={navigationDisabled}
-                        />
-                    )}
-                </div>
+                {/* Left Nav Arrow - hidden on mobile (swipe to navigate) */}
+                {!isMobile && (
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            width: 60,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        {safeIndex > 0 && (
+                            <NavigationButton
+                                direction="prev"
+                                onClick={goToPrev}
+                                disabled={navigationDisabled}
+                            />
+                        )}
+                    </div>
+                )}
 
                 {/* Cards Container - centered with fixed height */}
                 <div
@@ -174,24 +187,26 @@ export function HorizontalCardCarousel({
                     ))}
                 </div>
 
-                {/* Right Nav Arrow - pushed to edge */}
-                <div
-                    style={{
-                        flexShrink: 0,
-                        width: 60,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                    }}
-                >
-                    {safeIndex < cardCount - 1 && (
-                        <NavigationButton
-                            direction="next"
-                            onClick={goToNext}
-                            disabled={navigationDisabled}
-                        />
-                    )}
-                </div>
+                {/* Right Nav Arrow - hidden on mobile (swipe to navigate) */}
+                {!isMobile && (
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            width: 60,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }}
+                    >
+                        {safeIndex < cardCount - 1 && (
+                            <NavigationButton
+                                direction="next"
+                                onClick={goToNext}
+                                disabled={navigationDisabled}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Dot Indicators */}
