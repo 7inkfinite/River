@@ -100,7 +100,9 @@ export function RiverCTA({ allowResubmit = true }: { allowResubmit?: boolean }) 
     // Check if we have results (for /form page lock behavior)
     // Must be defined before label calculation
     const hasResults = state.result !== null
-    const resultsLock = !allowResubmit && hasResults && status !== "loading"
+    const hasEverGenerated = React.useRef(false)
+    if (hasResults && isMine) hasEverGenerated.current = true
+    const resultsLock = !allowResubmit && hasEverGenerated.current
 
     // -----------------------------
     // Label priority (IMPORTANT)

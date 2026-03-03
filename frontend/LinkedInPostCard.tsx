@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Repeat, Copy, X } from "lucide-react"
+import { Repeat, Copy, Check, X } from "lucide-react"
 
 export type RegenMode = "idle" | "loading" | "success" | "error"
 
@@ -173,7 +173,7 @@ export function LinkedInPostCard({
                     />
 
                     <IconOnlyActionButton
-                        icon={<Copy size={24} />}
+                        icon={copyLabel === "copied!" ? <Check size={24} /> : <Copy size={24} />}
                         label={copyLabel}
                         onClick={onCopy}
                         disabled={copyDisabled}

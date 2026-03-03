@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Copy, Repeat, X, LayoutGrid, ExternalLink, CheckCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Check, Repeat, X, LayoutGrid, ExternalLink, CheckCircle } from "lucide-react"
 import { UseRiverGeneration } from "./UseRiverGeneration.tsx"
 import { TwitterThreadCard } from "./TwitterThreadCard.tsx"
 import { LinkedInPostCard } from "./LinkedInPostCard.tsx"
@@ -400,7 +400,7 @@ function RiverResultsInner({
         const next = Math.max(0, Math.min(i, igCount - 1))
         const child = el.children.item(next) as HTMLElement | null
         if (!child) return
-        child.scrollIntoView({ behavior: "smooth", inline: "start" })
+        el.scrollTo({ left: child.offsetLeft, behavior: "smooth" })
         setIgIndex(next)
     }
 
@@ -527,7 +527,7 @@ function RiverResultsInner({
                 }}
             >
                 {/* Video Header */}
-                <VideoHeader videoTitle={result.videoTitle} youtubeId={result.youtubeId} />
+                <VideoHeader videoTitle={result.videoTitle} />
 
                 {/* Carousel Container */}
                 <HorizontalCardCarousel
@@ -804,7 +804,7 @@ function InstagramCarouselCard(props: {
                     disabled={tweakDisabled}
                 />
                 <CopyMenuButton
-                    disabled={false}
+                    disabled={tweakOpen}
                     copied={copied}
                     onCopySlide={onCopySlide}
                     onCopyAll={onCopyAll}
@@ -894,7 +894,7 @@ function AspectRatioToggle({ aspect, onToggle }: { aspect: "1:1" | "4:5"; onTogg
                 alignItems: "center",
                 gap: 0,
                 padding: 4,
-                backgroundColor: "rgba(70, 136, 247, 0.12)",
+                backgroundColor: "rgba(124, 138, 17, 0.10)",
                 borderRadius: 999,
                 fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 fontSize: 12,
@@ -919,7 +919,7 @@ function AspectToggleButton({ label, isActive, onClick }: { label: string; isAct
                 padding: "6px 10px",
                 border: "none",
                 borderRadius: 999,
-                backgroundColor: isActive ? "#FAF8F0" : hover ? "rgba(70, 136, 247, 0.08)" : "transparent",
+                backgroundColor: isActive ? "#FAF8F0" : hover ? "rgba(124, 138, 17, 0.06)" : "transparent",
                 color: isActive ? "rgba(47,47,47,0.85)" : "rgba(47,47,47,0.55)",
                 cursor: isActive ? "default" : "pointer",
                 transition: "background-color 220ms cubic-bezier(0.25,0.1,0.25,1), color 220ms cubic-bezier(0.25,0.1,0.25,1)",
@@ -935,7 +935,7 @@ function AspectToggleButton({ label, isActive, onClick }: { label: string; isAct
 
 function IconOnlyActionButton({ icon, label, onClick, disabled }: { icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }) {
     const [hover, setHover] = React.useState(false)
-    const bg = hover ? "rgba(70, 136, 247, 0.18)" : "rgba(70, 136, 247, 0.12)"
+    const bg = hover ? "rgba(124, 138, 17, 0.16)" : "rgba(124, 138, 17, 0.10)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     return (
@@ -983,7 +983,7 @@ function CopyMenuButton({
     const [hover, setHover] = React.useState(false)
     const wrapRef = React.useRef<HTMLDivElement | null>(null)
 
-    const bg = hover ? "rgba(70, 136, 247, 0.18)" : "rgba(70, 136, 247, 0.12)"
+    const bg = hover ? "rgba(124, 138, 17, 0.16)" : "rgba(124, 138, 17, 0.10)"
     const fg = hover ? "rgba(47,47,47,0.72)" : "rgba(47,47,47,0.55)"
 
     React.useEffect(() => {
@@ -1043,7 +1043,7 @@ function CopyMenuButton({
                 }}
             >
                 <span style={{ display: "flex", width: 24, height: 24, alignItems: "center", justifyContent: "center" }}>
-                    <Copy size={22} />
+                    {copied !== null ? <Check size={22} /> : <Copy size={22} />}
                 </span>
             </button>
 
@@ -1087,7 +1087,7 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
                 border: "none",
                 borderRadius: 24,
                 padding: "10px 12px",
-                backgroundColor: hover ? "rgba(70, 136, 247, 0.14)" : "transparent",
+                backgroundColor: hover ? "rgba(124, 138, 17, 0.10)" : "transparent",
                 cursor: "pointer",
                 color: "rgba(47,47,47,0.72)",
                 fontSize: 14,
@@ -1213,7 +1213,7 @@ function RiverMiniCTA({ label, onClick, disabled, loading = false }: { label: st
     )
 }
 
-function VideoHeader({ videoTitle, youtubeId }: { videoTitle: string; youtubeId: string | null }) {
+function VideoHeader({ videoTitle }: { videoTitle: string }) {
     return (
         <div
             style={{
@@ -1224,7 +1224,6 @@ function VideoHeader({ videoTitle, youtubeId }: { videoTitle: string; youtubeId:
                 flexDirection: "column",
                 alignItems: "center",
                 textAlign: "center",
-                gap: 6,
             }}
         >
             <div
@@ -1237,16 +1236,6 @@ function VideoHeader({ videoTitle, youtubeId }: { videoTitle: string; youtubeId:
                 }}
             >
                 {videoTitle}
-            </div>
-            <div
-                style={{
-                    fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                    fontSize: 14,
-                    lineHeight: 1.4,
-                    color: "#7A7A7A",
-                }}
-            >
-                {youtubeId ? `YouTube Video • ${youtubeId}` : "YouTube Video"}
             </div>
         </div>
     )

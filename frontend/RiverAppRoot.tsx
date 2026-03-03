@@ -35,7 +35,7 @@ function RiverAppContent({ backgroundImage }: { backgroundImage?: string }) {
         <>
             {(!isAuthenticated || isFormPage) && (
                 <RiverProvider>
-                    <RiverCTA />
+                    <RiverCTA allowResubmit={isAuthenticated} />
                     <RiverResultsRoot />
                 </RiverProvider>
             )}

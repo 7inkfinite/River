@@ -52,7 +52,7 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
         try {
             console.log("Claiming anonymous generations via Pipedream")
 
-            const response = await fetch("https://eork646k8728ed.m.pipedream.net", {
+            const response = await fetch("https://eoj6g1c9blmwckv.m.pipedream.net", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -119,17 +119,21 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 setSession(initialSession)
+                console.log('[AuthGate] initAuth: hasUser:', !!initialSession?.user, 'alreadyProcessed:', hasProcessedSignIn.current)
 
                 // If we have a session from OAuth redirect, process sign-in
                 if (initialSession?.user && !hasProcessedSignIn.current) {
                     hasProcessedSignIn.current = true
                     const anonymousSessionId = localStorage.getItem("river_session_id")
+                    console.log('[AuthGate] initAuth: processing session for user:', initialSession.user.id, 'anonymousSessionId:', anonymousSessionId)
 
                     if (anonymousSessionId) {
+                        console.log('[AuthGate] initAuth: claiming anonymous generations...')
                         setClaimComplete(false)
                         await claimGenerations(initialSession)
                         setClaimComplete(true)
                         setDefaultTab("dashboard")
+                        console.log('[AuthGate] initAuth: claim complete')
                     } else {
                         setDefaultTab("dashboard")
                         setLastClaimCount(null)
@@ -147,22 +151,26 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
 
         // Listen for auth state changes (for email/password sign-in)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-            console.log('Auth state change:', event, !!newSession)
+            console.log('[AuthGate] Auth state change:', event, 'hasSession:', !!newSession, 'hasUser:', !!newSession?.user, 'alreadyProcessed:', hasProcessedSignIn.current)
 
             setSession(newSession)
 
-            // Handle sign-in event (only if not already processed)
+            // Guard: only process sign-in events that have a real session with a user
+            // INITIAL_SESSION can fire with null session on page load — skip those
             if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')
                 && newSession?.user && !hasProcessedSignIn.current) {
                 hasProcessedSignIn.current = true
                 const anonymousSessionId = localStorage.getItem("river_session_id")
+                console.log('[AuthGate] Processing sign-in for user:', newSession.user.id, 'anonymousSessionId:', anonymousSessionId)
 
                 if (anonymousSessionId) {
                     // User had anonymous generations - run claim
+                    console.log('[AuthGate] Claiming anonymous generations...')
                     setClaimComplete(false)
                     await claimGenerations(newSession)
                     setClaimComplete(true)
                     setDefaultTab("dashboard")
+                    console.log('[AuthGate] Claim complete')
                 } else {
                     // Fresh sign-in without prior anonymous usage
                     setDefaultTab("dashboard")
@@ -176,7 +184,7 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
                 // The modal tracks auth success and transitions to the success view.
             }
 
-            // Handle sign-out event
+            // Handle sign-out event — reset so next sign-in gets processed
             if (event === 'SIGNED_OUT') {
                 hasProcessedSignIn.current = false
                 setDefaultTab("create")

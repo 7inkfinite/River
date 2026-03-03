@@ -152,27 +152,27 @@ export function HorizontalCardCarousel({
                     </div>
                 )}
 
-                {/* Cards Container - centered with fixed height */}
+                {/* Cards Container - grid stacks all cards in same cell so height = tallest card */}
                 <div
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
                     style={{
-                        position: "relative",
                         flex: 1,
                         minHeight: 520,
-                        display: "flex",
-                        alignItems: "flex-start",
-                        justifyContent: "center",
+                        display: "grid",
+                        alignItems: "start",
+                        justifyItems: "center",
                         overflow: "clip" as any,
                     }}
                 >
-                    {/* Render all cards but only show the current one */}
+                    {/* All cards occupy the same grid cell — tallest one sets the height */}
                     {cards.map((card, index) => (
                         <div
                             key={index}
                             style={{
-                                position: index === safeIndex ? "relative" : "absolute",
+                                gridRow: 1,
+                                gridColumn: 1,
                                 width: "100%",
                                 maxWidth: 720,
                                 opacity: index === safeIndex ? 1 : 0,
