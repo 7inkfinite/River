@@ -734,6 +734,12 @@ function DashboardDetailView({
         }
     }
 
+    // Copy state for Twitter/LinkedIn cards
+    const [twCopyLabel, setTwCopyLabel] = React.useState("copy")
+    const [liCopyLabel, setLiCopyLabel] = React.useState("copy")
+    const twCopyTimer = React.useRef<number>(0)
+    const liCopyTimer = React.useRef<number>(0)
+
     // Parse outputs by platform
     const twitterOutput = outputs.find((o) => o?.platform?.toLowerCase() === "twitter" || o?.platform?.toLowerCase() === "x")
     const linkedInOutput = outputs.find((o) => o?.platform?.toLowerCase() === "linkedin")
@@ -759,11 +765,14 @@ function DashboardDetailView({
                     onCopy={async () => {
                         try {
                             await navigator.clipboard.writeText(threadText)
+                            setTwCopyLabel("copied!")
+                            if (twCopyTimer.current) window.clearTimeout(twCopyTimer.current)
+                            twCopyTimer.current = window.setTimeout(() => setTwCopyLabel("copy"), 1400)
                         } catch (e) {
                             console.warn("Clipboard not available", e)
                         }
                     }}
-                    copyLabel="copy"
+                    copyLabel={twCopyLabel}
                     copyDisabled={false}
                 />
             </React.Fragment>
@@ -786,11 +795,14 @@ function DashboardDetailView({
                     onCopy={async () => {
                         try {
                             await navigator.clipboard.writeText(postText)
+                            setLiCopyLabel("copied!")
+                            if (liCopyTimer.current) window.clearTimeout(liCopyTimer.current)
+                            liCopyTimer.current = window.setTimeout(() => setLiCopyLabel("copy"), 1400)
                         } catch (e) {
                             console.warn("Clipboard not available", e)
                         }
                     }}
-                    copyLabel="copy"
+                    copyLabel={liCopyLabel}
                     copyDisabled={false}
                 />
             </React.Fragment>

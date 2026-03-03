@@ -1,6 +1,6 @@
 // code/InstagramCarouselCard.tsx
 import * as React from "react"
-import { ChevronLeft, ChevronRight, Copy, Repeat, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Check, Repeat, X } from "lucide-react"
 
 export type RegenMode = "idle" | "loading" | "success" | "error"
 
@@ -52,7 +52,7 @@ export function InstagramCarouselCard(props: {
         const next = Math.max(0, Math.min(i, count - 1))
         const child = el.children.item(next) as HTMLElement | null
         if (!child) return
-        child.scrollIntoView({ behavior: "smooth", inline: "start" })
+        el.scrollTo({ left: child.offsetLeft, behavior: "smooth" })
         setIndex(next)
     }
 
@@ -269,7 +269,7 @@ export function InstagramCarouselCard(props: {
                 />
 
                 <CopyMenuButton
-                    disabled={false}
+                    disabled={tweakOpen}
                     copied={copied}
                     onCopySlide={() => onCopySlide(safeIndex)}
                     onCopyAll={onCopyAll}
@@ -573,7 +573,7 @@ function CopyMenuButton({
                         justifyContent: "center",
                     }}
                 >
-                    <Copy size={22} />
+                    {copied !== null ? <Check size={22} /> : <Copy size={22} />}
                 </span>
             </button>
 

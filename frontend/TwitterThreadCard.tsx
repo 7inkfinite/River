@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Repeat, Copy, X } from "lucide-react"
+import { Repeat, Copy, Check, X } from "lucide-react"
 
 const PATTERN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" fill="none" overflow="visible"><g><path d="M 240 160 C 284.183 160 320 195.817 320 240 C 320 284.183 284.183 320 240 320 C 195.817 320 160 284.183 160 240 C 160 195.817 195.817 160 240 160 Z" fill="transparent" stroke="rgb(112, 150, 23)"></path><path d="M 239.762 175 C 275.529 175 304.524 203.995 304.524 239.762 C 304.524 275.529 275.529 304.524 239.762 304.524 C 203.995 304.524 175 275.529 175 239.762 C 175 203.995 203.995 175 239.762 175 Z" fill="transparent" stroke-width="2" stroke="rgb(112, 150, 23)"></path><path d="M 240.238 145 C 292.837 145 335.476 187.64 335.476 240.238 C 335.476 292.837 292.837 335.476 240.238 335.476 C 187.64 335.476 145 292.837 145 240.238 C 145 187.64 187.64 145 240.238 145 Z" fill="transparent" stroke-width="2" stroke="rgb(112, 150, 23)"></path><path d="M 239.762 95 C 319.712 95 384.524 159.812 384.524 239.762 C 384.524 319.712 319.712 384.524 239.762 384.524 C 159.812 384.524 95 319.712 95 239.762 C 95 159.812 159.812 95 239.762 95 Z" fill="transparent" stroke-width="3" stroke="rgb(112, 150, 23)"></path><path d="M 239.81 76 C 330.279 76 403.619 149.34 403.619 239.81 C 403.619 330.279 330.279 403.619 239.81 403.619 C 149.34 403.619 76 330.279 76 239.81 C 76 149.34 149.34 76 239.81 76 Z" fill="transparent" stroke="rgb(112, 150, 23)"></path><path d="M 240.238 65 C 337.019 65 415.476 143.457 415.476 240.238 C 415.476 337.019 337.019 415.476 240.238 415.476 C 143.457 415.476 65 337.019 65 240.238 C 65 143.457 143.457 65 240.238 65 Z" fill="transparent" stroke="rgb(112, 150, 23)"></path><path d="M 240.595 42.5 C 350 42.5 438.69 131.19 438.69 240.595 C 438.69 350 350 438.69 240.595 438.69 C 131.19 438.69 42.5 350 42.5 240.595 C 42.5 131.19 131.19 42.5 240.595 42.5 Z" fill="transparent" stroke-width="2" stroke="rgb(112, 150, 23)"></path><path d="M 240 0 C 372.548 0 480 107.452 480 240 C 480 372.548 372.548 480 240 480 C 107.452 480 0 372.548 0 240 C 0 107.452 107.452 0 240 0 Z" fill="transparent" stroke-width="0.5" stroke="rgb(112, 150, 23)"></path></g></svg>`
 
@@ -209,7 +209,7 @@ export function TwitterThreadCard({
                     />
 
                     <IconOnlyActionButton
-                        icon={<Copy size={24} />}
+                        icon={copyLabel === "copied!" ? <Check size={24} /> : <Copy size={24} />}
                         label={copyLabel}
                         onClick={onCopy}
                         disabled={copyDisabled}
