@@ -68,7 +68,7 @@ export function StatusBar({
             >
                 {/* Home - expands to show "Home" label on hover */}
                 <button
-                    onClick={() => (window.location.href = "/")}
+                    onClick={() => (window.location.href = "/about")}
                     onMouseEnter={() => setHomeHover(true)}
                     onMouseLeave={() => setHomeHover(false)}
                     style={{

@@ -69,7 +69,10 @@ function PlatformIcon({ platform, active = true }: { platform: string; active?: 
 }
 
 
-// Generations progress bar component (matching Figma design)
+// Diamond dot grid rows — exactly 30 dots, 1:1 with generation limit
+const DIAMOND_ROWS = [2, 4, 6, 6, 6, 4, 2]
+
+// Generations dot grid component (matching Figma compact design)
 function GenerationsProgressBar({
     generationsUsed = 0,
     generationsLimit = 30,
@@ -78,107 +81,145 @@ function GenerationsProgressBar({
     generationsLimit?: number
 }) {
     const [upgradeHover, setUpgradeHover] = React.useState(false)
-    const generationsLeft = Math.max(0, generationsLimit - generationsUsed)
-    const progressPercentage = Math.min(100, (generationsUsed / generationsLimit) * 100)
+    const filledDotCount = Math.min(generationsUsed, generationsLimit)
+
+    // Fill dots bottom-to-top row by row — 1:1 mapping, no ratio
+    const reversedRows = [...DIAMOND_ROWS].reverse()
+    let dotsFilled = 0
+    const rowFillCounts: number[] = new Array(DIAMOND_ROWS.length).fill(0)
+    for (let i = 0; i < reversedRows.length && dotsFilled < filledDotCount; i++) {
+        const rowIndex = DIAMOND_ROWS.length - 1 - i
+        const toFill = Math.min(reversedRows[i], filledDotCount - dotsFilled)
+        rowFillCounts[rowIndex] = toFill
+        dotsFilled += toFill
+    }
+
+    const dotSize = 8
+    const dotGap = 6
 
     return (
         <div
             style={{
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
                 gap: 16,
-                width: "100%",
-                maxWidth: 403,
             }}
         >
-            {/* Progress bar */}
-            <div
+            {/* Upgrade CTA */}
+            <button
+                onClick={() => {
+                    console.log("Upgrade clicked")
+                }}
+                onMouseEnter={() => setUpgradeHover(true)}
+                onMouseLeave={() => setUpgradeHover(false)}
                 style={{
-                    width: "100%",
-                    height: 21,
-                    borderRadius: 12,
-                    backgroundColor: "#F5F0DE",
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    paddingRight: 12,
-                    boxShadow: "inset -2px 2px 2.4px 0px rgba(0,0,0,0.19)",
+                    padding: "8px 16px",
+                    borderRadius: 24,
+                    border: "none",
+                    backgroundColor: upgradeHover ? "#1F1F1F" : "#2F2F2F",
+                    color: "#FAF8F0",
+                    fontSize: 14,
+                    fontWeight: 400,
+                    fontFamily: '"Inter", sans-serif',
+                    cursor: "pointer",
+                    transition: "background-color 200ms ease",
+                    whiteSpace: "nowrap" as const,
+                    flexShrink: 0,
                 }}
             >
-                {/* Progress fill */}
+                Upgrade
+            </button>
+            <span
+                style={{
+                    fontFamily: '"Inter", sans-serif',
+                    fontSize: 14,
+                    fontWeight: 400,
+                    color: "#2F2F2F",
+                    whiteSpace: "nowrap" as const,
+                    flexShrink: 0,
+                }}
+            >
+                to keep using river.
+            </span>
+
+            {/* Diamond dot grid with overlaid count */}
+            <div
+                style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: dotGap,
+                    flexShrink: 0,
+                }}
+            >
+                {DIAMOND_ROWS.map((count, rowIndex) => {
+                    const filled = rowFillCounts[rowIndex]
+                    const unfilled = count - filled
+                    return (
+                        <div
+                            key={rowIndex}
+                            style={{
+                                display: "flex",
+                                gap: dotGap,
+                                justifyContent: "center",
+                            }}
+                        >
+                            {Array.from({ length: count }, (_, dotIndex) => {
+                                const isFilled = dotIndex >= unfilled
+                                return (
+                                    <div
+                                        key={dotIndex}
+                                        style={{
+                                            width: dotSize,
+                                            height: dotSize,
+                                            borderRadius: "50%",
+                                            backgroundColor: isFilled
+                                                ? "#4688F7"
+                                                : "#2F2F2F",
+                                            opacity: isFilled ? 1 : 0.18,
+                                            transition:
+                                                "background-color 400ms ease, opacity 400ms ease",
+                                        }}
+                                    />
+                                )
+                            })}
+                        </div>
+                    )
+                })}
+
+                {/* Frosted glass pill — centered band, not full coverage */}
                 <div
                     style={{
                         position: "absolute",
-                        left: 0,
-                        top: 0,
-                        height: "100%",
-                        width: `${progressPercentage}%`,
-                        minWidth: progressPercentage > 0 ? 20 : 0,
-                        maxWidth: "100%",
-                        borderRadius: 12,
-                        backgroundColor: "#4688F7",
-                        boxShadow: "inset 0px -4px 3.2px 0px #2776C5, inset 0px 2px 3.4px 0px rgba(254,254,254,0.44)",
-                    }}
-                />
-                {/* Text */}
-                <span
-                    style={{
-                        position: "relative",
-                        zIndex: 1,
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 12,
-                        fontWeight: 400,
-                        color: "#2D2E0F",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "2px 6px",
+                        borderRadius: 10,
+                        backgroundColor: "rgba(250, 248, 240, 0.6)",
+                        backdropFilter: "blur(3px)",
+                        WebkitBackdropFilter: "blur(3px)",
+                        border: "1px solid rgba(200, 195, 175, 0.25)",
                     }}
                 >
-                    {generationsLeft} generations left
-                </span>
-            </div>
-
-            {/* Upgrade CTA */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    width: "100%",
-                }}
-            >
-                <span
-                    style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: 14,
-                        fontWeight: 400,
-                        color: "#2F2F2F",
-                    }}
-                >
-                    To keep using the app and unlock more benefits,
-                </span>
-                <button
-                    onClick={() => {
-                        // TODO: Open upgrade modal or navigate to upgrade page
-                        console.log("Upgrade clicked")
-                    }}
-                    onMouseEnter={() => setUpgradeHover(true)}
-                    onMouseLeave={() => setUpgradeHover(false)}
-                    style={{
-                        padding: "6px 12px",
-                        borderRadius: 24,
-                        border: "none",
-                        backgroundColor: upgradeHover ? "#1F1F1F" : "#2F2F2F",
-                        color: "#FAF8F0",
-                        fontSize: 14,
-                        fontWeight: 400,
-                        fontFamily: '"Inter", sans-serif',
-                        cursor: "pointer",
-                        transition: "background-color 200ms ease",
-                    }}
-                >
-                    Upgrade
-                </button>
+                    <span
+                        style={{
+                            fontFamily: '"Inter", sans-serif',
+                            fontSize: 20,
+                            fontWeight: 400,
+                            color: "#323232",
+                            lineHeight: 1,
+                            letterSpacing: "-0.01em",
+                            whiteSpace: "nowrap" as const,
+                        }}
+                    >
+                        {generationsUsed}/{generationsLimit}
+                    </span>
+                </div>
             </div>
         </div>
     )
